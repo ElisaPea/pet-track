@@ -9,6 +9,11 @@ function App() {
     <>
       <div className="bg-red-500">
         <div className="text-red-50">hola</div>
+        <div className="text-red-50">hola2</div>
+        <div className="text-red-50">hola3</div>
+        <div className="text-red-50">hola4</div>
+        <div className="text-red-50">hola5</div>
+        <div className="text-red-50">hola6</div>
         <a href="https://vite.dev" target="_blank">
           {/* <img src={viteLogo} className="logo" alt="Vite logo" /> */}
         </a>
