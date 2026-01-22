@@ -9,7 +9,7 @@ function App() {
   return (
     <>
       <button
-        className="border p-2 rounded-xl bg-blue-500 hover:bg-blue-300 cursor-pointer text-white"
+        className="border p-2 rounded-xl bg-red-500 hover:bg-red-300 cursor-pointer text-white"
         onClick={() => setVisibleColors(!visibleColors)}
       >
         {visibleColors ? "Hide colors" : "Show colors"}
