@@ -7,16 +7,14 @@ function App() {
 
   return (
     <>
-      <div className="bg-red-500">
-        <div className="text-red-50">hola</div>
+      <div className="">
+        {/* <div className="text-red-50">hola</div>
         <div className="text-red-50">hola2</div>
         <div className="text-red-50">hola3</div>
         <div className="text-red-50">hola4</div>
         <div className="text-red-50">hola5</div>
-        <div className="text-red-50">hola6</div>
-        <a href="https://vite.dev" target="_blank">
-          {/* <img src={viteLogo} className="logo" alt="Vite logo" /> */}
-        </a>
+        <div className="text-red-50">hola6</div> */}
+        <a href="https://vite.dev" target="_blank"></a>
         <a href="https://react.dev" target="_blank">
           <img src={reactLogo} className="logo react" alt="React logo" />
         </a>
