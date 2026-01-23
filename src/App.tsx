@@ -50,6 +50,7 @@ function App() {
         </a>
 
         <h1 className="text-2xl font-bold">Vite + React</h1>
+        <h2>PRUEBA OSCAR</h2>
         <div className="card">
           <button
             className="bg-blue-500 text-white p-2 rounded"
