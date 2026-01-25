@@ -1,5 +1,6 @@
 import { useState } from "react";
 import reactLogo from "./assets/react.svg";
+import petTrackLogo from "./assets/logoPetTrack.jpg";
 import "./App.css";
 
 function App() {
@@ -47,6 +48,9 @@ function App() {
       <div className="items-center flex flex-col">
         <a href="https://react.dev" target="_blank">
           <img src={reactLogo} className="logo react" alt="React logo" />
+        </a>
+        <a href="https://react.dev" target="_blank">
+          <img src={petTrackLogo} className="logo react" alt="PetTrack logo" />
         </a>
 
         <h1 className="text-2xl font-bold">Vite + React</h1>
