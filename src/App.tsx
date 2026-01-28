@@ -62,7 +62,7 @@ function App() {
           </p>
         </div>
         <p className="text-sm">
-          Click on the Vite and React logos to learn more
+          Pulsa aquí para ver más sobre los logos
         </p>
       </div>
     </>
