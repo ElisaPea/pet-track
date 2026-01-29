@@ -1,0 +1,3 @@
+CREATE TABLE PRODUCTO (
+    VARCHAR (40) nombre 
+)
