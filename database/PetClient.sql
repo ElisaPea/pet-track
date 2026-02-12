@@ -1,0 +1,19 @@
+DROP TABLE IF EXISTS PetClient;
+CREATE TABLE PetClient (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(), 
+    petId UUID NOT NULL,
+    clientId UUID NOT NULL,
+    extraFields TEXT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    FOREIGN KEY (petId) REFERENCES Pet(id)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE,
+    FOREIGN KEY (clientId) REFERENCES Client(id)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE,
+
+
+    UNIQUE (petId, clientId) 
+);
+

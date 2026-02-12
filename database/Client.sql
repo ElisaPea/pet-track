@@ -1,0 +1,19 @@
+DROP TABLE IF EXISTS Client;
+CREATE TABLE Client (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(), 
+    userId UUID,
+    veterinaryCenterId  UUID NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE, 
+    phone VARCHAR(20),
+    extraInfo TEXT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (userId) REFERENCES User(id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+    FOREIGN KEY (veterinaryCenterId) REFERENCES VeterinaryCenter(id)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+);
+
