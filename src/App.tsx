@@ -1,71 +1,44 @@
-// import { useEffect, useState } from 'react'
-// import { supabase } from './supabaseClient' // Importamos el cliente que creamos
 
-// function App() {
-//   const [items, setItems] = useState([])
-
-//   useEffect(() => {
-//     getItems()
-//   }, [])
-
-//   async function getItems() {
-//     const { data, error } = await supabase
-//       .from('tu_tabla') // Nombre de tu tabla en Supabase
-//       .select('*')
-    
-//     if (error) console.error('Error:', error)
-//     else setItems(data)
-//   }
-
-//   return (
-//     <div>
-//       <h1>Datos de Supabase</h1>
-//       <ul>
-//         {items.map(item => (
-//           <li key={item.id}>{item.nombre}</li>
-//         ))}
-//       </ul>
-//     </div>
-//   )
-// }
-
-// export default App
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import reactLogo from "./assets/react.svg";
 import "./App.css";
-//import { supabase } from "./lib/supabaseCliente.js" // Importamos el cliente que creamos
+import { supabase } from './lib/supabaseCliente.ts'; // Importamos el cliente que creamos
 
 function App() {
   const [count, setCount] = useState(0);
   const [visibleColors, setVisibleColors] = useState(false);
+  const [items, setItems] = useState<any>([])
 
+  // useEffect(() => {
+  //   getItems()
+  // }, [])
+
+  async function getItems() {
+    const { data, error } = await supabase
+      .from('VeterinaryCenter') // Nombre de tu tabla en Supabase
+      .select('*')
+    
+    if (error) console.error('Error:', error)
+    else {setItems(data); console.log(data)} 
+  }
+ 
   return (
     <>
       <button
         className="border p-2 rounded-xl bg-red-500 hover:bg-red-300 cursor-pointer text-white"
-        onClick={() => setVisibleColors(!visibleColors)}
+        onClick={() => getItems()}
       >
         {visibleColors ? "Hide colors" : "Show colors"}
       </button>
+       <div>
+     <h1>Datos de Supabase</h1>
+
+     <ul>
+         {items && items.length && (items as any).map((item: any) => (
+        <li key={item.id}>{item.name}</li>
+        ))}
+      </ul>
+    </div>
 
       {visibleColors && (
         <div className="flex flex-col gap-2">
