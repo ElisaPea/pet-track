@@ -1,6 +1,58 @@
+// import { useEffect, useState } from 'react'
+// import { supabase } from './supabaseClient' // Importamos el cliente que creamos
+
+// function App() {
+//   const [items, setItems] = useState([])
+
+//   useEffect(() => {
+//     getItems()
+//   }, [])
+
+//   async function getItems() {
+//     const { data, error } = await supabase
+//       .from('tu_tabla') // Nombre de tu tabla en Supabase
+//       .select('*')
+    
+//     if (error) console.error('Error:', error)
+//     else setItems(data)
+//   }
+
+//   return (
+//     <div>
+//       <h1>Datos de Supabase</h1>
+//       <ul>
+//         {items.map(item => (
+//           <li key={item.id}>{item.nombre}</li>
+//         ))}
+//       </ul>
+//     </div>
+//   )
+// }
+
+// export default App
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import "./App.css";
+//import { supabase } from "./lib/supabaseCliente.js" // Importamos el cliente que creamos
 
 function App() {
   const [count, setCount] = useState(0);
