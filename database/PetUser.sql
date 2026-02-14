@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS PetUser (
     extraFields TEXT,
     createdAt timestamp DEFAULT CURRENT_TIMESTAMP,
     updatedAt timestamp DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (petId) REFERENCES Pet(id) ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (userId) REFERENCES "user"(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (petId) REFERENCES Pet(id) ON DELETE RESTRICT ON UPDATE CASCADE, -- empleamos ON DELETE RESTRICT por buenas practicas y evitar eliminar registros accidentalmente.
+    FOREIGN KEY (userId) REFERENCES "user"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     UNIQUE (petId, userId) -- impide que un usuario tenga la misma mascota dos veces
 )
