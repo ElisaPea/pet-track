@@ -1,5 +1,6 @@
-CREATE TABLE User (
-    id integer PRIMARY KEY, 
+DROP TABLE IF EXISTS "User";
+CREATE TABLE "User" (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(), 
     name VARCHAR(60),
     phone VARCHAR(9), 
     email VARCHAR(100), 
@@ -11,4 +12,6 @@ CREATE TABLE User (
     isActive boolean,
     deletedAt timestamp,
     updatedAt timestamp
+    
+
 )

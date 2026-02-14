@@ -1,5 +1,6 @@
+DROP TABLE IF EXISTS VeterinaryCenter;
 CREATE TABLE VeterinaryCenter (
-    id integer PRIMARY KEY, 
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(), 
     name VARCHAR(40), 
     address VARCHAR(100), 
     phone VARCHAR(9), 
