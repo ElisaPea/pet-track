@@ -12,8 +12,6 @@ CREATE TABLE PetClient (
     FOREIGN KEY (clientId) REFERENCES Client(id)
     ON DELETE RESTRICT
     ON UPDATE CASCADE,
-
-
     UNIQUE (petId, clientId) 
 );
 

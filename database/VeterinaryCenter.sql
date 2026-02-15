@@ -4,6 +4,6 @@ CREATE TABLE VeterinaryCenter (
     name VARCHAR(40), 
     address VARCHAR(100), 
     phone VARCHAR(9), 
-    createdAt timestamp, 
-    updatedAt timestamp
-)
+    createdAt timestamp DEFAULT CURRENT_TIMESTAMP, 
+    updatedAt timestamp DEFAULT CURRENT_TIMESTAMP
+);

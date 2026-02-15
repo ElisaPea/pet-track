@@ -1,17 +1,12 @@
-DROP TABLE IF EXISTS petUser;
-CREATE TABLE petUser (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(), 
+CREATE TABLE IF NOT EXISTS PetUser (
+   id UUID DEFAULT gen_random_uuid() PRIMARY KEY, -- que es UUID? es un identificador unico universal, útil para generar identificadores, en vez de usar numeros
     petId UUID NOT NULL,
     userId UUID NOT NULL,
     extraFields TEXT,
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (petId, userId), -- Un usuario solo puede ser dueño de una mascota una vez
-    FOREIGN KEY (petId) REFERENCES Pet(id)
-    ON DELETE RESTRICT -- No se puede borrar una mascota si tiene un dueño
-    ON UPDATE CASCADE, -- Si se actualiza el id de una mascota, se actualiza el id de la mascota en la tabla PetClient
-    FOREIGN KEY (userId) REFERENCES User(id)
-    ON DELETE RESTRICT -- No se puede borrar un usuario si tiene una mascota
-    ON UPDATE CASCADE -- Si se actualiza el id de un usuario, se actualiza el id del usuario en la tabla PetClient
+    createdAt timestamp DEFAULT CURRENT_TIMESTAMP,
+    updatedAt timestamp DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (petId) REFERENCES Pet(id) ON DELETE RESTRICT ON UPDATE CASCADE, -- empleamos ON DELETE RESTRICT por buenas practicas y evitar eliminar registros accidentalmente.
+    FOREIGN KEY (userId) REFERENCES "user"(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+    UNIQUE (petId, userId) -- impide que un usuario tenga la misma mascota dos veces
 );
 
