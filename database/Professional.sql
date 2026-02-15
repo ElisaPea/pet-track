@@ -13,4 +13,4 @@ CREATE TABLE Professional (
     FOREIGN KEY (veterinaryCenterId) REFERENCES VeterinaryCenter(id)
     ON DELETE SET NULL -- Si se borra la veterinaria, el profesional queda como "sin veterinaria", como si estuviera en paro
     ON UPDATE CASCADE -- Si se actualiza el id de la veterinaria, se actualiza el id del profesional
-)
+);
