@@ -4,8 +4,8 @@ CREATE TABLE Professional (
     userId UUID NOT NULL,
     veterinaryCenterId UUID,
     licenseNumber VARCHAR(20),
-    createdAt timestamp, 
-    updatedAt timestamp
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     UNIQUE(userId, veterinaryCenterId), -- Un usuario solo puede ser un profesional en una veterinaria
     FOREIGN KEY (userId) REFERENCES User(id)
     ON DELETE CASCADE -- Si se borra el usuario, se borra el profesional ya que un profesional es un usuario

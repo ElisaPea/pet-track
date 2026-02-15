@@ -6,12 +6,12 @@ CREATE TABLE "User" (
     email VARCHAR(100), 
     passwordHash VARCHAR(255),
     role ENUM('user', 'professional'),
-    createdAt timestamp, 
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
     lgpdConsent boolean,
-    lgpdConsentDate timestamp,
+    lgpdConsentDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     isActive boolean,
-    deletedAt timestamp,
-    updatedAt timestamp
+    deletedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     
 
 )
