@@ -2,7 +2,8 @@
 
 Para ver este contenido presiona: Windows: Ctrl + Shift + V, Mac: Cmd + Shift + V
 
-Para levantar el proyecto (o sea verlo en la web, aunque se en local), tenéis que abrir la terminal (la del mismo IDE es perfecta) y escribir `npm run dev`. Os saldrá un enlace, por ejemplo: `http://localhost:5173/`. Haced clic en él y podréis ver el proyecto en vuestro navegador.
+Para levantar el proyecto (o sea verlo en la web, aunque se en local), tenéis que abrir la terminal (la del mismo IDE es perfecta) y escribir `npm run dev`. Os saldrá un enlace, por ejemplo: `http://localhost:5173/`. Haced clic en él y podréis ver el proyecto en vuestro navegador. Si os da problemas, antes de buscar, haced esto: `rm -rf node_modules && npm install`.
+Esto lo que hace es eliminar la carpeta donde se guardan automaticamente las dependencias de las librerias instaladas y volver a instalaras. Muchas veces, cuando se bajan cambios y otra persona ha instalado una libreria, el despliegue da problemas con esta cache. Si luego el `npm run dev` sigue sin funcionar, hablad con ChatGPT o Elisa ejej.
 
 ## Crear una screen
 
