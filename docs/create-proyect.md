@@ -2,6 +2,8 @@
 
 Para ver este contenido presiona: Windows: Ctrl + Shift + V, Mac: Cmd + Shift + V
 
+Para levantar el proyecto (o sea verlo en la web, aunque se en local), tenéis que abrir la terminal (la del mismo IDE es perfecta) y escribir `npm run dev`. Os saldrá un enlace, por ejemplo: `http://localhost:5173/`. Haced clic en él y podréis ver el proyecto en vuestro navegador.
+
 ## Crear una screen
 
 - **1**: Añade la constante dentro del fichero `src\constants\constants.ts` con el nombre de la nueva screen,
