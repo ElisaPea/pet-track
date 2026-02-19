@@ -21,24 +21,22 @@ DROP TYPE IF EXISTS user_role;
 CREATE TYPE user_role AS ENUM ('user', 'professional');
 
 -- CREACION DE LAS TABLAS EN ORDEN DE DEPENDENCIA
-CREATE TABLE "User" ( -- NEW: porque "User" está entre comillas?
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(), -- NEW: supanase gestiona el auth, entonces no neceistamos guardar aquí la pass (es mala practica de hecho), solo hay que referenciar este id con el de supanbse: id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    name VARCHAR(60) NOT NULL, -- NEW: nombre es obligatorio
+CREATE TABLE "User" ( 
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    name VARCHAR(60) NOT NULL,
     phone VARCHAR(9), 
-    email VARCHAR(100) UNIQUE NOT NULL,  -- NEW: esto se puede quitar, se guarda en tabla auth de supabase
-    passwordHash BYTEA, --   NEW: esto se puede quitar, se guarda en tabla auth de supabase, He leido que almacenar los strings de hash en binrario es mas eficiente y ocupa menos espacio, en este caso utilizamos BYTEA que funciona como un TEXT bianrio
     role user_role DEFAULT 'user', -- Definio que el rol por determinado sea user. 
     createdAt timestamp DEFAULT CURRENT_TIMESTAMP, 
     lgpdConsent boolean DEFAULT FALSE, -- NEW: AÑADIDO: por defecto false 
     lgpdConsentDate timestamp,
-    isActive boolean, -- NEW: DUDA: esto para que era?
+    isActive boolean, -- Dado de baja
     deletedAt timestamp,
     updatedAt timestamp DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE VeterinaryCenter (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(), 
-    email VARCHAR(100) UNIQUE NOT NULL, --NEW: para enlazar cliente y vet center, hay que enviar un correo, lo ideal es que se use uno que es del centro vet. un centro vet puede tener x profesionales, pero lo normal es que tenga un correo de empresa donde todos los profs tienen
+    email VARCHAR(100) UNIQUE NOT NULL,
     name VARCHAR(40), 
     address VARCHAR(100), 
     phone VARCHAR(9), 
@@ -73,6 +71,7 @@ CREATE TABLE Client (
     email VARCHAR(100) NOT NULL UNIQUE, 
     phone VARCHAR(20),
     extraInfo TEXT,
+    isActive boolean, -- Dado de baja
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (userId) REFERENCES User(id)
@@ -104,8 +103,8 @@ CREATE TABLE PetUser (
     extraFields TEXT,
     createdAt timestamp DEFAULT CURRENT_TIMESTAMP,
     updatedAt timestamp DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (petId) REFERENCES Pet(id) ON DELETE RESTRICT ON UPDATE CASCADE, -- empleamos ON DELETE RESTRICT por buenas practicas y evitar eliminar registros accidentalmente. NEW: yo pondría on delete cascade porque si eliminamos la PET queremos que también se elimine la relación de PetUser
-    FOREIGN KEY (userId) REFERENCES User(id) ON DELETE RESTRICT ON UPDATE CASCADE, -- NEW: yo pondría on delete cascade porque si eliminamos el usuario queremos que también se elimine la relación de PetUser
+    FOREIGN KEY (petId) REFERENCES Pet(id) ON DELETE RESTRICT ON UPDATE CASCADE, 
+    FOREIGN KEY (userId) REFERENCES User(id) ON DELETE RESTRICT ON UPDATE CASCADE,
     UNIQUE (petId, userId) -- impide que un usuario tenga la misma mascota dos veces
 );
 
@@ -119,10 +118,10 @@ CREATE TABLE PetClient (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
     FOREIGN KEY (petId) REFERENCES Pet(id)
     ON DELETE RESTRICT
-    ON UPDATE CASCADE, -- NEW: yo pondría on delete cascade porque si eliminamos la PET queremos que también se elimine la relación de PetClientX
+    ON UPDATE CASCADE, 
     FOREIGN KEY (clientId) REFERENCES Client(id)
     ON DELETE RESTRICT
-    ON UPDATE CASCADE, -- NEW: yo pondría on delete cascade porque si eliminamos el cliente queremos que también se elimine la relación de PetClient
+    ON UPDATE CASCADE,
     UNIQUE (petId, clientId) 
 );
 
