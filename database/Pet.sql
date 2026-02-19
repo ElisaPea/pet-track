@@ -8,4 +8,4 @@ CREATE TABLE IF NOT EXISTS Pet (
     isVerified BOOLEAN DEFAULT FALSE, -- FALSE -> mascota creada por usuario que aún no tiene la relación de PetClient, TRUE -> mascota que tiene la relación de PetClient
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+);
