@@ -1,4 +1,6 @@
-# 🐾 Guía Rápida: React + Material UI (Pet Track)
+# Introducción a React
+
+Para ver este contenido presiona: Windows: Ctrl + Shift + V, Mac: Cmd + Shift + V
 
 ## 1. ¿Qué es un Componente?
 
@@ -25,26 +27,40 @@ export default function MiComponente() {
 }
 ```
 
-# 📘 Documentación: React & Pet Track
-
-## 🔄 El Return (El Renderizado)
+## 2. El Return (El Renderizado)
 
 El `return` es la parte más importante de tu componente. Es donde le dices a React qué debe "dibujar" en el navegador.
 
 - **Regla del Padre Único:** Todo lo que devuelvas debe estar envuelto en una sola etiqueta. Si tienes varios elementos sueltos, envuélvelos en un `<Box>`, `<div>` o un Fragment `<> ... </>`.
-- **JSX:** Dentro del `return` escribes JSX (parecido al HTML). Para meter lógica de JavaScript (como una variable), úsala entre llaves: `{miVariable}`.
+- **TSX:** Dentro del `return` escribes TSX (parecido al HTML) por eso el componente tiene el formato .tsx. Para meter lógica de JavaScript (como una variable), úsala entre llaves: `{miVariable}`.
 - **Lógica arriba, Diseño abajo:** La lógica (cálculos, estados) va antes del `return`; el diseño (etiquetas) va dentro del `return`.
+
+### Ejemplo:
+
+```tsx
+export default function MiComponente() {
+  // Lógica (Variables, estados, funciones)
+  const saludo = "Bienvenido a Pet Track";
+
+  const [count, setCount] = useState(0);
+
+  function handleClick() {
+    setCount(count + 1);
+  }
+
+  // Diseño (Lo que se renderiza en pantalla)
+  return (
+    <div className="container">
+      <h1>{saludo}</h1>
+      <button onClick={handleClick}>Añade 1</button>
+      <p>{count}</p>
+    </div>
+  );
+}
+```
 
 ---
 
-## 📚 Uso de Librerías (Material UI)
+## 3. Uso de Librerías (Material UI)
 
-Para no reinventar la rueda y que el diseño sea profesional, usamos librerías externas.
-
-### 1. Instalación
-
-Antes de usar nada, el paquete debe estar en tu carpeta `node_modules`:
-
-```bash
-npm install @mui/material @emotion/react @emotion/styled @mui/icons-material
-```
+Para no reinventar la rueda y que el diseño sea profesional, usamos librerías externas. Cada una de ellas primero hay que instalarla, con un comando muy sencillo. La lista de las instaladas actualmente está en el archivo `dependencies-project.md`

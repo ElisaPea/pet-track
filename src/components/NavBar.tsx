@@ -1,8 +1,11 @@
 import { AppBar, Toolbar, Typography, Box, Button, Stack } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { SCREEN } from "../constants/constants";
 
 export default function NavBar() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <AppBar
@@ -35,14 +38,27 @@ export default function NavBar() {
         <Stack direction="row" spacing={3}>
           <Button
             color="inherit"
-            sx={{ textTransform: "none", borderBottom: "2px solid black" }}
+            sx={{
+              textTransform: "none",
+              borderBottom:
+                location.pathname === SCREEN.HOME ? "2px solid black" : "",
+            }}
+            onClick={() => {
+              navigate(SCREEN.HOME);
+            }}
           >
             Home
           </Button>
           <Button
             color="inherit"
-            sx={{ textTransform: "none" }}
-            onClick={() => navigate("/login")}
+            sx={{
+              textTransform: "none",
+              borderBottom:
+                location.pathname === SCREEN.LOGIN ? "2px solid black" : "",
+            }}
+            onClick={() => {
+              navigate(SCREEN.LOGIN);
+            }}
           >
             Log in
           </Button>
