@@ -1,5 +1,7 @@
 # 🐾 Plataforma de Mascotas – Resumen de Lógica de la API
 
+Para ver este contenido presiona: Windows: Ctrl + Shift + V, Mac: Cmd + Shift + V
+
 ## 🧠 Concepto Principal
 
 El sistema se basa en una única entidad global de mascota:
