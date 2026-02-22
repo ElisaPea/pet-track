@@ -62,6 +62,20 @@ export default function NavBar() {
           >
             Log in
           </Button>
+          {/* En caso de que el usuario este logueado, prueba Malcon*/}
+          <Button
+            color="inherit"
+            sx={{
+              textTransform: "none",
+              borderBottom:
+                location.pathname === SCREEN.HOME_USER ? "2px solid black" : "",
+            }}
+            onClick={() => {
+              navigate(SCREEN.HOME_USER);
+            }}
+          >
+            HomeUser
+          </Button>
         </Stack>
       </Toolbar>
     </AppBar>
