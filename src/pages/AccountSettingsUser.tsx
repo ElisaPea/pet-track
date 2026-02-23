@@ -8,47 +8,34 @@ export default function AccountSettingsUser() {
       <Box
         sx={{
           display: "flex",
-          justifyContent: "center",
+          flexDirection: "column",
           alignItems: "center",
+          justifyContent: "center",
           mt: 8, // Margen superior para centrar visualmente
         }}
-      >
+
+        >
+          {/* Tipografia actualizar perfil */}
+            <Typography variant="h4" sx={{ fontWeight: "600", color: "#4A3B3B", mb: 0.5 }}>
+              Actualiza tu perfil
+            </Typography>
+
+            {/* Línea decorativa */}
+            <Box sx={{ width: 60, height: 4, bgcolor: "#00BCD4", mb: 4 }} />
+
         {/* Contenedor Principal (Cuadrado azul claro) */}
         <Box
           sx={{
             bgcolor: "#D1F2F5", // Azul pastel de la imagen
             width: "100%",
-            maxWidth: 450,
+            maxWidth: 600,
             borderRadius: 10, // Bordes muy redondeados
             p: 4,
             boxShadow: "0px 4px 10px rgba(0,0,0,0.05)",
             textAlign: "center",
           }}
+        
         >
-          {/* Header con Huellita */}
-          <Stack
-            direction="row"
-            spacing={2}
-            justifyContent="center"
-            alignItems="center"
-            sx={{ mb: 4 }}
-          >
-            <Box
-              sx={{
-                bgcolor: "white",
-                borderRadius: "50%",
-                p: 1,
-                display: "flex",
-                color: "#90CAF9",
-              }}
-            >
-              <PetsIcon fontSize="large" />
-            </Box>
-            <Typography variant="h4" sx={{ fontWeight: "500", color: "#333" }}>
-              Actualiza tu perfil
-            </Typography>
-          </Stack>
-
           {/* Formulario */}
           <Box component="form" noValidate sx={{ mt: 1 }}>
             <Stack spacing={3} alignItems="center">
@@ -64,39 +51,121 @@ export default function AccountSettingsUser() {
                   variant="standard"
                   InputProps={{ disableUnderline: true }}
                   sx={{
-                    bgcolor: "white",
+                    bgcolor: "#6D5D5D",
                     borderRadius: 50,
                     px: 2,
-                    py: 0.5,
+                    py: 0.4,
+                    input: { 
+                    color: "white", // Texto blanco para que contraste
+                    px: 2}
                   }}
                 />
               </Stack>
 
-              {/* Campo Password */}
+              {/* Campo email */}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
                   sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
                 >
-                  Password:
+                  Correo electrónico:
                 </Typography>
                 <TextField
                   fullWidth
-                  type="password"
                   variant="standard"
                   InputProps={{ disableUnderline: true }}
                   sx={{
-                    bgcolor: "white",
+                    bgcolor: "#6D5D5D",
                     borderRadius: 50,
                     px: 2,
-                    py: 0.5,
+                    py: 0.4,
+                    input: { 
+                    color: "white", // Texto blanco para que contraste
+                    px: 2}
                   }}
                 />
               </Stack>
 
-              {/* Botones */}
-              <Box sx={{ width: "100%", pt: 2 }}>
-                <Button
+
+              
+              {/* Campo telefono */}
+              <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
+                <Typography
+                  sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
+                >
+                  Número de teléfono:
+                </Typography>
+                <TextField
                   fullWidth
+                  variant="standard" //añadir para que no se borre la extension del tel
+                  defaultValue="+34 "
+                  InputProps={{ disableUnderline: true }}
+                  sx={{
+                    bgcolor: "#6D5D5D",
+                    borderRadius: 50,
+                    width:"50%",
+                    ml: "auto",
+                    px: 1,
+                    py: 0.4,
+                    input: { 
+                    color: "white", // Texto blanco para que contraste
+                    px: 2}
+                  }}
+                />
+              </Stack>
+
+              {/* Campo Dirección */}
+              <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
+                <Typography
+                  sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
+                >
+                  Dirección:
+                </Typography>
+                <TextField
+                  fullWidth
+                  variant="standard"
+                  InputProps={{ disableUnderline: true }}
+                  sx={{
+                    bgcolor: "#6D5D5D",
+                    borderRadius: 50,
+                    px: 2,
+                    py: 0.4,
+                    input: { 
+                    color: "white", // Texto blanco para que contraste
+                    px: 2}
+                  }}
+                />
+              </Stack>
+              
+              {/* Campo Centro vet asociado */}
+              <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
+                <Typography
+                  sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
+                >
+                  Centro veterinario asociado:
+                </Typography>
+                <TextField
+                  fullWidth
+                  variant="standard"
+                  InputProps={{ disableUnderline: true }}
+                  sx={{
+                    bgcolor: "#6D5D5D",
+                    borderRadius: 50,
+                    px: 2,
+                    py: 0.4,
+                    input: { 
+                    color: "white", // Texto blanco para que contraste
+                    px: 2}
+                  }}
+                />
+              </Stack>
+
+              {/* Botón guardar*/}
+              <Box sx={{ width: "100%",
+              display: "flex",
+              justifyContent: "flex-end",
+              pt: 2 }}>
+
+                <Button
                   variant="contained"
                   sx={{
                     bgcolor: "#FBC02D", // Amarillo del botón "Acceder"
@@ -108,21 +177,7 @@ export default function AccountSettingsUser() {
                     "&:hover": { bgcolor: "#f9a825" },
                   }}
                 >
-                  ACCEDER
-                </Button>
-
-                <Button
-                  fullWidth
-                  variant="contained"
-                  sx={{
-                    bgcolor: "#9EABB3", // Gris del botón "Crear cuenta"
-                    color: "black",
-                    fontWeight: "bold",
-                    borderRadius: 2,
-                    "&:hover": { bgcolor: "#78909C" },
-                  }}
-                >
-                  CREAR CUENTA
+                  GUARDAR
                 </Button>
               </Box>
             </Stack>
