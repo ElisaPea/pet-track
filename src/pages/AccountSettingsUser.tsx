@@ -1,6 +1,6 @@
 import BasicScreen from "../components/BasicScreen";
 import { Box, Typography, TextField, Button, Stack } from "@mui/material";
-import PetsIcon from "@mui/icons-material/Pets"; // Icono de la huellita
+
 
 export default function AccountSettingsUser() {
   return (
@@ -96,7 +96,7 @@ export default function AccountSettingsUser() {
                 </Typography>
                 <TextField
                   fullWidth
-                  variant="standard" //añadir para que no se borre la extension del tel
+                  variant="standard" 
                   defaultValue="+34 "
                   InputProps={{ disableUnderline: true }}
                   sx={{
