@@ -1,5 +1,5 @@
 import BasicScreenUser from "../components/BasicScreenUser";
-import { Box, Typography, IconButton, Button, Stack, Dialog, Tabs, Tab } from "@mui/material";
+import { Box, Typography, IconButton, Button, Stack, Dialog, Tabs, Tab, TextField, Select, MenuItem } from "@mui/material";
 import { Instagram, LinkedIn, Mail } from "@mui/icons-material";
 import { useState } from "react";
 
@@ -7,7 +7,8 @@ import { useState } from "react";
 export default function Welcome_User() {
     {/* Constants of Panel & Tabs*/ }
     const [open, setOpen] = useState(false);
-    const [tabActual, setTabActual] = useState(0)
+    const [tabActual, setTabActual] = useState(0);
+    const [vacunas, setVacunas] = useState("");
     return (
         <BasicScreenUser>
             <section>
@@ -71,7 +72,7 @@ export default function Welcome_User() {
                                 bgcolor: "#FFFFFF",
                                 color: "black",
                                 borderRadius: 10,
-                                "&:hover": { bgcolor: "#cdcdcd" }
+                                "&:hover": { bgcolor: "#FDC435" }
                             }}
                             onClick={() => setOpen(true)}
                         >
@@ -184,7 +185,7 @@ export default function Welcome_User() {
                 {/* Add Pet Panel */}
                 <Dialog
                     open={open}
-                    onClose={() => { setOpen(false); setTabActual(0); }}
+                    // aussence of onClose makes the pannel only close when clicked the exit button 
                     fullWidth
                     maxWidth={false}
                     slotProps={{
@@ -195,7 +196,7 @@ export default function Welcome_User() {
                                 maxHeight: "85vh",
                                 borderRadius: 5,
                                 padding: 0,
-                                overflow: "hidden"
+                                overflow: "hidden" // enables the blue bgColor of the tabs to use all of the space in the corners
                             }
                         }
                     }}
@@ -214,9 +215,10 @@ export default function Welcome_User() {
                                     bgcolor: "white",
                                     color: "black",
                                     "&.Mui-selected": {
-                                        bgcolor: "#00ADBA",
+                                        bgcolor: "#BEF1F3",
                                         color: "black",
-                                    }
+                                    },
+                                    "&:hover": { bgcolor: "#BEF1F3" }
                                 }}
                             />
                             <Tab
@@ -225,29 +227,205 @@ export default function Welcome_User() {
                                     bgcolor: "white",
                                     color: "black",
                                     "&.Mui-selected": {
-                                        bgcolor: "#00ADBA",
+                                        bgcolor: "#BEF1F3",
                                         color: "black",
-                                    }
-                                }}
-                            />
-                            <Tab
-                                label="PRUEBA"
-                                sx={{
-                                    bgcolor: "white",
-                                    color: "black",
-                                    "&.Mui-selected": {
-                                        bgcolor: "#00ADBA",
-                                        color: "black",
-                                    }
+                                    },
+                                    "&:hover": { bgcolor: "#BEF1F3" }
                                 }}
                             />
                         </Tabs>
                     </Box>
                     {/* Tabs Content */}
-                    <Box sx={{ padding: 4 }}>
-                        {tabActual == 0 && <Box>Hola</Box>}
-                        {tabActual == 1 && <Box>Que tal?</Box>}
-                        {tabActual == 2 && <Box>prueba?</Box>}
+
+                    <Box sx={{ // display "flex" & flexDirection "column" enables align vertically the children boxes
+                        px: 6, py: 3, height: "100%", display: "flex", flexDirection: "column"
+                    }}>
+                        <Box sx={{
+                            flex: 1 // fills all the empty space vertically after the button box begins
+                        }}>
+                            {/* Pet Info Tab */}
+                            {tabActual == 0 && <Box>
+                                <Stack spacing={5} /*space betwen rows*/ alignItems="center">
+                                    {/* Pet Name Field */}
+                                    <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
+                                        <Typography
+                                            sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
+                                        >
+                                            ¿Cual es el nombre de tu mascota?
+                                        </Typography>
+                                        <TextField
+                                            variant="standard"
+                                            InputProps={{
+                                                disableUnderline: true, style: { color: "white" }  // color white letters
+                                            }}
+                                            sx={{
+                                                width: 600,
+                                                bgcolor: "#685F5F",
+                                                borderRadius: 50,
+                                                px: 2,
+                                                py: 0.5,
+                                                ml: -12, // position besides Typography
+                                                "&:hover": { bgcolor: " #555353" }
+                                            }}
+                                        />
+                                    </Stack>
+                                    {/* Pet Img Field */}
+                                    <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
+                                        <Typography
+                                            sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
+                                        >
+                                            !Comparte una foto de tu mascota!
+                                        </Typography>
+                                        <Button // podria ser un icon button?
+                                            sx={{
+                                                color: "black",
+                                                fontSize: 50,
+                                                width: 100,
+                                                height: 90,
+                                                bgcolor: "#685F5F",
+                                                borderRadius: 10,
+                                                px: 2,
+                                                py: 0.5,
+                                                ml: -12, // position besides Typography
+                                                "&:hover": { bgcolor: "#555353" }
+                                            }}
+                                        >
+                                            +
+                                        </Button>
+                                    </Stack>
+                                    {/* Aditional Info Field */}
+                                    <Box sx={{ width: "100%"  /*use all horitzontal space*/ }} >
+                                        <Typography
+                                            sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
+                                        >
+                                            Informacion adicional:
+                                        </Typography>
+                                    </Box>
+                                    <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
+                                        {/* Age Field */}
+                                        <Typography
+                                            sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
+                                        >
+                                            Edad:
+                                        </Typography>
+                                        <TextField
+                                            variant="standard"
+                                            InputProps={{
+                                                disableUnderline: true, style: { color: "white" }  // color white letters
+                                            }}
+                                            sx={{
+                                                width: 60,
+                                                bgcolor: "#685F5F",
+                                                borderRadius: 50,
+                                                px: 2,
+                                                py: 0.5,
+                                                ml: -8, // position besides Typographyç
+                                                "&:hover": { bgcolor: "#555353" }
+                                            }}
+                                        />
+                                        {/* Weight Field */}
+                                        <Typography
+                                            sx={{ width: 120, textAlign: "left", fontWeight: "bold", ml: 4 }}
+                                        >
+                                            Peso:
+                                        </Typography>
+                                        <TextField
+                                            variant="standard"
+                                            InputProps={{
+                                                disableUnderline: true, style: { color: "white" }  // color white letters
+                                            }}
+                                            sx={{
+                                                width: 60,
+                                                bgcolor: "#685F5F",
+                                                borderRadius: 50,
+                                                px: 2,
+                                                py: 0.5,
+                                                ml: -8, // position besides Typography
+                                                "&:hover": { bgcolor: "#555353" }
+                                            }}
+                                        />
+                                        {/* Vacunas Field */}
+                                        <Typography
+                                            sx={{ width: 120, textAlign: "left", fontWeight: "bold", ml: 4 }}
+                                        >
+                                            ¿Vacunas?:
+                                        </Typography>
+                                        <Select // Combo box
+                                            variant="standard"
+                                            disableUnderline
+                                            value={vacunas} // initial value equal to vacunas wich is ""
+                                            onChange={(e) => setVacunas(e.target.value)} //on change set value of vacunas to the one selected
+                                            sx={{
+                                                width: 77,
+                                                bgcolor: "#685F5F",
+                                                borderRadius: 50,
+                                                px: 2,
+                                                py: 0.5,
+                                                ml: -2, // position besides Typography
+                                                "&:hover": { bgcolor: "#555353" }
+                                            }}
+                                        >
+                                            <MenuItem value="yes">Si</MenuItem>
+                                            <MenuItem value="no">No</MenuItem>
+                                        </Select>
+                                        {/* Breed Field */}
+                                        <Typography
+                                            sx={{ width: 120, textAlign: "left", fontWeight: "bold", ml: 4 }}
+                                        >
+                                            Raza:
+                                        </Typography>
+                                        <TextField
+                                            variant="standard"
+                                            InputProps={{
+                                                disableUnderline: true, style: { color: "white" }  // color white letters
+                                            }}
+                                            sx={{
+                                                width: 60,
+                                                bgcolor: "#685F5F",
+                                                borderRadius: 50,
+                                                px: 2,
+                                                py: 0.5,
+                                                ml: -8, // position besides Typographyç
+                                                "&:hover": { bgcolor: "#555353" }
+                                            }}
+                                        />
+                                    </Stack>
+                                </Stack>
+                            </Box>}
+                            {/* Pet Notes Tab */}
+                            {tabActual == 1 && <Box> </Box>}
+                        </Box>
+                        {/* Buttons */}
+                        <Box sx={{ // fills the free space before the info and notes tabs  & make the buttons sit at the end of the axis
+                            display: "flex", justifyContent: "flex-end", gap: 6, pb: 3
+                        }}>
+                            <Button
+                                variant="contained"
+                                sx={{
+                                    width: 125,
+                                    height: 35,
+                                    borderRadius: 50,
+                                    bgcolor: "#F02F0A",
+                                    "&:hover": { bgcolor: "#D82E0C" },
+                                }}
+                                onClick={() => setOpen(false)}
+                            >
+                                SALIR
+                            </Button>
+                            <Button
+                                variant="contained"
+                                sx={{
+                                    width: 125,
+                                    height: 35,
+                                    borderRadius: 50,
+                                    bgcolor: "#FBC02D",
+                                    "&:hover": { bgcolor: "#f9a825" },
+                                    color: "black"
+                                }}
+                            >
+                                GUARDAR
+                            </Button>
+                        </Box>
                     </Box>
                 </Dialog>
             </section>
