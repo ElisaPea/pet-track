@@ -1,8 +1,12 @@
 import BasicScreen from "../components/BasicScreen";
 import { Box, Typography, TextField, Button, Stack } from "@mui/material";
-
+import { useNavigate } from "react-router-dom";
+import { SCREEN } from "../constants/constants";
 
 export default function AccountSettingsUser() {
+  // Hook de navegación (debe estar dentro del componente)
+  const navigate = useNavigate();
+
   return (
     <BasicScreen>
       <Box
@@ -167,6 +171,9 @@ export default function AccountSettingsUser() {
 
                 <Button
                   variant="contained"
+                  onClick={() => {
+                                navigate(SCREEN.listVet); 
+                              }}
                   sx={{
                     bgcolor: "#FBC02D", // Amarillo del botón "Acceder"
                     color: "black",

@@ -2,5 +2,6 @@ export const SCREEN = {
   HOME: "/",
   LOGIN: "/login",
   settingsUser: "/AccountSettingsUser",
-  settingsVet: "/AccountSettingsVet"
+  settingsVet: "/AccountSettingsVet",
+  listVet: "/ListVetCenters"
 };
