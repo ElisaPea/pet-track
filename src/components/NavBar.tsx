@@ -76,7 +76,20 @@ export default function NavBar() {
           >
             Perfil
           </Button>
-
+   
+          <Button
+            color="inherit"
+            sx={{
+              textTransform: "none",
+              borderBottom:
+                location.pathname === SCREEN.settingsVet? "2px solid black" : "",
+            }}
+            onClick={() => {
+              navigate(SCREEN.settingsVet); //No es correcto dejarlo en el Home, se debe proteger, si no está el login hecho no debería aparecer. 
+            }}
+          >
+            PerfilVet
+          </Button>
 
           
         </Stack>
