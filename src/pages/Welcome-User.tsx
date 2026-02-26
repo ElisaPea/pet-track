@@ -1,6 +1,6 @@
 import BasicScreenUser from "../components/BasicScreenUser";
 import { Box, Typography, IconButton, Button, Stack, Dialog, Tabs, Tab, TextField, Select, MenuItem } from "@mui/material";
-import { Instagram, LinkedIn, Mail } from "@mui/icons-material";
+import { CenterFocusStrong, Instagram, LinkedIn, Mail } from "@mui/icons-material";
 import { useState } from "react";
 
 
@@ -191,6 +191,7 @@ export default function Welcome_User() {
                     slotProps={{
                         paper: {
                             sx: {
+                                bgcolor: "#E4F7FB",
                                 width: "75vw",
                                 height: "85vh",
                                 maxHeight: "85vh",
@@ -212,7 +213,7 @@ export default function Welcome_User() {
                             <Tab
                                 label="Datos Mascota"
                                 sx={{
-                                    bgcolor: "white",
+                                    bgcolor: "#E4F7FB",
                                     color: "black",
                                     "&.Mui-selected": {
                                         bgcolor: "#BEF1F3",
@@ -224,7 +225,7 @@ export default function Welcome_User() {
                             <Tab
                                 label="Notas"
                                 sx={{
-                                    bgcolor: "white",
+                                    bgcolor: "#E4F7FB",
                                     color: "black",
                                     "&.Mui-selected": {
                                         bgcolor: "#BEF1F3",
@@ -245,7 +246,7 @@ export default function Welcome_User() {
                         }}>
                             {/* Pet Info Tab */}
                             {tabActual == 0 && <Box>
-                                <Stack spacing={5} /*space betwen rows*/ alignItems="center">
+                                <Stack spacing={4} /*space betwen rows*/ alignItems="center">
                                     {/* Pet Name Field */}
                                     <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                                         <Typography
@@ -274,7 +275,7 @@ export default function Welcome_User() {
                                         <Typography
                                             sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
                                         >
-                                            !Comparte una foto de tu mascota!
+                                            !Comparte fotos de tu mascota!
                                         </Typography>
                                         <Button // podria ser un icon button?
                                             sx={{
@@ -301,7 +302,7 @@ export default function Welcome_User() {
                                             Informacion adicional:
                                         </Typography>
                                     </Box>
-                                    <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
+                                    <Stack direction="row" alignItems="center" sx={{ width: "100%", pt: -30 }}>
                                         {/* Age Field */}
                                         <Typography
                                             sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
@@ -393,7 +394,85 @@ export default function Welcome_User() {
                                 </Stack>
                             </Box>}
                             {/* Pet Notes Tab */}
-                            {tabActual == 1 && <Box> </Box>}
+                            {tabActual == 1 && <Box>
+                                <Box
+                                    sx={{ // Box that contains and share the space between the two note boxes
+                                        display: "wrap-flex", //  makes the content share evenly the space
+                                        justifyContent: "center", // justify the contents in the center
+                                        columnGap: 8,
+                                        mt: 3
+                                    }}
+                                >
+                                    {/* WHITE BOX */}
+                                    <Box
+                                        sx={{ // Note 
+                                            bgcolor: "white",
+                                            height: 400, // note size
+                                            width: 450,
+                                            borderRadius: 10,
+                                            overflow: "hidden",
+                                            px: 3.5, // text placement inside
+                                            py: 2,
+                                            border: "3px solid transparent", // transparent border
+                                            "&:hover": {
+                                                border: "3px solid #BEF1F3" // color blue border on hover
+                                            }
+                                        }}
+                                    >   {/* TOP TEXT */}
+                                        <Typography>
+                                            Notas del centro vet:
+                                        </Typography>
+                                        {/* TEXT FIELD */}
+                                        <TextField
+                                            multiline // allow multiple lines
+                                            rows={14} // only 14 rows ( matches the size of the white box)
+                                            fullWidth // uses all the box width
+                                            variant="standard"
+                                            InputProps={{
+                                                disableUnderline: true, style: { color: "black" }  // color black letters
+                                            }}
+                                            sx={{
+                                                mt: 1, // top & bottom separation
+                                                mb: -1
+                                            }}
+                                        >
+                                        </TextField>
+                                    </Box>
+                                    {/* WHITE BOX */}
+                                    <Box
+                                        sx={{
+                                            bgcolor: "white",
+                                            height: 400,
+                                            width: 450,
+                                            borderRadius: 10,
+                                            px: 3.5,
+                                            py: 2,
+                                            border: "3px solid transparent",
+                                            "&:hover": { border: "3px solid #BEF1F3" }
+                                        }}
+
+                                    >   {/* TOP TEXT */}
+                                        <Typography>
+                                            Notas del usuario:
+                                        </Typography>
+                                        {/* TEXT FIELD */}
+                                        <TextField
+                                            multiline
+                                            rows={14}
+                                            fullWidth
+                                            variant="standard"
+                                            InputProps={{
+                                                disableUnderline: true, style: { color: "black" }  // color black letters
+                                            }}
+                                            sx={{
+                                                mt: 1,
+                                                mb: -1
+                                            }}
+                                        >
+                                        </TextField>
+                                    </Box>
+                                </Box>
+                            </Box>}
                         </Box>
                         {/* Buttons */}
                         <Box sx={{ // fills the free space before the info and notes tabs  & make the buttons sit at the end of the axis
