@@ -1,11 +1,57 @@
 import BasicScreen from "../components/BasicScreen";
-import { Box, Typography, TextField, Button, Stack } from "@mui/material";
+import { Box, Typography, TextField, Button, Stack, Collapse, Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
+import React, { useState, type ChangeEvent } from "react";
 
 export default function AccountSettingsUser() {
   // Hook de navegación (debe estar dentro del componente)
   const navigate = useNavigate();
+  //Nuevo estado para controlar mensaje de error.
+  const [error, setError] = useState(false);
+  //Nuevo estado para controlar mensaje guardado con éxito.
+  const [success, setSuccess] = useState(false);
+
+  //ArrayList Campos
+const [formData, setFormData] = useState({
+    nombre: "",
+    email: "",
+    telefono: "+34 ",
+    direccion: "",
+  });
+
+
+  // Manejador de cambios en los inputs
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError(false); // Limpiar error mientras escriben
+    // Ocultamos el éxito si el usuario vuelve a escribir
+    if (success) setSuccess(false);
+  };
+  //Funcion campos obligatorios
+  const handleGuardar = () => {
+  const { nombre, email, telefono } = formData;
+    // Verificamos si los obligatorios están vacíos o si el teléfono solo tiene el prefijo
+    if (!nombre.trim() || !email.trim() || telefono.trim() === "+34") {
+      setError(true);
+    } else {
+      setError(false);
+      console.log("Datos guardados con éxito:", formData);
+      // Activamos el mensaje de éxito
+      setSuccess(true);
+      console.log("Datos guardados con éxito:", formData);
+      // Vaciamos el formulario (Reset)
+      setFormData({
+        nombre: "",
+        email: "",
+        telefono: "+34 ",
+        direccion: "",
+      });
+      setTimeout(() => setSuccess(false), 3000);
+
+      // Aquí va conexión a Supabase más adelante
+    }
+};
 
   return (
     <BasicScreen>
@@ -42,17 +88,35 @@ export default function AccountSettingsUser() {
         >
           {/* Formulario */}
           <Box component="form" noValidate sx={{ mt: 1 }}>
+       
+          {/* Mensaje de Error Visual */}
+          <Collapse in={error}>
+            <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+              Por favor, rellena todos los campos obligatorios (Nombre, Email y Teléfono).
+            </Alert>
+          </Collapse>  
+          {/* Mensaje de Error Guardado */}
+        <Collapse in={success}>
+         <Alert severity="success" sx={{ mb: 3, borderRadius: 5 }}>
+            ¡Datos guardados correctamente!
+          </Alert>
+        </Collapse>
+
             <Stack spacing={3} alignItems="center">
-              {/* Campo Correo */}
+              {/* Campo Nombre*/}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
                   sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
                 >
-                  Nombre:
+                  Nombre*:
                 </Typography>
                 <TextField
                   fullWidth
+                  name = "nombre"
                   variant="standard"
+                  value={formData.nombre}
+                  onChange={handleChange}
+                  error={error && !formData.nombre}
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "#6D5D5D",
@@ -69,13 +133,17 @@ export default function AccountSettingsUser() {
               {/* Campo email */}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 300, textAlign: "left", fontWeight: "bold" }}
                 >
-                  Correo electrónico:
+                  Correo electrónico*:
                 </Typography>
                 <TextField
                   fullWidth
                   variant="standard"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={error && !formData.email}
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "#6D5D5D",
@@ -96,12 +164,15 @@ export default function AccountSettingsUser() {
                 <Typography
                   sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
                 >
-                  Número de teléfono:
+                  Número de teléfono*:
                 </Typography>
                 <TextField
                   fullWidth
                   variant="standard" 
-                  defaultValue="+34 "
+                  name="telefono"
+                  value={formData.telefono}
+                  onChange={handleChange}
+                  error={error && formData.telefono.trim() === "+34"}
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "#6D5D5D",
@@ -120,13 +191,15 @@ export default function AccountSettingsUser() {
               {/* Campo Dirección */}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 150, textAlign: "left", fontWeight: "bold" }}
                 >
                   Dirección:
                 </Typography>
                 <TextField
                   fullWidth
                   variant="standard"
+                  value={formData.direccion}
+                  onChange={handleChange}
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "#6D5D5D",
@@ -143,16 +216,17 @@ export default function AccountSettingsUser() {
               {/* Campo Centro vet asociado */}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 400, textAlign: "left", fontWeight: "bold"}}
                 >
                   Centro veterinario asociado:
                 </Typography>
                 <TextField
                   fullWidth
                   variant="standard"
-                  InputProps={{ disableUnderline: true }}
+                  defaultValue="Ninguno seleccionado"
+                  InputProps={{ disableUnderline: true, readOnly: true }}
                   sx={{
-                    bgcolor: "#6D5D5D",
+                    bgcolor: "#9E9E9E",
                     borderRadius: 50,
                     px: 2,
                     py: 0.4,
@@ -166,10 +240,12 @@ export default function AccountSettingsUser() {
               {/* Botón guardar*/}
               <Box sx={{ width: "100%",
               display: "flex",
-              justifyContent: "flex-end",
+              justifyContent: "space-between",
+              alignItems: "center",
               pt: 2 }}>
 
-                <Button
+
+              <Button
                   variant="contained"
                   onClick={() => {
                                 navigate(SCREEN.listVet); 
@@ -184,8 +260,24 @@ export default function AccountSettingsUser() {
                     "&:hover": { bgcolor: "#f9a825" },
                   }}
                 >
+                  Buscar Centro Veterinario
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick= {handleGuardar}
+                  sx={{
+                    bgcolor: "#FBC02D", // Amarillo del botón "Acceder"
+                    color: "black",
+                    fontWeight: "bold",
+                    borderRadius: 2,
+                    mb: 2,
+                    border: "2px solid #64B5F6", // Borde azul del diseño
+                    "&:hover": { bgcolor: "#f9a825" },
+                  }}
+                >
                   GUARDAR
                 </Button>
+
               </Box>
             </Stack>
           </Box>
