@@ -62,6 +62,36 @@ export default function NavBar() {
           >
             Log in
           </Button>
+          
+          <Button
+            color="inherit"
+            sx={{
+              textTransform: "none",
+              borderBottom:
+                location.pathname === SCREEN.settingsUser ? "2px solid black" : "",
+            }}
+            onClick={() => {
+              navigate(SCREEN.settingsUser); //No es correcto dejarlo en el Home, se debe proteger, si no está el login hecho no debería aparecer. 
+            }}
+          >
+            Perfil
+          </Button>
+   
+          <Button
+            color="inherit"
+            sx={{
+              textTransform: "none",
+              borderBottom:
+                location.pathname === SCREEN.settingsVet? "2px solid black" : "",
+            }}
+            onClick={() => {
+              navigate(SCREEN.settingsVet); //No es correcto dejarlo en el Home, se debe proteger, si no está el login hecho no debería aparecer. 
+            }}
+          >
+            PerfilVet
+          </Button>
+
+          
         </Stack>
       </Toolbar>
     </AppBar>
