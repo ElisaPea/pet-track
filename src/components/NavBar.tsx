@@ -7,6 +7,17 @@ export default function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // I added this to dynamically update the NavBar title based on the current page.
+  // 1. Mapping object for the titles; these can be changed as you see fit, they are just examples for now.
+  const titles = {
+    [SCREEN.HOME]: "Bienvenido a Pet Track",
+    [SCREEN.LOGIN]: "Iniciar Sesión",
+    // Add more as needed...
+  };
+
+  // 2. Get the current title based on the pathname. Defaults to 'Pet Track' if no match is found.
+  const currentTitle = titles[location.pathname] || "Pet Track";
+
   return (
     <AppBar
       position="static"
@@ -14,6 +25,8 @@ export default function NavBar() {
       sx={{ bgcolor: "#B2EBF2", color: "black", width: "100%" }}
     >
       <Toolbar sx={{ justifyContent: "space-between" }}>
+
+        {/* LEFT SECTION: Logo and App Name */}
         <Stack direction="row" alignItems="center" spacing={1}>
           <Box
             sx={{
@@ -35,6 +48,22 @@ export default function NavBar() {
             Pet Track
           </Typography>
         </Stack>
+
+        {/* CENTER SECTION: Dynamic Title */}
+        <Typography
+          variant="h6"
+          sx={{
+            flex: 1,
+            textAlign: "center",
+            fontWeight: "bold",
+            fontSize: "1.1rem"
+          }}
+        >
+          {/* When data is fetched, we need to include the center name and/or user names for better personalization, if you agree. */}
+          {currentTitle}
+        </Typography>
+
+        {/* RIGHT SECTION: Navigation Buttons */}
         <Stack direction="row" spacing={3}>
           <Button
             color="inherit"
@@ -62,36 +91,6 @@ export default function NavBar() {
           >
             Log in
           </Button>
-          
-          <Button
-            color="inherit"
-            sx={{
-              textTransform: "none",
-              borderBottom:
-                location.pathname === SCREEN.settingsUser ? "2px solid black" : "",
-            }}
-            onClick={() => {
-              navigate(SCREEN.settingsUser); //No es correcto dejarlo en el Home, se debe proteger, si no está el login hecho no debería aparecer. 
-            }}
-          >
-            Perfil
-          </Button>
-   
-          <Button
-            color="inherit"
-            sx={{
-              textTransform: "none",
-              borderBottom:
-                location.pathname === SCREEN.settingsVet? "2px solid black" : "",
-            }}
-            onClick={() => {
-              navigate(SCREEN.settingsVet); //No es correcto dejarlo en el Home, se debe proteger, si no está el login hecho no debería aparecer. 
-            }}
-          >
-            PerfilVet
-          </Button>
-
-          
         </Stack>
       </Toolbar>
     </AppBar>
