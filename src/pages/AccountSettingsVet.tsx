@@ -5,8 +5,14 @@ import React, { useState, type ChangeEvent } from "react";
 export default function AccountSettingsUser() {
   //Nuevo estado para controlar mensaje de error.
   const [error, setError] = useState(false);
+  //Nuevo estado para controlar mensaje de error.
+  const [error2, setError2] = useState(false);
   //Nuevo estado para controlar mensaje guardado con éxito.
   const [success, setSuccess] = useState(false);
+  //Añadimos un estado para el mensaje de error dinámico. 
+  const [errorMessage, setErrorMessage] = useState("");
+
+
 
   //ArrayList Campos
 const [formData, setFormData] = useState({
@@ -22,21 +28,51 @@ const [formData, setFormData] = useState({
 const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError(false); // Limpiar error mientras escriben
+    if (error2) setError2(false); // Limpiar error mientras escriben
     // Ocultamos el éxito si el usuario vuelve a escribir
     if (success) setSuccess(false);
+    
   };
   //Funcion campos obligatorios
   const handleGuardar = () => {
-  const { nombre, email, telefono } = formData;
-    // Verificamos si los obligatorios están vacíos o si el teléfono solo tiene el prefijo
-    if (!nombre.trim() || !email.trim() || telefono.trim() === "+34"||!formData.numeroColegiado.trim()) {
+  
+    const { nombre, email, telefono } = formData;
+
+    
+    // Reiniciamos estados al principio para evitar que se pisen
+    setError(false);
+    setError2(false);
+    setSuccess(false);
+    setErrorMessage("");
+
+     //Reglas de validación
+    
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;// Validación Email: Verifica formato estándar (texto@texto.extensión)
+    const soloNumeros = telefono.replace(/\D/g, ""); // Validación Teléfono: Extraemos solo los números para contar
+    const esTelefonoValido = soloNumeros.length === 11; // +34 (2) + 9 números
+    const colegiadoValid = /^\d{4,6}$/.test(formData.numeroColegiado); //Validación específica para Colegiado (Solo números y longitud 4-6)
+    
+    // Validación de campos VACÍOS
+    if (!nombre.trim() || !email.trim() || telefono.trim() === "+34"|| !formData.numeroColegiado.trim()) {
+      setErrorMessage("Por favor, rellena todos los campos obligatorios (Nombre, Email y Teléfono).");
       setError(true);
-    } else {
+      return; 
+    }
+
+        //Validación de FORMATO
+    if (!emailValid.test(email) || !esTelefonoValido || !colegiadoValid) {
+      setErrorMessage("Por favor, rellena con el formato adecuado los campos obligatorios (Email, Teléfono de 9 dígitos y NºColegiado).");
+      setError2(true);
+      return; 
+    }
+
+      //Exito: 
       setError(false);
-      console.log("Datos guardados con éxito:", formData);
-      // Activamos el mensaje de éxito
+      setError2(false);
       setSuccess(true);
+      
       console.log("Datos guardados con éxito:", formData);
+
       // Vaciamos el formulario (Reset)
       setFormData({
         nombre: "",
@@ -48,7 +84,6 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setTimeout(() => setSuccess(false), 3000);
 
       // Aquí va conexión a Supabase más adelante
-    }
 };
 
   return (
@@ -93,6 +128,15 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               Por favor, rellena todos los campos obligatorios (Nombre, Email, Teléfono y Número de colegiado).
             </Alert>
           </Collapse>  
+
+          {/* Mensaje de Error Visual  Rellenar correctamente los campos obligatorios*/}
+          <Collapse in={error2}>
+            <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+            Por favor, rellena con el formato adecuado los campos obligatorios(Email, Teléfono y Número Colegiado).
+            </Alert>
+          </Collapse>  
+
+  
           {/* Mensaje de Error Guardado */}
         <Collapse in={success}>
          <Alert severity="success" sx={{ mb: 3, borderRadius: 5 }}>

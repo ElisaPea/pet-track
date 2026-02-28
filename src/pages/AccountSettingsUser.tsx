@@ -41,6 +41,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
     // Reiniciamos estados al principio para evitar que se pisen
     setError(false);
+    setError2(false);
     setSuccess(false);
     setErrorMessage("");
 
