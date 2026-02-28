@@ -1,7 +1,10 @@
 import BasicScreen from "../components/BasicScreen";
 import { Box, Typography, TextField, Button, Stack, Paper } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-
+import IconButton from "@mui/material/IconButton";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useNavigate } from "react-router-dom";
+import { SCREEN } from "../constants/constants";
 
 
 {/* Array nombres centro veterinarios*/}
@@ -15,11 +18,17 @@ const vetCentersData = [
     {id:6, nombre: "nombreVet", email: "info@vet.es"}
 ]
 
+
 export default function ListVetCenters() {
-const handleEmail = (emailCentro: string, nombreCentro: string) => {
+const navigate = useNavigate(); //Declarar para navegar. 
+const handleEmail = (emailCentro: string, nombreCentro: string) => { //Botón para email. 
   console.log(`Enviando solicitud a: ${nombreCentro} (${emailCentro})`);
   window.location.href = `mailto:${emailCentro}?subject=Solicitud de Asociación&body=Hola, me gustaría asociarme a su centro...`;}
 
+  //Buscar en el buscador. 
+  function setSearchTerm(value: string): void {
+    throw new Error("Function not implemented.");
+  }
 
   return (
     <BasicScreen>
@@ -30,16 +39,31 @@ const handleEmail = (emailCentro: string, nombreCentro: string) => {
           alignItems: "center",
           justifyContent: "center",
           mt: 8, // Margen superior para centrar visualmente
+          position: "relative",
         }}
-
-        >
+      >
+          {/* Botón de atrás arriba, fuera del recuadro y amarillo */}
+          <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-start", mb: 2 }}>
+          <IconButton
+            onClick={() => navigate(SCREEN.settingsUser)}
+            sx={{
+              bgcolor: "#FBC02D", // Amarillo como tus otros botones
+              color: "black",
+              "&:hover": { bgcolor: "#f9a825" },
+              boxShadow: "0px 2px 5px rgba(0,0,0,0.2)", // Un poco de sombra para que resalte
+            }}
+          >
+          <ArrowBackIcon fontSize="medium" />
+          </IconButton>
+        </Box>
+        
           {/* Tipografia Asociarte a un centro veterinario */}
             <Typography variant="h4" sx={{ fontWeight: "600", color: "#000000", mb: 0.5 }}>
               Asociate a un centro veterinario
             </Typography>
 
             {/* Línea decorativa */}
-            <Box sx={{ width: 60, height: 4, bgcolor: "#00BCD4", mb: 4 }} />
+            <Box sx={{ width: 100, height: 4, bgcolor: "#00BCD4", mb: 5 }} />
 
         {/* Contenedor Principal (Cuadrado azul claro) */}
         <Box
@@ -67,10 +91,10 @@ const handleEmail = (emailCentro: string, nombreCentro: string) => {
                 <TextField
                   fullWidth
                   variant="standard"
-                  placeholder="Filtra la lista..." //conectar el buscador con onChange ={(e) =>setSearchTerm(e.target.value)}
+                  placeholder="Filtra la lista..." 
+                  onChange ={(e) =>setSearchTerm(e.target.value)}//conectar el buscador con onChange ={(e) =>setSearchTerm(e.target.value)}
                   InputProps={{
-                    disableUnderline: true,
-                    // Añadimos la lupa para realizar busqueda
+                    disableUnderline: true,// Añadimos la lupa para realizar busqueda
                      startAdornment: (
                     <SearchIcon sx={{ color: "black", ml: 1, opacity: 0.7 }} />
                      ),
@@ -90,6 +114,11 @@ const handleEmail = (emailCentro: string, nombreCentro: string) => {
               </Stack>
               </Stack>      
           </Box>
+  
+
+        {/* Línea decorativa ajustada */}
+        <Box sx={{ width: 200, height: 4, bgcolor: "#00BCD4", mb: 4, alignSelf: "center" }} />
+
         {/* COMIENZA TABLA DE DATOS */}
         <Paper elevation={0} sx={{ border: "2px solid #333", borderRadius: 0, mt: 4}}>
           {vetCentersData.map((center, index) => (
