@@ -11,19 +11,29 @@ import {
 } from "@mui/material";
 import { Instagram, LinkedIn, Mail, ArrowForward } from "@mui/icons-material";
 import cat from "../assets/cat-test.png";
+import { useNavigate } from "react-router-dom";
+import { SCREEN } from "../constants/constants";
 
-export default function Home() {
+export default function LandingPage() {
+  const navigate = useNavigate();
+
   return (
     <BasicScreen>
       <Container maxWidth="md">
         {/* HEADER / LOGO PRINCIPAL */}
-        <Box sx={{ textAlign: "center", mt: 6, mb: 4 }}>
+        <Box
+          sx={{
+            textAlign: "center",
+            mt: { xs: 4, sm: 6 },
+            mb: { xs: 3, sm: 4 },
+          }}
+        >
           <Box
             sx={{
               display: "inline-block",
               bgcolor: "#B2EBF2",
-              px: 4,
-              py: 2,
+              px: { xs: 3, sm: 4 },
+              py: { xs: 1.5, sm: 2 },
               borderRadius: "50px",
               boxShadow: 1,
             }}
@@ -38,15 +48,29 @@ export default function Home() {
         </Box>
 
         {/* SLIDER IMAGES (PLACEHOLDERS) */}
-        <Grid container spacing={2} justifyContent="center" sx={{ mb: 6 }}>
+        <Grid
+          container
+          spacing={2}
+          justifyContent="center"
+          sx={{ mb: { xs: 4, sm: 6 } }}
+        >
           {[1, 2, 3].map((item) => (
-            <Grid size={{ xs: 4 }} key={item}>
-              <Card sx={{ borderRadius: 8, height: 180 }}>
-                <CardMedia component="img" image={cat} alt="Pet" />
+            <Grid size={{ xs: 4, sm: 4 }} key={item}>
+              <Card sx={{ borderRadius: 2, aspectRatio: "1.5 / 1" }}>
+                <CardMedia
+                  component="img"
+                  image={cat}
+                  alt="Pet"
+                  sx={{ objectFit: "cover" }}
+                />
               </Card>
             </Grid>
           ))}
-          <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ mt: 2, justifyContent: "center" }}
+          >
             <Box
               sx={{
                 width: 10,
@@ -75,7 +99,12 @@ export default function Home() {
         </Grid>
 
         {/* SECCIÓN SERVICIOS */}
-        <Typography variant="h4" textAlign="center" gutterBottom sx={{ mb: 4 }}>
+        <Typography
+          variant="h4"
+          textAlign="center"
+          gutterBottom
+          sx={{ mb: { xs: 3, sm: 4 } }}
+        >
           Servicios
           <Box
             sx={{
@@ -89,7 +118,12 @@ export default function Home() {
         </Typography>
 
         {/* BLOQUE VETERINARIO */}
-        <Grid container spacing={4} alignItems="center" sx={{ mb: 8 }}>
+        <Grid
+          container
+          spacing={4}
+          alignItems="center"
+          sx={{ mb: { xs: 6, sm: 8 } }}
+        >
           <Grid size={{ xs: 12, md: 6 }}>
             <Box
               component="img"
@@ -110,6 +144,9 @@ export default function Home() {
             </Box>
             <Box textAlign="right">
               <IconButton
+                onClick={() => {
+                  navigate(SCREEN.LOGIN);
+                }}
                 sx={{
                   bgcolor: "#00BCD4",
                   color: "white",
@@ -140,8 +177,11 @@ export default function Home() {
                 en cualquier momento.
               </Typography>
             </Box>
-            <Box textAlign="right">
+            <Box textAlign="left">
               <IconButton
+                onClick={() => {
+                  navigate(SCREEN.LOGIN);
+                }}
                 sx={{
                   bgcolor: "#00BCD4",
                   color: "white",
@@ -160,85 +200,7 @@ export default function Home() {
             />
           </Grid>
         </Grid>
-
-        {/* FOOTER */}
-        <Box sx={{ mt: 10, textAlign: "center" }}>
-          <Stack direction="row" spacing={2} justifyContent="center">
-            <IconButton>
-              <Instagram />
-            </IconButton>
-            <IconButton>
-              <LinkedIn />
-            </IconButton>
-            <IconButton>
-              <Mail />
-            </IconButton>
-          </Stack>
-        </Box>
       </Container>
     </BasicScreen>
   );
 }
-
-//   const [count, setCount] = useState(0);
-//   const [visibleColors, setVisibleColors] = useState(false);
-// <>
-//   <button
-//     className="border p-2 rounded-xl bg-red-500 hover:bg-red-300 cursor-pointer text-white"
-//     onClick={() => setVisibleColors(!visibleColors)}
-//   >
-//     {visibleColors ? "Hide colors" : "Show colors"}
-//   </button>
-
-//   {visibleColors && (
-//     <div className="flex flex-col gap-2">
-//       <div className="bg-red-500 text-white">red - tailwind</div>
-//       <div style={{ backgroundColor: "#ef4444", color: "#ffffff" }}>
-//         red - css
-//       </div>
-//       <div className="bg-blue-500 text-white">blue - tailwind</div>
-//       <div style={{ backgroundColor: "#3b82f6", color: "#ffffff" }}>
-//         blue - css
-//       </div>
-//       <div className="bg-green-500 text-white">green - tailwind</div>
-//       <div style={{ backgroundColor: "#16a34a", color: "#ffffff" }}>
-//         green - css
-//       </div>
-//       <div className="bg-yellow-400 text-black">yellow - tailwind</div>
-//       <div style={{ backgroundColor: "#f59e0b", color: "#ffffff" }}>
-//         yellow - css
-//       </div>
-//       <div className="bg-purple-500 text-white">purple - tailwind</div>
-//       <div style={{ backgroundColor: "#9333ea", color: "#ffffff" }}>
-//         purple - css
-//       </div>
-//       <div className="bg-gray-300 text-black">gray - tailwind</div>
-//       <div style={{ backgroundColor: "#9ca3af", color: "#ffffff" }}>
-//         gray - css
-//       </div>
-//     </div>
-//   )}
-
-//   <div className="items-center flex flex-col">
-//     <a href="https://react.dev" target="_blank">
-//       <img src={reactLogo} className="logo react" alt="React logo" />
-//     </a>
-
-//     <h1 className="text-2xl font-bold">Vite + React</h1>
-//     <h2>PRUEBA OSCAR</h2>
-//     <div className="card">
-//       <button
-//         className="bg-blue-500 text-white p-2 rounded"
-//         onClick={() => setCount((count) => count + 1)}
-//       >
-//         count is {count}
-//       </button>
-//       <p className="text-lg">
-//         Edit <code>src/App.tsx</code> and save to test HMR
-//       </p>
-//     </div>
-//     <p className="text-sm">
-//       Pulsa aquí para ver más sobre los logos
-//     </p>
-//   </div>
-// </>

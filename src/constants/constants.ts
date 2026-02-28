@@ -1,4 +1,4 @@
 export const SCREEN = {
-  HOME: "/",
+  LANDING_PAGE: "/",
   LOGIN: "/login",
 };
