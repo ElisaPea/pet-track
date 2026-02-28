@@ -9,8 +9,12 @@ export default function AccountSettingsUser() {
   const navigate = useNavigate();
   //Nuevo estado para controlar mensaje de error.
   const [error, setError] = useState(false);
+  //Nuevo estado para controlar mensaje de error.
+  const [error2, setError2] = useState(false);
   //Nuevo estado para controlar mensaje guardado con éxito.
   const [success, setSuccess] = useState(false);
+  //Añadimos un estado para el mensaje de error dinámico. 
+  const [errorMessage, setErrorMessage] = useState("");
 
   //ArrayList Campos
 const [formData, setFormData] = useState({
@@ -25,32 +29,60 @@ const [formData, setFormData] = useState({
 const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError(false); // Limpiar error mientras escriben
+    if (error2) setError2(false); // Limpiar error mientras escriben
     // Ocultamos el éxito si el usuario vuelve a escribir
     if (success) setSuccess(false);
   };
+
   //Funcion campos obligatorios
   const handleGuardar = () => {
-  const { nombre, email, telefono } = formData;
-    // Verificamos si los obligatorios están vacíos o si el teléfono solo tiene el prefijo
+
+    const { nombre, email, telefono } = formData;
+
+    // Reiniciamos estados al principio para evitar que se pisen
+    setError(false);
+    setSuccess(false);
+    setErrorMessage("");
+
+    //Reglas de validación
+    
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;// Validación Email: Verifica formato estándar (texto@texto.extensión)
+    const soloNumeros = telefono.replace(/\D/g, ""); // Validación Teléfono: Extraemos solo los números para contar
+    const esTelefonoValido = soloNumeros.length === 11; // +34 (2) + 9 números
+
+    // Validación de campos VACÍOS
     if (!nombre.trim() || !email.trim() || telefono.trim() === "+34") {
+      setErrorMessage("Por favor, rellena todos los campos obligatorios (Nombre, Email y Teléfono).");
       setError(true);
-    } else {
+      return; 
+    }
+
+    //Validación de FORMATO
+    if (!emailValid.test(email) || !esTelefonoValido) {
+      setErrorMessage("Por favor, rellena con el formato adecuado los campos obligatorios (Email y Teléfono de 9 dígitos).");
+      setError2(true);
+      return; 
+    }
+
+      //Exito: 
       setError(false);
-      console.log("Datos guardados con éxito:", formData);
-      // Activamos el mensaje de éxito
+      setError2(false);
       setSuccess(true);
+
       console.log("Datos guardados con éxito:", formData);
-      // Vaciamos el formulario (Reset)
+
+      // Reset del formulario
       setFormData({
-        nombre: "",
-        email: "",
-        telefono: "+34 ",
-        direccion: "",
+      nombre: "",
+      email: "",
+      telefono: "+34 ",
+      direccion: "",
       });
       setTimeout(() => setSuccess(false), 3000);
 
       // Aquí va conexión a Supabase más adelante
-    }
+
+
 };
 
   return (
@@ -89,12 +121,20 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           {/* Formulario */}
           <Box component="form" noValidate sx={{ mt: 1 }}>
        
-          {/* Mensaje de Error Visual */}
+          {/* Mensaje de Error Visual Rellenar campos obligatorios */}
           <Collapse in={error}>
             <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
               Por favor, rellena todos los campos obligatorios (Nombre, Email y Teléfono).
             </Alert>
           </Collapse>  
+
+          {/* Mensaje de Error Visual  Rellenar correctamente los campos obligatorios*/}
+          <Collapse in={error2}>
+            <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+              Por favor, rellena con el formato adecuado los campos obligatorios(Email, Teléfono).
+            </Alert>
+          </Collapse>  
+
           {/* Mensaje de Error Guardado */}
         <Collapse in={success}>
          <Alert severity="success" sx={{ mb: 3, borderRadius: 5 }}>
@@ -162,7 +202,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
               {/* Campo telefono */}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 160, textAlign: "left", fontWeight: "bold" }}
                 >
                   Número de teléfono*:
                 </Typography>
