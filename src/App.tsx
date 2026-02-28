@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
-import HomeUser from "./pages/HomeUser";
+import HomeVet from "./pages/HomeVet";
 import { SCREEN } from "./constants/constants";
 
 function App() {
@@ -11,7 +11,7 @@ function App() {
       <Routes>
         <Route path={SCREEN.HOME} element={<Home />} />
         <Route path={SCREEN.LOGIN} element={<Login />} />
-        <Route path={SCREEN.HOME_USER} element={<HomeUser />} />
+        <Route path={SCREEN.HOME_VET} element={<HomeVet />} />
       </Routes>
     </BrowserRouter>
   );
