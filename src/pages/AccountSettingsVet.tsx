@@ -1,8 +1,56 @@
 import BasicScreen from "../components/BasicScreen";
-import { Box, Typography, TextField, Button, Stack } from "@mui/material";
+import { Box, Typography, TextField, Button, Stack, Collapse, Alert } from "@mui/material";
+import React, { useState, type ChangeEvent } from "react";
+
+export default function AccountSettingsUser() {
+  //Nuevo estado para controlar mensaje de error.
+  const [error, setError] = useState(false);
+  //Nuevo estado para controlar mensaje guardado con éxito.
+  const [success, setSuccess] = useState(false);
+
+  //ArrayList Campos
+const [formData, setFormData] = useState({
+    nombre: "",
+    email: "",
+    telefono: "+34 ",
+    direccion: "",
+    numeroColegiado: "",
+  });
 
 
-export default function AccountSettingsVet() {
+  // Manejador de cambios en los inputs
+const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError(false); // Limpiar error mientras escriben
+    // Ocultamos el éxito si el usuario vuelve a escribir
+    if (success) setSuccess(false);
+  };
+  //Funcion campos obligatorios
+  const handleGuardar = () => {
+  const { nombre, email, telefono } = formData;
+    // Verificamos si los obligatorios están vacíos o si el teléfono solo tiene el prefijo
+    if (!nombre.trim() || !email.trim() || telefono.trim() === "+34"||!formData.numeroColegiado.trim()) {
+      setError(true);
+    } else {
+      setError(false);
+      console.log("Datos guardados con éxito:", formData);
+      // Activamos el mensaje de éxito
+      setSuccess(true);
+      console.log("Datos guardados con éxito:", formData);
+      // Vaciamos el formulario (Reset)
+      setFormData({
+        nombre: "",
+        email: "",
+        telefono: "+34 ",
+        direccion: "",
+        numeroColegiado: "",
+      });
+      setTimeout(() => setSuccess(false), 3000);
+
+      // Aquí va conexión a Supabase más adelante
+    }
+};
+
   return (
     <BasicScreen>
       <Box
@@ -38,17 +86,35 @@ export default function AccountSettingsVet() {
         >
           {/* Formulario */}
           <Box component="form" noValidate sx={{ mt: 1 }}>
+       
+          {/* Mensaje de Error Visual */}
+          <Collapse in={error}>
+            <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+              Por favor, rellena todos los campos obligatorios (Nombre, Email, Teléfono y Número de colegiado).
+            </Alert>
+          </Collapse>  
+          {/* Mensaje de Error Guardado */}
+        <Collapse in={success}>
+         <Alert severity="success" sx={{ mb: 3, borderRadius: 5 }}>
+            ¡Datos guardados correctamente!
+          </Alert>
+        </Collapse>
+
             <Stack spacing={3} alignItems="center">
-              {/* Campo Correo */}
+              {/* Campo Nombre*/}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
                   sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
                 >
-                  Nombre:
+                  Nombre*:
                 </Typography>
                 <TextField
                   fullWidth
+                  name = "nombre"
                   variant="standard"
+                  value={formData.nombre}
+                  onChange={handleChange}
+                  error={error && !formData.nombre}
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "#6D5D5D",
@@ -65,13 +131,17 @@ export default function AccountSettingsVet() {
               {/* Campo email */}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 300, textAlign: "left", fontWeight: "bold" }}
                 >
-                  Correo electrónico:
+                  Correo electrónico*:
                 </Typography>
                 <TextField
                   fullWidth
                   variant="standard"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={error && !formData.email}
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "#6D5D5D",
@@ -92,12 +162,15 @@ export default function AccountSettingsVet() {
                 <Typography
                   sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
                 >
-                  Número de teléfono:
+                  Número de teléfono*:
                 </Typography>
                 <TextField
                   fullWidth
                   variant="standard" 
-                  defaultValue="+34 "
+                  name="telefono"
+                  value={formData.telefono}
+                  onChange={handleChange}
+                  error={error && formData.telefono.trim() === "+34"}
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "#6D5D5D",
@@ -116,13 +189,15 @@ export default function AccountSettingsVet() {
               {/* Campo Dirección */}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 150, textAlign: "left", fontWeight: "bold" }}
                 >
                   Dirección:
                 </Typography>
                 <TextField
                   fullWidth
                   variant="standard"
+                  value={formData.direccion}
+                  onChange={handleChange}
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "#6D5D5D",
@@ -139,14 +214,17 @@ export default function AccountSettingsVet() {
               {/* Campo Centro vet asociado */}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 400, textAlign: "left", fontWeight: "bold"}}
                 >
-                  Nº de colegiado:
+                  Nº Colegiado*:
                 </Typography>
                 <TextField
                   fullWidth
                   variant="standard"
-                  InputProps={{ disableUnderline: true }}
+                  onChange={handleChange}
+                  name="numeroColegiado"
+                  value={formData.numeroColegiado}
+                  InputProps={{ disableUnderline: true}}
                   sx={{
                     bgcolor: "#6D5D5D",
                     borderRadius: 50,
@@ -162,11 +240,13 @@ export default function AccountSettingsVet() {
               {/* Botón guardar*/}
               <Box sx={{ width: "100%",
               display: "flex",
-              justifyContent: "flex-end",
+              justifyContent: "space-between",
+              alignItems: "center",
               pt: 2 }}>
 
                 <Button
                   variant="contained"
+                  onClick= {handleGuardar}
                   sx={{
                     bgcolor: "#FBC02D", // Amarillo del botón "Acceder"
                     color: "black",
@@ -179,6 +259,7 @@ export default function AccountSettingsVet() {
                 >
                   GUARDAR
                 </Button>
+
               </Box>
             </Stack>
           </Box>
