@@ -82,7 +82,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setTimeout(() => setSuccess(false), 3000);
 
       // Aquí va conexión a Supabase más adelante
-
+    
 
 };
 
