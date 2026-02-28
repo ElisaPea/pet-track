@@ -7,7 +7,7 @@ export default function HomeUser() {
         <BasicScreen>
             <Box sx={{ textAlign: "center", mt: 4, mb: 4 }}>
                 <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                    Bienvenido a PetTrack
+                    Bienvenido Malcon
                 </Typography>
                 <Typography variant="subtitle1" sx={{ color: "gray" }}>
                     Aquí puedes gestionar la salud de tus mascotas
