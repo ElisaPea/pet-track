@@ -1,5 +1,5 @@
 export const SCREEN = {
-  HOME: "/",
+  LANDING_PAGE: "/",
   LOGIN: "/login",
   settingsUser: "/AccountSettingsUser",
   settingsVet: "/AccountSettingsVet",
