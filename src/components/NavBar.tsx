@@ -2,6 +2,7 @@ import { AppBar, Toolbar, Typography, Box, Button, Stack } from "@mui/material";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
+import FootprintIcon from "./FootprintIcon";
 
 export default function NavBar() {
   const navigate = useNavigate();
@@ -15,19 +16,7 @@ export default function NavBar() {
     >
       <Toolbar sx={{ justifyContent: "space-between" }}>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Box
-            sx={{
-              width: 30,
-              height: 30,
-              bgcolor: "white",
-              borderRadius: "50%",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            🐾
-          </Box>
+          <FootprintIcon />
           <Typography
             variant="h6"
             sx={{ fontSize: "1.1rem", fontWeight: "bold" }}
@@ -62,36 +51,38 @@ export default function NavBar() {
           >
             Log in
           </Button>
-          
+
           <Button
             color="inherit"
             sx={{
               textTransform: "none",
               borderBottom:
-                location.pathname === SCREEN.settingsUser ? "2px solid black" : "",
+                location.pathname === SCREEN.settingsUser
+                  ? "2px solid black"
+                  : "",
             }}
             onClick={() => {
-              navigate(SCREEN.settingsUser); //No es correcto dejarlo en el Home, se debe proteger, si no está el login hecho no debería aparecer. 
+              navigate(SCREEN.settingsUser); //No es correcto dejarlo en el Home, se debe proteger, si no está el login hecho no debería aparecer.
             }}
           >
             Perfil
           </Button>
-   
+
           <Button
             color="inherit"
             sx={{
               textTransform: "none",
               borderBottom:
-                location.pathname === SCREEN.settingsVet? "2px solid black" : "",
+                location.pathname === SCREEN.settingsVet
+                  ? "2px solid black"
+                  : "",
             }}
             onClick={() => {
-              navigate(SCREEN.settingsVet); //No es correcto dejarlo en el Home, se debe proteger, si no está el login hecho no debería aparecer. 
+              navigate(SCREEN.settingsVet); //No es correcto dejarlo en el Home, se debe proteger, si no está el login hecho no debería aparecer.
             }}
           >
             PerfilVet
           </Button>
-
-          
         </Stack>
       </Toolbar>
     </AppBar>
