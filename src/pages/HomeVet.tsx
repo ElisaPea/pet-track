@@ -3,9 +3,23 @@ import { Box, Typography, TextField, Button, Stack, InputAdornment, IconButton, 
 import PetsIcon from "@mui/icons-material/Pets"; // Icono de la huellita
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
-import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt'; // O usa otro icono de flecha si lo prefieres
+import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt'; // Alternative arrow icon can be used if preferred
+import beni from "../assets/Beni_perfil.jpeg";
+import test1 from "../assets/test_1.jpg";
+import test2 from "../assets/test_2.jpeg";
+
 
 export default function HomeVet() {
+
+    // Mock data array
+    const petList = [
+        { id: 1, client: "Malcon", dni: "A1234567", pet: "Beni", image: beni },
+        { id: 2, client: "Aroa", dni: "B9876543", pet: "Luna", image: undefined }, // Null image state for testing fallback UI
+        { id: 3, client: "Ventura", dni: "C4561237", pet: "Thor", image: test2 },
+        { id: 4, client: "Elisa", dni: "D1928374", pet: "Atena", image: test1 }
+        // Add as many items as needed...
+    ];
+
     return (
         <BasicScreen>
             {/* Welcome Vet Title & Blue Line */}
@@ -86,90 +100,113 @@ export default function HomeVet() {
             </Box>
             {/* End of Actions Bar */}
 
-            {/* Clients cards */}
-
+            {/* CONTENEDOR DINÁMICO */}
             <Box
                 sx={{
-                    width: 320, // Ajusta el ancho según sea necesario
-                    bgcolor: '#00ADBA', // Color de fondo turquesa del contenedor principal
-                    borderRadius: 5, // Bordes redondeados del contenedor principal
-                    p: 2, // Espaciado interno
-                    display: 'flex',
-                    flexDirection: 'column', // Disposición vertical de los elementos
-                    gap: 1.5, // Espacio entre los dos bloques blancos
+                    display: "flex",
+                    flexWrap: "wrap", // Permite que bajen a la siguiente fila
+                    gap: 3,           // Espacio entre tarjetas
+                    justifyContent: "center", // Centra las tarjetas si sobra espacio
+                    mt: 5,
+                    p: 2
                 }}
             >
-                {/* 1. SECCIÓN SUPERIOR: Datos del Cliente */}
-                <Box
-                    sx={{
-                        bgcolor: 'white', // Fondo blanco para el bloque superior
-                        borderRadius: 3, // Bordes redondeados del bloque superior
-                        p: 1.5, // Espaciado interno del bloque
-                    }}
-                >
-                    <Stack direction="row" spacing={2} alignItems="flex-start">
-                        <Box sx={{ flex: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: '500', color: 'black' }}>
-                                Cliente:
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: '500', color: 'black' }}>
-                                Paco
-                            </Typography>
-                        </Box>
-                        <Box sx={{ textAlign: 'right', flex: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: '500', color: 'black' }}>
-                                DNI:
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: '500', color: 'black' }}>
-                                1234567
-                            </Typography>
-                        </Box>
-                    </Stack>
-                </Box>
-
-                {/* 2. SECCIÓN INFERIOR: Datos de la Mascota y Botón */}
-                <Box
-                    sx={{
-                        bgcolor: 'white', // Fondo blanco para el bloque inferior
-                        borderRadius: 3, // Bordes redondeados del bloque inferior
-                        p: 1.5, // Espaciado interno del bloque
-                        display: 'flex',
-                        alignItems: 'center', // Alineación vertical de los elementos
-                        gap: 1.5, // Espacio entre el avatar, el texto y el botón
-                    }}
-                >
-                    <Avatar
-                        src="https://images.dog.ceo/breeds/beagle/n02088358_1196.jpg" // Imagen de ejemplo
-                        variant="rounded" // Esto hace que la imagen sea cuadrada con bordes redondeados
+                {petList.map((item) => (
+                    /* Clients cards */
+                    <Box
+                        key={item.id}
                         sx={{
-                            width: 70, // Tamaño del avatar
-                            height: 70, // Tamaño del avatar
-                            borderRadius: '15px', // Bordes redondeados más sutiles
+                            width: 300, // Adjust width as necessary for proper scaling
+                            bgcolor: '#00ADBA',
+                            boxShadow: 5,
+                            borderRadius: 4,
+                            p: 2, // Inner padding
+                            display: 'flex',
+                            flexDirection: 'column', // Vertical alignment
+                            gap: 1.5, // Gap between the two white blocks
                         }}
-                    />
-                    <Box sx={{ flex: 1 }}>
-                        <Typography variant="body2" sx={{ fontWeight: '500', color: 'black' }}>
-                            Mascota 1:
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: '500', color: 'black' }}>
-                            Mojito
-                        </Typography>
-                    </Box>
-                    <IconButton
-                        sx={{
-                            bgcolor: '#00ADBA', // Color de fondo turquesa del botón
-                            color: 'white', // Color del icono
-                            borderRadius: '50%', // Botón circular
-                            p: 1, // Espaciado interno
-                            ml: 2, // Margen izquierdo para separarlo
-                        }}
-                        onClick={() => console.log('Abrir popup de Mojito')}
                     >
-                        <ArrowRightAltIcon /> {/* Icono de flecha */}
-                    </IconButton>
-                </Box>
-            </Box>
+                        {/* 1. UPPER SECTION: Client Data */}
+                        <Box
+                            sx={{
+                                bgcolor: 'white', // White background for the upper block
+                                borderRadius: 3, // Rounded corners for the upper block
+                                p: 1.5, // Internal padding for the upper block
+                            }}
+                        >
+                            <Stack direction="row" spacing={2} alignItems="flex-start">
+                                <Box sx={{ flex: 1 }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'black' }}>
+                                        Cliente:
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'black' }}>
+                                        DNI:
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ textAlign: 'right', flex: 1 }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'black' }}>
+                                        {item.client}
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'black' }}>
+                                        {item.dni}
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                        </Box>
 
+                        {/* 2. LOWER SECTION: Pet Data and Button */}
+                        <Box
+                            sx={{
+                                bgcolor: 'white', // White background for the lower block
+                                borderRadius: 3, // Rounded corners for the lower block
+                                p: 1.5, // Internal padding for the lower block
+                                display: 'flex',
+                                alignItems: 'center', // Vertical alignment of the elements
+                                gap: 1.5, // Gap between the avatar, text, and button
+                            }}
+                        >
+                            <Avatar
+                                src={item.image} // Example image
+                                alt={item.pet} // Alt text for accessibility
+                                variant="rounded" // Makes the image square with rounded corners
+                                sx={{
+                                    width: 70, // Avatar size
+                                    height: 70, // Avatar size
+                                    borderRadius: '15px', // More subtle rounded corners
+                                    boxShadow: 2, // Corregido el valor de sombra para que sea más natural
+                                    bgcolor: '#B2EBF2',
+                                    color: 'black'
+                                }}
+                            >
+                                {/* Inicial si no hay imagen */}
+                                {item.pet.charAt(0)}
+                            </Avatar>
+
+                            <Box sx={{ flex: 1 }}>
+                                <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'black' }}>
+                                    Nombre:
+                                </Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'black' }}>
+                                    {item.pet}
+                                </Typography>
+                            </Box>
+
+                            <IconButton
+                                sx={{
+                                    bgcolor: '#00ADBA', // Turquoise button background color
+                                    color: 'white', // Icon color
+                                    borderRadius: '50%', // Circular button
+                                    p: 1, // Internal padding
+                                    ml: 2, // Left margin to separate it
+                                }}
+                                onClick={() => console.log(`Abrir popup de ${item.pet}`)} // Modify
+                            >
+                                <ArrowRightAltIcon /> {/* Arrow icon */}
+                            </IconButton>
+                        </Box>
+                    </Box>
+                ))}
+            </Box>
         </BasicScreen>
     );
 }
