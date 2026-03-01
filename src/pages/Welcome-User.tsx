@@ -9,6 +9,24 @@ export default function Welcome_User() {
     const [open, setOpen] = useState(false);
     const [tabActual, setTabActual] = useState(0);
     const [vacunas, setVacunas] = useState("");
+    {/* Validations */ }
+    const [sumbitted, setSumbitted] = useState(false)
+    const [name, setName] = useState("");
+    const [nameError, setNameError] = useState("");
+    const nameValidation = (value: string) => {
+        if (/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ]/.test(value)) { // no numbers or special characters allowed
+            setNameError("❗ El nombre solo puede contener letras ❗");
+        } else {
+            setNameError("");
+        }
+        setName(value);
+    }
+    const onlyNumbers = (e: React.KeyboardEvent) => {
+        if (!/[0-9]/.test(e.key) && !["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"].includes(e.key)) {
+            e.preventDefault();
+        }
+    }
+
     return (
         <BasicScreenUser>
             <section>
@@ -255,12 +273,19 @@ export default function Welcome_User() {
                                             ¿Cual es el nombre de tu mascota?
                                         </Typography>
                                         <TextField
+                                            autoComplete="off" // disable browser recomendations
+                                            value={name}
+                                            onChange={(e) => nameValidation(e.target.value)}
+                                            error={sumbitted && !!nameError}
+                                            helperText={sumbitted ? nameError : ""}
+                                            onClick={() => setSumbitted(false)}
                                             variant="standard"
                                             InputProps={{
                                                 disableUnderline: true, style: { color: "white" }  // color white letters
                                             }}
                                             sx={{
-                                                width: 600,
+                                                width: 300,
+                                                border: sumbitted && nameError ? "2px solid #F02F0A" : "2px solid transparent",
                                                 bgcolor: "#685F5F",
                                                 borderRadius: 50,
                                                 px: 2,
@@ -310,10 +335,13 @@ export default function Welcome_User() {
                                             Edad:
                                         </Typography>
                                         <TextField
+                                            autoComplete="off"
+                                            onKeyDown={onlyNumbers}
                                             variant="standard"
                                             InputProps={{
                                                 disableUnderline: true, style: { color: "white" }  // color white letters
                                             }}
+                                            slotProps={{ htmlInput: { maxLength: 2 } }} //max 2 digits
                                             sx={{
                                                 width: 60,
                                                 bgcolor: "#685F5F",
@@ -331,10 +359,13 @@ export default function Welcome_User() {
                                             Peso:
                                         </Typography>
                                         <TextField
+                                            autoComplete="off"
+                                            onKeyDown={onlyNumbers}
                                             variant="standard"
                                             InputProps={{
-                                                disableUnderline: true, style: { color: "white" }  // color white letters
+                                                disableUnderline: true, style: { color: "white" },   // color white letters
                                             }}
+                                            slotProps={{ htmlInput: { maxLength: 2 } }} //max 2 digits
                                             sx={{
                                                 width: 60,
                                                 bgcolor: "#685F5F",
@@ -376,6 +407,7 @@ export default function Welcome_User() {
                                             Raza:
                                         </Typography>
                                         <TextField
+                                            autoComplete="off"
                                             variant="standard"
                                             InputProps={{
                                                 disableUnderline: true, style: { color: "white" }  // color white letters
@@ -487,12 +519,18 @@ export default function Welcome_User() {
                                     bgcolor: "#F02F0A",
                                     "&:hover": { bgcolor: "#D82E0C" },
                                 }}
-                                onClick={() => setOpen(false)}
+                                onClick={() => {
+                                    setOpen(false);
+                                    setSumbitted(false);
+                                    setName("");
+                                    setNameError("");
+                                }}
                             >
                                 SALIR
                             </Button>
                             <Button
                                 variant="contained"
+                                onClick={() => setSumbitted(true)}
                                 sx={{
                                     width: 125,
                                     height: 35,
