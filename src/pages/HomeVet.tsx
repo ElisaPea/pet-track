@@ -7,6 +7,8 @@ import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt'; // Alternativ
 import beni from "../assets/Beni_perfil.jpeg";
 import test1 from "../assets/test_1.jpg";
 import test2 from "../assets/test_2.jpeg";
+import ClientDetailsPopup from "../components/ClientDetailsPopup";
+import { useState } from "react";
 
 
 export default function HomeVet() {
@@ -19,6 +21,12 @@ export default function HomeVet() {
         { id: 4, client: "Elisa", dni: "D1928374", pet: "Atena", image: test1 }
         // Add as many items as needed...
     ];
+
+    // 2. Create the 'switch'. It is closed by default (false)
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleOpen = () => setIsModalOpen(true);
+    const handleClose = () => setIsModalOpen(false);
 
     return (
         <BasicScreen>
@@ -100,13 +108,13 @@ export default function HomeVet() {
             </Box>
             {/* End of Actions Bar */}
 
-            {/* CONTENEDOR DINÁMICO */}
+            {/* DYNAMIC CONTAINER */}
             <Box
                 sx={{
                     display: "flex",
-                    flexWrap: "wrap", // Permite que bajen a la siguiente fila
-                    gap: 3,           // Espacio entre tarjetas
-                    justifyContent: "center", // Centra las tarjetas si sobra espacio
+                    flexWrap: "wrap", // Enable flex wrapping
+                    gap: 3,           // Gap between card elements
+                    justifyContent: "center", // Center justify content when items are fewer than row width
                     mt: 5,
                     p: 2
                 }}
@@ -173,12 +181,12 @@ export default function HomeVet() {
                                     width: 70, // Avatar size
                                     height: 70, // Avatar size
                                     borderRadius: '15px', // More subtle rounded corners
-                                    boxShadow: 2, // Corregido el valor de sombra para que sea más natural
+                                    boxShadow: 2,
                                     bgcolor: '#B2EBF2',
                                     color: 'black'
                                 }}
                             >
-                                {/* Inicial si no hay imagen */}
+                                {/* Initial if no image is available */}
                                 {item.pet.charAt(0)}
                             </Avatar>
 
@@ -199,10 +207,16 @@ export default function HomeVet() {
                                     p: 1, // Internal padding
                                     ml: 2, // Left margin to separate it
                                 }}
-                                onClick={() => console.log(`Abrir popup de ${item.pet}`)} // Modify
+                                onClick={handleOpen}
                             >
                                 <ArrowRightAltIcon /> {/* Arrow icon */}
                             </IconButton>
+
+                            {/* Place the Modal at the bottom. It will be 'listening' to the isModalOpen switch. */}
+                            <ClientDetailsPopup
+                                open={isModalOpen}
+                                onClose={handleClose}
+                            />
                         </Box>
                     </Box>
                 ))}
