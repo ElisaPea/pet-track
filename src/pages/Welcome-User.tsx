@@ -4,7 +4,7 @@ import { CenterFocusStrong, Instagram, LinkedIn, Mail } from "@mui/icons-materia
 import { useState } from "react";
 
 
-export default function Welcome_User() {
+export default function WelcomeUser() {
     {/* Constants of Panel & Tabs*/ }
     const [open, setOpen] = useState(false);
     const [tabActual, setTabActual] = useState(0);
