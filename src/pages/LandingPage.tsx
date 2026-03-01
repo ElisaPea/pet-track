@@ -1,25 +1,22 @@
 import BasicScreen from "../components/BasicScreen";
-import {
-  Typography,
-  Container,
-  Box,
-  Grid,
-  Card,
-  CardMedia,
-  IconButton,
-  Stack,
-} from "@mui/material";
-import { Instagram, LinkedIn, Mail, ArrowForward } from "@mui/icons-material";
-import cat from "../assets/cat-test.png";
+import { Typography, Container, Box, Grid, IconButton } from "@mui/material";
+import { ArrowForward } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
+import PetCarousel from "../components/PetCarousel";
+
+const serviceImages = [
+  "https://plus.unsplash.com/premium_photo-1661915652986-fe818e1973f9?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+
+  "https://plus.unsplash.com/premium_photo-1661629144388-851a3fe74096?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+];
 
 export default function LandingPage() {
   const navigate = useNavigate();
 
   return (
     <BasicScreen>
-      <Container maxWidth="md">
+      <Container maxWidth="lg">
         {/* HEADER / LOGO PRINCIPAL */}
         <Box
           sx={{
@@ -54,48 +51,7 @@ export default function LandingPage() {
           justifyContent="center"
           sx={{ mb: { xs: 4, sm: 6 } }}
         >
-          {[1, 2, 3].map((item) => (
-            <Grid size={{ xs: 4, sm: 4 }} key={item}>
-              <Card sx={{ borderRadius: 2, aspectRatio: "1.5 / 1" }}>
-                <CardMedia
-                  component="img"
-                  image={cat}
-                  alt="Pet"
-                  sx={{ objectFit: "cover" }}
-                />
-              </Card>
-            </Grid>
-          ))}
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{ mt: 2, justifyContent: "center" }}
-          >
-            <Box
-              sx={{
-                width: 10,
-                height: 10,
-                bgcolor: "#B2EBF2",
-                borderRadius: "50%",
-              }}
-            />
-            <Box
-              sx={{
-                width: 10,
-                height: 10,
-                bgcolor: "#ccc",
-                borderRadius: "50%",
-              }}
-            />
-            <Box
-              sx={{
-                width: 10,
-                height: 10,
-                bgcolor: "#ccc",
-                borderRadius: "50%",
-              }}
-            />
-          </Stack>
+          <PetCarousel />
         </Grid>
 
         {/* SECCIÓN SERVICIOS */}
@@ -127,7 +83,7 @@ export default function LandingPage() {
           <Grid size={{ xs: 12, md: 6 }}>
             <Box
               component="img"
-              src="https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&q=80&w=500"
+              src={serviceImages[0]}
               sx={{ width: "100%", borderRadius: 8 }}
             />
           </Grid>
@@ -177,7 +133,7 @@ export default function LandingPage() {
                 en cualquier momento.
               </Typography>
             </Box>
-            <Box textAlign="left">
+            <Box textAlign="right">
               <IconButton
                 onClick={() => {
                   navigate(SCREEN.LOGIN);
@@ -195,7 +151,7 @@ export default function LandingPage() {
           <Grid size={{ xs: 12, md: 6 }}>
             <Box
               component="img"
-              src="https://images.unsplash.com/photo-1516733725897-1aa73b87c8e8?auto=format&fit=crop&q=80&w=500"
+              src={serviceImages[1]}
               sx={{ width: "100%", borderRadius: 8 }}
             />
           </Grid>

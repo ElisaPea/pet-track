@@ -31,7 +31,7 @@ export default function BasicScreen({
           justifyContent: "space-between",
         }}
       >
-        <Container maxWidth="md" sx={{ py: { xs: 3, sm: 4 } }}>
+        <Container maxWidth="lg" sx={{ py: { xs: 3, sm: 4 } }}>
           {children}
         </Container>
         <Footer />
