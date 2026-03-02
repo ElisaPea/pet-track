@@ -1,5 +1,4 @@
 import { AppBar, Toolbar, Typography, Box, Button, Stack } from "@mui/material";
-import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
 import FootprintIcon from "./FootprintIcon";
@@ -10,30 +9,39 @@ export default function NavBar() {
 
   return (
     <AppBar
-      position="static"
+      position="fixed"
       elevation={0}
-      sx={{ bgcolor: "#B2EBF2", color: "black", width: "100%" }}
+      sx={{ bgcolor: "#B2EBF2", color: "black", width: "100%", zIndex: 1200 }}
     >
       <Toolbar sx={{ justifyContent: "space-between" }}>
         <Stack direction="row" alignItems="center" spacing={1}>
           <FootprintIcon />
           <Typography
             variant="h6"
-            sx={{ fontSize: "1.1rem", fontWeight: "bold" }}
+            sx={{
+              fontSize: { xs: "1rem", sm: "1.1rem" },
+              fontWeight: "bold",
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              navigate(SCREEN.LANDING_PAGE);
+            }}
           >
             Pet Track
           </Typography>
         </Stack>
-        <Stack direction="row" spacing={3}>
+        <Stack direction="row" spacing={{ xs: 1, sm: 3 }}>
           <Button
             color="inherit"
             sx={{
               textTransform: "none",
               borderBottom:
-                location.pathname === SCREEN.HOME ? "2px solid black" : "",
+                location.pathname === SCREEN.WELCOME_USER
+                  ? "2px solid black"
+                  : "",
             }}
             onClick={() => {
-              navigate(SCREEN.HOME);
+              navigate(SCREEN.WELCOME_USER);
             }}
           >
             Home
