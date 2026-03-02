@@ -5,7 +5,7 @@ import IconButton from "@mui/material/IconButton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
-import { getVetCenters } from "../api/get-user";
+import { getVetCenters } from "../api/query";
 import { useEffect, useState } from "react";
 import { CircularProgress } from "@mui/material";
 
@@ -15,7 +15,7 @@ export default function ListVetCenters() {
   const [searchTerm, setSearchTerm] = useState("");      // Para el buscador
   const [loading, setLoading] = useState(true);          // Control de carga
 
-  // EFECTO PARA DISPARAR LA CONSULTA A SUPABASE
+  // EFECTO PARA DISPARAR LA CONSULTA A SUPABASE-- View module
   useEffect(() => {
     async function loadData() {
       const data = await getVetCenters();
