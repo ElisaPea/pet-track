@@ -46,13 +46,13 @@ export default function NavBar() {
             color="inherit"
             sx={{
               textTransform: "none",
-              // borderBottom:
-              // location.pathname === SCREEN.LANDING_PAGE
-              //   ? "2px solid black"
-              //   : "",
+              borderBottom:
+                location.pathname === SCREEN.WELCOME_USER
+                  ? "2px solid black"
+                  : "",
             }}
             onClick={() => {
-              // navigate(SCREEN.LANDING_PAGE);
+              navigate(SCREEN.WELCOME_USER);
             }}
           >
             Home
