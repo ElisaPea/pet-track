@@ -17,6 +17,11 @@ import {
     Grid
 } from '@mui/material';
 
+// Pictures import for testing (TO DELETE)
+import beni from "../assets/Beni_perfil.jpeg";
+import test1 from "../assets/test_1.jpg";
+import test2 from "../assets/test_2.jpeg";
+
 interface TabPanelProps {
     children?: React.ReactNode;
     index: number;
@@ -27,6 +32,7 @@ interface TabPanelProps {
 interface ClientDetailsPopupProps {
     open: boolean;
     onClose: () => void;
+    clientId: number | null; // The client Id from the HomeVet page
 }
 
 /**
@@ -46,7 +52,7 @@ function TabPanel(props: TabPanelProps) {
  * PRIMARY COMPONENT: ClientDetailsPopup
  * Implements React.FC with ClientDetailsPopupProps interface
  */
-const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({ open, onClose }) => {
+const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({ open, onClose, clientId }) => {
     // STATE: Active tab index controller (0: Client Details, 1: Pets)
     const [tabValue, setTabValue] = useState(0);
 
@@ -54,6 +60,33 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({ open, onClose }
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
         setTabValue(newValue);
     };
+
+    // Mock clients data array
+    const clientList = [
+        { id: 1, client: "Malcon", mail: "malcon@hotmail.com", phone: 123456789, asociated: true },
+        { id: 2, client: "Aroa", mail: "aroa@hotmail.com", phone: 123456789, asociated: true },
+        { id: 3, client: "Ventura", mail: "ventura@hotmail.com", phone: 123456789, asociated: true },
+        { id: 4, client: "Elisa", mail: "elisa@hotmail.com", phone: 123456789, asociated: false }
+        // Add as many items as needed...
+    ];
+
+    // Mock pets data array
+    const petList = [
+        { id: 1, clientId: 1, name: "Beni", species: "Gato", chip: 109284478563826, image: beni, vetNotes: "Tiene que tomarse una tila porque está como una cabra", userNotes: "Solo hace que comer, dormir y cagar" },
+        { id: 2, clientId: 1, name: "Thor", species: "Gato", chip: 109284478745294, image: test1, vetNotes: "Tiene que moverse más", userNotes: "Si sigue durmiendo más, pensaré que está muerto" },
+        { id: 3, clientId: 1, name: "Atena", species: "Gato", chip: 909421478563826, image: test2, vetNotes: "Si sigue comiendo así va a rodar", userNotes: "Todo correcto" },
+        { id: 4, clientId: 1, name: "Luna", species: "Gato", chip: 109772241563826, image: beni, vetNotes: "Nada que destacar", userNotes: "No se mueve más que para ir a comer" }
+        // Add as many items as needed...
+    ];
+
+    // 1. Buscamos los datos del cliente en el array mockeado
+    const selectedClient = clientList.find(c => c.id === clientId);
+
+    // 2. Filtramos las mascotas asociadas a ese ID
+    const filteredPets = petList.filter(p => p.clientId === clientId);
+
+    // Si no hay ID o no se encuentra el cliente, no mostramos el contenido
+    //if (!selectedClient) return null;
 
     return (
         <Dialog
@@ -66,12 +99,12 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({ open, onClose }
                 sx: {
                     borderRadius: 5,
                     bgcolor: '#E1F5FE',
-                    margin: { xs: 2, sm: 'auto' }, // Margen pequeño en móviles
+                    margin: { xs: 2, sm: 'auto' },
                     width: {
                         xs: '95%',
                         sm: '800px',
                         md: '900px'
-                    } // Se estira en móvil
+                    }
                 }
             }}
         >
@@ -118,7 +151,9 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({ open, onClose }
                             <Typography sx={{ fontWeight: 'bold' }}>
                                 Nombre
                             </Typography>
-                            <TextField size="small" variant="standard"
+                            <TextField key={selectedClient?.id || 'empty'}
+                                size="small" variant="standard"
+                                defaultValue={selectedClient?.client || "VACIO"}
                                 InputProps={{ disableUnderline: true }}
                                 sx={{ bgcolor: '#757575', borderRadius: 4, px: 2, width: { xs: '100%', sm: 350 }, input: { color: 'white' } }}
                             />
@@ -198,15 +233,14 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({ open, onClose }
                         '&::-webkit-scrollbar': { width: '10px' }, // Scrollbar width
                         '&::-webkit-scrollbar-thumb': { bgcolor: '#00ADBA', borderRadius: 10 } // Scrollbar thumb color and border radius
                     }}>
-                        {/* Simulación de mapeo dinámico */}
+                        {/* Dynamic mapping simulator */}
                         {[1, 2, 3, 4, 5].map((num) => (
                             <Box key={num} sx={{
-                                bgcolor: '#00ADBA', // Tu color turquesa de la imagen
+                                bgcolor: '#00ADBA',
                                 borderRadius: 8,
                                 p: 2,
                                 mb: 2,
                                 display: 'flex',
-                                // En móvil (xs) apilamos, en PC (sm) fila horizontal
                                 flexDirection: { xs: 'column', sm: 'row' },
                                 alignItems: 'center',
                                 gap: 2
@@ -216,7 +250,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({ open, onClose }
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: 2,
-                                    minWidth: { sm: '250px' }, // Reservamos espacio para foto + texto
+                                    minWidth: { sm: '250px' },
                                     width: { xs: '100%', sm: 'auto' },
                                     justifyContent: { xs: 'center', sm: 'flex-start' }
                                 }}>
@@ -238,6 +272,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({ open, onClose }
                                 </Box>
 
                                 {/* RIGHT GROUP: Veterinary and user notes */}
+                                {/* NOTE: replace the typography to a TextField to read-only state to prevent user input */}
                                 <Box sx={{
                                     display: 'flex',
                                     flexGrow: 1,

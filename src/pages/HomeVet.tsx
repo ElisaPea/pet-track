@@ -4,11 +4,13 @@ import PetsIcon from "@mui/icons-material/Pets"; // Icono de la huellita
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt'; // Alternative arrow icon can be used if preferred
+import ClientDetailsPopup from "../components/ClientDetailsPopup";
+import { useState } from "react";
+
+// Pictures import for testing (TO DELETE)
 import beni from "../assets/Beni_perfil.jpeg";
 import test1 from "../assets/test_1.jpg";
 import test2 from "../assets/test_2.jpeg";
-import ClientDetailsPopup from "../components/ClientDetailsPopup";
-import { useState } from "react";
 
 
 export default function HomeVet() {
@@ -18,15 +20,24 @@ export default function HomeVet() {
         { id: 1, client: "Malcon", dni: "A1234567", pet: "Beni", image: beni },
         { id: 2, client: "Aroa", dni: "B9876543", pet: "Luna", image: undefined }, // Null image state for testing fallback UI
         { id: 3, client: "Ventura", dni: "C4561237", pet: "Thor", image: test2 },
-        { id: 4, client: "Elisa", dni: "D1928374", pet: "Atena", image: test1 }
+        { id: 4, client: "Elisa", dni: "D1928374", pet: "Atena", image: test1 },
+        { id: 5, client: "Malcon", dni: "A1234567", pet: "Beni", image: undefined }, // Null image state for testing fallback UI
+        { id: 6, client: "Aroa", dni: "B9876543", pet: "Luna", image: test1 },
+        { id: 7, client: "Ventura", dni: "C4561237", pet: "Thor", image: test2 },
+        { id: 8, client: "Elisa", dni: "D1928374", pet: "Atena", image: test1 }
         // Add as many items as needed...
     ];
 
-    // 2. Create the 'switch'. It is closed by default (false)
+    // Create the 'switch'. It is closed by default (false)
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const handleOpen = () => setIsModalOpen(true);
-    const handleClose = () => setIsModalOpen(false);
+    const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
+
+    // Function to open the popup with a specific ID
+    const handleOpenDetails = (id: number) => {
+        setSelectedClientId(id);
+        setIsModalOpen(true);
+    };
 
     return (
         <BasicScreen>
@@ -208,7 +219,7 @@ export default function HomeVet() {
                                     ml: 2, // Left margin to separate it
                                     '&:hover': { bgcolor: '#00838F' }, // Change color on hover
                                 }}
-                                onClick={handleOpen}
+                                onClick={() => handleOpenDetails(item.id)} // Pass the item.id (client ID from the pressed card) to the button handler
                             >
                                 <ArrowRightAltIcon /> {/* Arrow icon */}
                             </IconButton>
@@ -217,6 +228,7 @@ export default function HomeVet() {
                             <ClientDetailsPopup
                                 open={isModalOpen}
                                 onClose={() => setIsModalOpen(false)}
+                                clientId={selectedClientId}
                             />
                         </Box>
                     </Box>
