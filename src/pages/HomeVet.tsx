@@ -206,6 +206,7 @@ export default function HomeVet() {
                                     borderRadius: '50%', // Circular button
                                     p: 1, // Internal padding
                                     ml: 2, // Left margin to separate it
+                                    '&:hover': { bgcolor: '#00838F' }, // Change color on hover
                                 }}
                                 onClick={handleOpen}
                             >
@@ -215,7 +216,7 @@ export default function HomeVet() {
                             {/* Place the Modal at the bottom. It will be 'listening' to the isModalOpen switch. */}
                             <ClientDetailsPopup
                                 open={isModalOpen}
-                                onClose={handleClose}
+                                onClose={() => setIsModalOpen(false)}
                             />
                         </Box>
                     </Box>
