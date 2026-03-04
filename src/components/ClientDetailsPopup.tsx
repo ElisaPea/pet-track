@@ -60,7 +60,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({ open, onClose }
             open={open}
             onClose={onClose}
             fullWidth
-            maxWidth="sm"
+            maxWidth="md"
             // PaperProps: UI Customization: Background colors and border radius configuration
             PaperProps={{
                 sx: {
@@ -68,8 +68,9 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({ open, onClose }
                     bgcolor: '#E1F5FE',
                     margin: { xs: 2, sm: 'auto' }, // Margen pequeño en móviles
                     width: {
-                        xs: 'calc(100% - 32px)',
-                        sm: 'auto'
+                        xs: '95%',
+                        sm: '800px',
+                        md: '900px'
                     } // Se estira en móvil
                 }
             }}
@@ -100,7 +101,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({ open, onClose }
                 </Tabs>
             </Box>
 
-            <DialogContent sx={{ bgcolor: '#E1F5FE', minHeight: 300 }}>
+            <DialogContent sx={{ bgcolor: '#E1F5FE', minHeight: 400, px: { xs: 1, sm: 3 } }}>
 
                 {/* TAB 1: CLIENT DATA FORM */}
                 <TabPanel value={tabValue} index={0}>
@@ -181,6 +182,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({ open, onClose }
 
                 {/* TAB 2: PET LIST */}
                 <TabPanel value={tabValue} index={1}>
+
                     {/* Top center button (Add pet) */}
                     <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
                         <Button variant="contained" sx={{ bgcolor: '#66BB6A', color: 'black', borderRadius: 5, textTransform: 'none', px: 4, fontWeight: 'bold', '&:hover': { bgcolor: '#52a552ff' } }}>
@@ -190,35 +192,89 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({ open, onClose }
 
                     {/* SCROLLABLE CONTAINER: Important for handling multiple pets */}
                     <Box sx={{
-                        maxHeight: 320,
+                        maxHeight: 450,
                         overflowY: 'auto',
-                        pr: 1,
-                        '&::-webkit-scrollbar': { width: '6px' },
-                        '&::-webkit-scrollbar-thumb': { bgcolor: '#00ADBA', borderRadius: 10 }
+                        pr: 2,
+                        '&::-webkit-scrollbar': { width: '10px' }, // Scrollbar width
+                        '&::-webkit-scrollbar-thumb': { bgcolor: '#00ADBA', borderRadius: 10 } // Scrollbar thumb color and border radius
                     }}>
                         {/* Simulación de mapeo dinámico */}
-                        {[1, 2, 3].map((num) => (
-                            <Box key={num} sx={{ bgcolor: '#00ADBA', borderRadius: 4, p: 2, mb: 2, border: '1px solid #9E9E9E' }}>
-                                <Grid container spacing={2} direction={{ xs: 'column', sm: 'row' }} alignItems="center">
-                                    <Grid item xs={12} sm={2} sx={{ display: 'flex', justifyContent: { xs: 'center', sm: 'flex-start' }, mb: { xs: 1, sm: 0 } }}>
-                                        <Avatar variant="rounded" sx={{ width: 80, height: 80, borderRadius: 3, bgcolor: 'white', border: '1px solid black' }} />
-                                    </Grid>
-                                    <Grid item xs={12} sm={3} sx={{ textAlign: { xs: 'center', sm: 'left' } }}>
-                                        <Typography variant="body2"><strong>Mascota 1:</strong> Mojito</Typography>
-                                        <Typography variant="body2"><strong>Animal / raza:</strong> Loro</Typography>
-                                        <Typography variant="body2"><strong>Chip / DNI:</strong> 999999</Typography>
-                                    </Grid>
-                                    <Grid item xs={12} sm={3.5}>
-                                        <Box sx={{ bgcolor: 'white', boxShadow: 1, borderRadius: 3, p: 1, height: { xs: 'auto', sm: 80 }, width: '100%' }}>
-                                            <Typography variant="caption" sx={{ fontWeight: 'bold' }}>Notas del centro vet:</Typography>
-                                        </Box>
-                                    </Grid>
-                                    <Grid item xs={12} sm={3.5}>
-                                        <Box sx={{ bgcolor: 'white', boxShadow: 1, borderRadius: 3, p: 1, height: { xs: 'auto', sm: 80 }, width: '100%' }}>
-                                            <Typography variant="caption" sx={{ fontWeight: 'bold' }}>Notas del usuario:</Typography>
-                                        </Box>
-                                    </Grid>
-                                </Grid>
+                        {[1, 2, 3, 4, 5].map((num) => (
+                            <Box key={num} sx={{
+                                bgcolor: '#00ADBA', // Tu color turquesa de la imagen
+                                borderRadius: 8,
+                                p: 2,
+                                mb: 2,
+                                display: 'flex',
+                                // En móvil (xs) apilamos, en PC (sm) fila horizontal
+                                flexDirection: { xs: 'column', sm: 'row' },
+                                alignItems: 'center',
+                                gap: 2
+                            }}>
+                                {/* LEFT GROUP: Pet profile pic and data */}
+                                <Box sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 2,
+                                    minWidth: { sm: '250px' }, // Reservamos espacio para foto + texto
+                                    width: { xs: '100%', sm: 'auto' },
+                                    justifyContent: { xs: 'center', sm: 'flex-start' }
+                                }}>
+                                    {/* Pet profile pic */}
+                                    <Avatar variant="rounded" sx={{ width: 80, height: 80, borderRadius: 3, bgcolor: 'white', border: '1px solid black' }} />
+
+                                    {/* Pet data */}
+                                    <Box sx={{ color: 'black', textAlign: 'left' }}>
+                                        <Typography variant="body2">
+                                            Nombre: Mojito
+                                        </Typography>
+                                        <Typography variant="body2">
+                                            Especie: Loro
+                                        </Typography>
+                                        <Typography variant="body2">
+                                            Chip: 999999
+                                        </Typography>
+                                    </Box>
+                                </Box>
+
+                                {/* RIGHT GROUP: Veterinary and user notes */}
+                                <Box sx={{
+                                    display: 'flex',
+                                    flexGrow: 1,
+                                    gap: 2,
+                                    width: '100%',
+                                    flexDirection: { xs: 'column', sm: 'row' }
+                                }}>
+                                    {/* Veterinary notes */}
+                                    <Box sx={{
+                                        flex: 1,
+                                        bgcolor: 'white',
+                                        borderRadius: 4,
+                                        border: '1px solid black',
+                                        p: 0,
+                                        minHeight: 80,
+                                        textAlign: 'center'
+                                    }}>
+                                        <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                                            Notas del centro vet:
+                                        </Typography>
+                                    </Box>
+
+                                    {/* User notes */}
+                                    <Box sx={{
+                                        flex: 1,
+                                        bgcolor: 'white',
+                                        borderRadius: 4,
+                                        border: '1px solid black',
+                                        p: 0,
+                                        minHeight: 80,
+                                        textAlign: 'center'
+                                    }}>
+                                        <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                                            Notas del usuario:
+                                        </Typography>
+                                    </Box>
+                                </Box>
                             </Box>
                         ))}
                     </Box>
