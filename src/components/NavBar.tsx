@@ -1,4 +1,4 @@
-import { AppBar, Toolbar, Typography, Box, Button, Stack } from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, Stack } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
 import FootprintIcon from "./FootprintIcon";

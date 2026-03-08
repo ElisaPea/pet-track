@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
-import React, { useState, type ChangeEvent } from "react";
+import React, { useState } from "react";
 
 export default function AccountSettingsUser() {
   // Hook de navegación (debe estar dentro del componente)
@@ -21,8 +21,6 @@ export default function AccountSettingsUser() {
   const [error2, setError2] = useState(false);
   //Nuevo estado para controlar mensaje guardado con éxito.
   const [success, setSuccess] = useState(false);
-  //Añadimos un estado para el mensaje de error dinámico.
-  const [errorMessage, setErrorMessage] = useState("");
 
   //ArrayList Campos
   const [formData, setFormData] = useState({
@@ -49,7 +47,6 @@ export default function AccountSettingsUser() {
     setError(false);
     setError2(false);
     setSuccess(false);
-    setErrorMessage("");
 
     //Reglas de validación
 
@@ -59,18 +56,12 @@ export default function AccountSettingsUser() {
 
     // Validación de campos VACÍOS
     if (!nombre.trim() || !email.trim() || telefono.trim() === "+34") {
-      setErrorMessage(
-        "Por favor, rellena todos los campos obligatorios (Nombre, Email y Teléfono).",
-      );
       setError(true);
       return;
     }
 
     //Validación de FORMATO
     if (!emailValid.test(email) || !esTelefonoValido) {
-      setErrorMessage(
-        "Por favor, rellena con el formato adecuado los campos obligatorios (Email y Teléfono de 9 dígitos).",
-      );
       setError2(true);
       return;
     }

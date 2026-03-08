@@ -8,7 +8,7 @@ import {
   Collapse,
   Alert,
 } from "@mui/material";
-import React, { useState, type ChangeEvent } from "react";
+import React, { useState } from "react";
 
 export default function AccountSettingsUser() {
   //Nuevo estado para controlar mensaje de error.
@@ -17,8 +17,6 @@ export default function AccountSettingsUser() {
   const [error2, setError2] = useState(false);
   //Nuevo estado para controlar mensaje guardado con éxito.
   const [success, setSuccess] = useState(false);
-  //Añadimos un estado para el mensaje de error dinámico.
-  const [errorMessage, setErrorMessage] = useState("");
 
   //ArrayList Campos
   const [formData, setFormData] = useState({
@@ -45,7 +43,6 @@ export default function AccountSettingsUser() {
     setError(false);
     setError2(false);
     setSuccess(false);
-    setErrorMessage("");
 
     //Reglas de validación
 
@@ -61,18 +58,12 @@ export default function AccountSettingsUser() {
       telefono.trim() === "+34" ||
       !formData.numeroColegiado.trim()
     ) {
-      setErrorMessage(
-        "Por favor, rellena todos los campos obligatorios (Nombre, Email y Teléfono).",
-      );
       setError(true);
       return;
     }
 
     //Validación de FORMATO
     if (!emailValid.test(email) || !esTelefonoValido || !colegiadoValid) {
-      setErrorMessage(
-        "Por favor, rellena con el formato adecuado los campos obligatorios (Email, Teléfono de 9 dígitos y NºColegiado).",
-      );
       setError2(true);
       return;
     }

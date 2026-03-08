@@ -3,18 +3,15 @@ import {
   Box,
   Typography,
   TextField,
-  Button,
   Stack,
   InputAdornment,
   IconButton,
   Avatar,
 } from "@mui/material";
-import PetsIcon from "@mui/icons-material/Pets"; // Icono de la huellita
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt"; // Alternative arrow icon can be used if preferred
 import beni from "../assets/Beni_perfil.jpeg";
-import test1 from "../assets/test_1.jpg";
 import test2 from "../assets/test_2.jpeg";
 import arya from "../assets/arya.jpeg";
 

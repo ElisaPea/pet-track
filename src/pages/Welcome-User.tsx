@@ -216,7 +216,7 @@ export default function WelcomeUser() {
           <Box sx={{ borderBottom: "2px solid black" }}>
             <Tabs
               value={tabActual}
-              onChange={(e, newValue) => setTabActual(newValue)}
+              onChange={(_, newValue) => setTabActual(newValue)}
               TabIndicatorProps={{ sx: { display: "none" } }}
             >
               <Tab
