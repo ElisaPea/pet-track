@@ -1,6 +1,7 @@
 import { AppBar, Toolbar, Typography, Box, Button, Stack } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
+import FootprintIcon from "./FootprintIcon";
 
 export default function NavBar() {
   const navigate = useNavigate();
@@ -27,19 +28,7 @@ export default function NavBar() {
       <Toolbar sx={{ justifyContent: "space-between" }}>
         {/* LEFT SECTION: Logo and App Name */}
         <Stack direction="row" alignItems="center" spacing={1}>
-          <Box
-            sx={{
-              width: { xs: 28, sm: 30 },
-              height: { xs: 28, sm: 30 },
-              bgcolor: "white",
-              borderRadius: "50%",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            🐾
-          </Box>
+          <FootprintIcon />
           <Typography
             variant="h6"
             sx={{
