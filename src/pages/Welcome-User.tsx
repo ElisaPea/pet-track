@@ -291,20 +291,20 @@ export default function WelcomeUser() {
                         variant="standard"
                         InputProps={{
                           disableUnderline: true,
-                          style: { color: "white" }, // color white letters
                         }}
                         sx={{
+                          bgcolor: "white",
+                          borderRadius: 50,
+                          px: 2,
+                          py: 0.5,
                           width: 300,
                           border:
                             sumbitted && nameError
                               ? "2px solid #F02F0A"
                               : "2px solid transparent",
-                          bgcolor: "#685F5F",
-                          borderRadius: 50,
-                          px: 2,
-                          py: 0.5,
+
                           ml: -12, // position besides Typography
-                          "&:hover": { bgcolor: " #555353" },
+                          "&:hover": { bgcolor: "#d5d5d5ff" },
                         }}
                       />
                     </Stack>
@@ -329,12 +329,12 @@ export default function WelcomeUser() {
                           fontSize: 50,
                           width: 100,
                           height: 90,
-                          bgcolor: "#685F5F",
+                          bgcolor: "white",
                           borderRadius: 10,
                           px: 2,
                           py: 0.5,
                           ml: -12, // position besides Typography
-                          "&:hover": { bgcolor: "#555353" },
+                          "&:hover": { bgcolor: "#d5d5d5ff" },
                         }}
                       >
                         +
@@ -373,17 +373,16 @@ export default function WelcomeUser() {
                         variant="standard"
                         InputProps={{
                           disableUnderline: true,
-                          style: { color: "white" }, // color white letters
                         }}
                         slotProps={{ htmlInput: { maxLength: 2 } }} //max 2 digits
                         sx={{
                           width: 60,
-                          bgcolor: "#685F5F",
+                          bgcolor: "white",
                           borderRadius: 50,
                           px: 2,
                           py: 0.5,
                           ml: -8, // position besides Typographyç
-                          "&:hover": { bgcolor: "#555353" },
+                          "&:hover": { bgcolor: "#d5d5d5ff" },
                         }}
                       />
                       {/* Weight Field */}
@@ -403,17 +402,16 @@ export default function WelcomeUser() {
                         variant="standard"
                         InputProps={{
                           disableUnderline: true,
-                          style: { color: "white" }, // color white letters
                         }}
                         slotProps={{ htmlInput: { maxLength: 2 } }} //max 2 digits
                         sx={{
                           width: 60,
-                          bgcolor: "#685F5F",
+                          bgcolor: "white",
                           borderRadius: 50,
                           px: 2,
                           py: 0.5,
                           ml: -8, // position besides Typography
-                          "&:hover": { bgcolor: "#555353" },
+                          "&:hover": { bgcolor: "#d5d5d5ff" },
                         }}
                       />
                       {/* Vacunas Field */}
@@ -434,12 +432,12 @@ export default function WelcomeUser() {
                         onChange={(e) => setVacunas(e.target.value)} //on change set value of vacunas to the one selected
                         sx={{
                           width: 77,
-                          bgcolor: "#685F5F",
+                          bgcolor: "white",
                           borderRadius: 50,
                           px: 2,
                           py: 0.5,
                           ml: -2, // position besides Typography
-                          "&:hover": { bgcolor: "#555353" },
+                          "&:hover": { bgcolor: "#d5d5d5ff" },
                         }}
                       >
                         <MenuItem value="yes">Si</MenuItem>
@@ -461,16 +459,15 @@ export default function WelcomeUser() {
                         variant="standard"
                         InputProps={{
                           disableUnderline: true,
-                          style: { color: "white" }, // color white letters
                         }}
                         sx={{
                           width: 60,
-                          bgcolor: "#685F5F",
+                          bgcolor: "white",
                           borderRadius: 50,
                           px: 2,
                           py: 0.5,
                           ml: -8, // position besides Typographyç
-                          "&:hover": { bgcolor: "#555353" },
+                          "&:hover": { bgcolor: "#d5d5d5ff" },
                         }}
                       />
                     </Stack>

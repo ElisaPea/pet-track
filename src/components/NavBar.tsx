@@ -21,7 +21,7 @@ export default function NavBar() {
 
   return (
     <AppBar
-      position="fixed"
+      position="sticky"
       elevation={0}
       sx={{ bgcolor: "#B2EBF2", color: "black", width: "100%", zIndex: 1200 }}
     >

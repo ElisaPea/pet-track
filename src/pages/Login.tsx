@@ -51,7 +51,17 @@ export default function Login() {
 
   const handleChange = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => ({ ...prev, [field]: "" })); // limpiar error al escribir
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" })); // limpiar error al escribir
+  };
+
+  const handleChangeTypeUser = (value: string) => {
+    setForm({
+      ...initialFormState,
+      email: form.email,
+      password: form.password,
+      typeUser: value as "user" | "professional",
+    });
+    if (Object.keys(errors).length > 0) setErrors({});
   };
 
   const testEmail = (value: string) => {
@@ -77,12 +87,11 @@ export default function Login() {
 
     if (Object.keys(newErrors).length === 0) {
       // Aquí iría la acción real de login/register
-      alert(`Formulario válido!\n${JSON.stringify(form, null, 2)}`);
+      // alert(`Formulario válido!\n${JSON.stringify(form, null, 2)}`);
     }
   };
 
   const handleChangeEmail = (value: string) => {
-    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (value && !testEmail(value)) {
       setForm((prev) => ({ ...prev, email: value }));
       setErrors((prev) => ({ ...prev, email: "El correo no es válido." }));
@@ -217,8 +226,7 @@ export default function Login() {
                     row
                     value={form.typeUser}
                     onChange={(e) => {
-                      handleChange("typeUser", e.target.value);
-                      setErrors({});
+                      handleChangeTypeUser(e.target.value);
                     }}
                   >
                     <FormControlLabel

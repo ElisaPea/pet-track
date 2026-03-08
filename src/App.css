@@ -1,0 +1,28 @@
+/* Scrollbar para Chrome, Edge y Safari */
+::-webkit-scrollbar {
+  width: 10px; /* ancho del scroll */
+}
+
+::-webkit-scrollbar-track {
+  background: #e3f2fd; /* fondo del track */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2196f3; /* azul principal */
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #1976d2; /* azul más oscuro al pasar el mouse */
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2196f3 #e3f2fd;
+}
+
+::-webkit-scrollbar-track {
+  margin-top: 0px;
+}

@@ -22,10 +22,9 @@ export default function BasicScreen({
       <Box
         sx={{
           flexGrow: 1,
-          pt: `${navHeight}px`,
           overflowY: "auto",
           scrollBehavior: "smooth",
-          minHeight: "100vh",
+          height: `calc(100vh - ${navHeight}px)`,
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
