@@ -26,3 +26,8 @@
 ::-webkit-scrollbar-track {
   margin-top: 0px;
 }
+
+html,
+body {
+  overflow-x: hidden;
+}
