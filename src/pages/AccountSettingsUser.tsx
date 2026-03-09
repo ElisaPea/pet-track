@@ -1,8 +1,16 @@
 import BasicScreen from "../components/BasicScreen";
-import { Box, Typography, TextField, Button, Stack, Collapse, Alert } from "@mui/material";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Stack,
+  Collapse,
+  Alert,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
-import React, { useState, type ChangeEvent } from "react";
+import React, { useState } from "react";
 
 export default function AccountSettingsUser() {
   // Hook de navegación (debe estar dentro del componente)
@@ -13,20 +21,17 @@ export default function AccountSettingsUser() {
   const [error2, setError2] = useState(false);
   //Nuevo estado para controlar mensaje guardado con éxito.
   const [success, setSuccess] = useState(false);
-  //Añadimos un estado para el mensaje de error dinámico. 
-  const [errorMessage, setErrorMessage] = useState("");
 
   //ArrayList Campos
-const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({
     nombre: "",
     email: "",
     telefono: "+34 ",
     direccion: "",
   });
 
-
   // Manejador de cambios en los inputs
-const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError(false); // Limpiar error mientras escriben
     if (error2) setError2(false); // Limpiar error mientras escriben
@@ -36,55 +41,49 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
   //Funcion campos obligatorios
   const handleGuardar = () => {
-
     const { nombre, email, telefono } = formData;
 
     // Reiniciamos estados al principio para evitar que se pisen
     setError(false);
     setError2(false);
     setSuccess(false);
-    setErrorMessage("");
 
     //Reglas de validación
-    
-    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;// Validación Email: Verifica formato estándar (texto@texto.extensión)
+
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Validación Email: Verifica formato estándar (texto@texto.extensión)
     const soloNumeros = telefono.replace(/\D/g, ""); // Validación Teléfono: Extraemos solo los números para contar
     const esTelefonoValido = soloNumeros.length === 11; // +34 (2) + 9 números
 
     // Validación de campos VACÍOS
     if (!nombre.trim() || !email.trim() || telefono.trim() === "+34") {
-      setErrorMessage("Por favor, rellena todos los campos obligatorios (Nombre, Email y Teléfono).");
       setError(true);
-      return; 
+      return;
     }
 
     //Validación de FORMATO
     if (!emailValid.test(email) || !esTelefonoValido) {
-      setErrorMessage("Por favor, rellena con el formato adecuado los campos obligatorios (Email y Teléfono de 9 dígitos).");
       setError2(true);
-      return; 
+      return;
     }
 
-      //Exito: 
-      setError(false);
-      setError2(false);
-      setSuccess(true);
+    //Exito:
+    setError(false);
+    setError2(false);
+    setSuccess(true);
 
-      console.log("Datos guardados con éxito:", formData);
+    console.log("Datos guardados con éxito:", formData);
 
-      // Reset del formulario
-      setFormData({
+    // Reset del formulario
+    setFormData({
       nombre: "",
       email: "",
       telefono: "+34 ",
       direccion: "",
-      });
-      setTimeout(() => setSuccess(false), 3000);
+    });
+    setTimeout(() => setSuccess(false), 3000);
 
-      // Aquí va conexión a Supabase más adelante
-    
-
-};
+    // Aquí va conexión a Supabase más adelante
+  };
 
   return (
     <BasicScreen>
@@ -96,15 +95,17 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
           justifyContent: "center",
           mt: 8, // Margen superior para centrar visualmente
         }}
-
+      >
+        {/* Tipografia actualizar perfil */}
+        <Typography
+          variant="h4"
+          sx={{ fontWeight: "600", color: "#4A3B3B", mb: 0.5 }}
         >
-          {/* Tipografia actualizar perfil */}
-            <Typography variant="h4" sx={{ fontWeight: "600", color: "#4A3B3B", mb: 0.5 }}>
-              Actualiza tu perfil
-            </Typography>
+          Actualiza tu perfil
+        </Typography>
 
-            {/* Línea decorativa */}
-            <Box sx={{ width: 60, height: 4, bgcolor: "#00BCD4", mb: 4 }} />
+        {/* Línea decorativa */}
+        <Box sx={{ width: 60, height: 4, bgcolor: "#00BCD4", mb: 4 }} />
 
         {/* Contenedor Principal (Cuadrado azul claro) */}
         <Box
@@ -117,31 +118,31 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             boxShadow: "0px 4px 10px rgba(0,0,0,0.05)",
             textAlign: "center",
           }}
-        
         >
           {/* Formulario */}
           <Box component="form" noValidate sx={{ mt: 1 }}>
-       
-          {/* Mensaje de Error Visual Rellenar campos obligatorios */}
-          <Collapse in={error}>
-            <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
-              Por favor, rellena todos los campos obligatorios (Nombre, Email y Teléfono).
-            </Alert>
-          </Collapse>  
+            {/* Mensaje de Error Visual Rellenar campos obligatorios */}
+            <Collapse in={error}>
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+                Por favor, rellena todos los campos obligatorios (Nombre, Email
+                y Teléfono).
+              </Alert>
+            </Collapse>
 
-          {/* Mensaje de Error Visual  Rellenar correctamente los campos obligatorios*/}
-          <Collapse in={error2}>
-            <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
-              Por favor, rellena con el formato adecuado los campos obligatorios(Email, Teléfono).
-            </Alert>
-          </Collapse>  
+            {/* Mensaje de Error Visual  Rellenar correctamente los campos obligatorios*/}
+            <Collapse in={error2}>
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+                Por favor, rellena con el formato adecuado los campos
+                obligatorios(Email, Teléfono).
+              </Alert>
+            </Collapse>
 
-          {/* Mensaje de Error Guardado */}
-        <Collapse in={success}>
-         <Alert severity="success" sx={{ mb: 3, borderRadius: 5 }}>
-            ¡Datos guardados correctamente!
-          </Alert>
-        </Collapse>
+            {/* Mensaje de Error Guardado */}
+            <Collapse in={success}>
+              <Alert severity="success" sx={{ mb: 3, borderRadius: 5 }}>
+                ¡Datos guardados correctamente!
+              </Alert>
+            </Collapse>
 
             <Stack spacing={3} alignItems="center">
               {/* Campo Nombre*/}
@@ -153,20 +154,17 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 </Typography>
                 <TextField
                   fullWidth
-                  name = "nombre"
+                  name="nombre"
                   variant="standard"
                   value={formData.nombre}
                   onChange={handleChange}
                   error={error && !formData.nombre}
                   InputProps={{ disableUnderline: true }}
                   sx={{
-                    bgcolor: "#6D5D5D",
+                    bgcolor: "white",
                     borderRadius: 50,
                     px: 2,
-                    py: 0.4,
-                    input: { 
-                    color: "white", // Texto blanco para que contraste
-                    px: 2}
+                    py: 0.5,
                   }}
                 />
               </Stack>
@@ -187,19 +185,14 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   error={error && !formData.email}
                   InputProps={{ disableUnderline: true }}
                   sx={{
-                    bgcolor: "#6D5D5D",
+                    bgcolor: "white",
                     borderRadius: 50,
                     px: 2,
-                    py: 0.4,
-                    input: { 
-                    color: "white", // Texto blanco para que contraste
-                    px: 2}
+                    py: 0.5,
                   }}
                 />
               </Stack>
 
-
-              
               {/* Campo telefono */}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
@@ -209,22 +202,19 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 </Typography>
                 <TextField
                   fullWidth
-                  variant="standard" 
+                  variant="standard"
                   name="telefono"
                   value={formData.telefono}
                   onChange={handleChange}
                   error={error && formData.telefono.trim() === "+34"}
                   InputProps={{ disableUnderline: true }}
                   sx={{
-                    bgcolor: "#6D5D5D",
+                    bgcolor: "white",
                     borderRadius: 50,
-                    width:"50%",
+                    px: 2,
+                    py: 0.5,
+                    width: "50%",
                     ml: "auto",
-                    px: 1,
-                    py: 0.4,
-                    input: { 
-                    color: "white", // Texto blanco para que contraste
-                    px: 2}
                   }}
                 />
               </Stack>
@@ -243,21 +233,18 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   onChange={handleChange}
                   InputProps={{ disableUnderline: true }}
                   sx={{
-                    bgcolor: "#6D5D5D",
+                    bgcolor: "white",
                     borderRadius: 50,
                     px: 2,
-                    py: 0.4,
-                    input: { 
-                    color: "white", // Texto blanco para que contraste
-                    px: 2}
+                    py: 0.5,
                   }}
                 />
               </Stack>
-              
+
               {/* Campo Centro vet asociado */}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 400, textAlign: "left", fontWeight: "bold"}}
+                  sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
                 >
                   Centro veterinario asociado:
                 </Typography>
@@ -267,30 +254,39 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   defaultValue="Ninguno seleccionado"
                   InputProps={{ disableUnderline: true, readOnly: true }}
                   sx={{
-                    bgcolor: "#9E9E9E",
+                    bgcolor: "#bebebeff",
                     borderRadius: 50,
                     px: 2,
-                    py: 0.4,
-                    input: { 
-                    color: "white", // Texto blanco para que contraste
-                    px: 2}
+                    py: 0.5,
                   }}
+                  // sx={{
+                  //   bgcolor: "#9E9E9E",
+                  //   borderRadius: 50,
+                  //   px: 2,
+                  //   py: 0.4,
+                  //   input: {
+                  //     color: "white", // Texto blanco para que contraste
+                  //     px: 2,
+                  //   },
+                  // }}
                 />
               </Stack>
 
               {/* Botón guardar*/}
-              <Box sx={{ width: "100%",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              pt: 2 }}>
-
-
-              <Button
+              <Box
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  pt: 2,
+                }}
+              >
+                <Button
                   variant="contained"
                   onClick={() => {
-                                navigate(SCREEN.listVet); 
-                              }}
+                    navigate(SCREEN.listVet);
+                  }}
                   sx={{
                     bgcolor: "#FBC02D", // Amarillo del botón "Acceder"
                     color: "black",
@@ -305,7 +301,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 </Button>
                 <Button
                   variant="contained"
-                  onClick= {handleGuardar}
+                  onClick={handleGuardar}
                   sx={{
                     bgcolor: "#FBC02D", // Amarillo del botón "Acceder"
                     color: "black",
@@ -318,7 +314,6 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 >
                   GUARDAR
                 </Button>
-
               </Box>
             </Stack>
           </Box>
