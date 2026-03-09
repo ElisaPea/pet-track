@@ -28,7 +28,6 @@ export default function WelcomeUser() {
   const [nameError, setNameError] = useState("");
   const nameValidation = (value: string) => {
     if (/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ]/.test(value)) {
-      // no numbers or special characters allowed
       setNameError("❗ El nombre solo puede contener letras ❗");
     } else {
       setNameError("");
@@ -64,13 +63,13 @@ export default function WelcomeUser() {
             sx={{
               bgcolor: "#00ADBA",
               borderRadius: "50px",
-              width: 75, // line dimensions
+              width: 75,
               height: 5,
               boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
               display: "flex",
               justifyContent: "center",
-              mt: 1, // margin with the upper title
-              ml: "auto", //margin with left & right borders
+              mt: 1,
+              ml: "auto",
               mr: "auto",
             }}
           ></Box>
@@ -83,8 +82,8 @@ export default function WelcomeUser() {
             alignItems: "center",
             flexWrap: "wrap",
             mt: 7,
-            columnGap: 8, // horizontal space betwen Pet Boxes
-            rowGap: 3.5, // vertical space between Pet Boxes
+            columnGap: 8,
+            rowGap: 3.5,
           }}
         >
           {/* Add Pet Box */}
@@ -147,18 +146,9 @@ export default function WelcomeUser() {
                   boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
                 }}
               >
-                {/* Pet Name */}
-                <Typography variant="h6" textAlign="center">
-                  Vin
-                </Typography>
-                {/* Pet Breed */}
-                <Typography variant="body1" textAlign="left" sx={{ ml: 2 }}>
-                  - Shitzu
-                </Typography>
-                {/* Pet Age */}
-                <Typography variant="body1" textAlign="left" sx={{ ml: 2 }}>
-                  - 4 años
-                </Typography>
+                <Typography variant="h6" textAlign="center">Vin</Typography>
+                <Typography variant="body1" textAlign="left" sx={{ ml: 2 }}>- Shitzu</Typography>
+                <Typography variant="body1" textAlign="left" sx={{ ml: 2 }}>- 4 años</Typography>
               </Box>
               {/* Pet Img Field */}
               <Box
@@ -168,7 +158,7 @@ export default function WelcomeUser() {
                   borderRadius: 5,
                   width: 100,
                   height: 100,
-                  boxShadow: "0px 4px 10px rgba(0,0,0,0.15)", //sombra
+                  boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
                 }}
               ></Box>
               {/* Pet Aditional Info Field */}
@@ -178,15 +168,13 @@ export default function WelcomeUser() {
                   borderRadius: 5,
                   width: 310,
                   height: 100,
-                  boxShadow: "0px 4px 10px rgba(0,0,0,0.15)", //sombra
+                  boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
-                <Typography variant="h6">
-                  Inserar informacion adicional
-                </Typography>
+                <Typography variant="h6">Inserar informacion adicional</Typography>
               </Box>
             </Box>
           </Box>
@@ -195,19 +183,18 @@ export default function WelcomeUser() {
         {/* Add Pet Panel */}
         <Dialog
           open={open}
-          // aussence of onClose makes the pannel only close when clicked the exit button
           fullWidth
           maxWidth={false}
           slotProps={{
             paper: {
               sx: {
                 bgcolor: "#E4F7FB",
-                width: "75vw",
-                height: "85vh",
-                maxHeight: "85vh",
+                width: { xs: "95vw", sm: "85vw", md: "75vw" },
+                height: { xs: "90vh", sm: "85vh" },
+                maxHeight: { xs: "90vh", sm: "85vh" },
                 borderRadius: 5,
                 padding: 0,
-                overflow: "hidden", // enables the blue bgColor of the tabs to use all of the space in the corners
+                overflow: "hidden",
               },
             },
           }}
@@ -218,16 +205,14 @@ export default function WelcomeUser() {
               value={tabActual}
               onChange={(_, newValue) => setTabActual(newValue)}
               TabIndicatorProps={{ sx: { display: "none" } }}
+              variant="fullWidth"
             >
               <Tab
                 label="Datos Mascota"
                 sx={{
                   bgcolor: "#E4F7FB",
                   color: "black",
-                  "&.Mui-selected": {
-                    bgcolor: "#BEF1F3",
-                    color: "black",
-                  },
+                  "&.Mui-selected": { bgcolor: "#BEF1F3", color: "black" },
                   "&:hover": { bgcolor: "#BEF1F3" },
                 }}
               />
@@ -236,10 +221,7 @@ export default function WelcomeUser() {
                 sx={{
                   bgcolor: "#E4F7FB",
                   color: "black",
-                  "&.Mui-selected": {
-                    bgcolor: "#BEF1F3",
-                    color: "black",
-                  },
+                  "&.Mui-selected": { bgcolor: "#BEF1F3", color: "black" },
                   "&:hover": { bgcolor: "#BEF1F3" },
                 }}
               />
@@ -249,32 +231,28 @@ export default function WelcomeUser() {
 
           <Box
             sx={{
-              // display "flex" & flexDirection "column" enables align vertically the children boxes
-              px: 6,
+              px: { xs: 2, sm: 4, md: 6 },
               py: 3,
               height: "100%",
               display: "flex",
               flexDirection: "column",
+              overflowY: "auto"
             }}
           >
-            <Box
-              sx={{
-                flex: 1, // fills all the empty space vertically after the button box begins
-              }}
-            >
+            <Box sx={{ flex: 1 }}>
               {/* Pet Info Tab */}
               {tabActual == 0 && (
                 <Box>
-                  <Stack spacing={4} /*space betwen rows*/ alignItems="center">
+                  <Stack spacing={4} alignItems="center">
                     {/* Pet Name Field */}
                     <Stack
-                      direction="row"
-                      alignItems="center"
+                      direction={{ xs: "column", sm: "row" }}
+                      alignItems={{ xs: "flex-start", sm: "center" }}
                       sx={{ width: "100%" }}
                     >
                       <Typography
                         sx={{
-                          width: 400,
+                          width: { xs: "100%", sm: 400 },
                           textAlign: "left",
                           fontWeight: "bold",
                         }}
@@ -282,7 +260,7 @@ export default function WelcomeUser() {
                         ¿Cual es el nombre de tu mascota?
                       </Typography>
                       <TextField
-                        autoComplete="off" // disable browser recomendations
+                        autoComplete="off"
                         value={name}
                         onChange={(e) => nameValidation(e.target.value)}
                         error={sumbitted && !!nameError}
@@ -291,39 +269,39 @@ export default function WelcomeUser() {
                         variant="standard"
                         InputProps={{
                           disableUnderline: true,
+                          style: { color: "white" },
                         }}
                         sx={{
                           bgcolor: "white",
-                          borderRadius: 50,
-                          px: 2,
-                          py: 0.5,
-                          width: 300,
+                          width: { xs: "100%", sm: 300 },
                           border:
                             sumbitted && nameError
                               ? "2px solid #F02F0A"
                               : "2px solid transparent",
-
-                          ml: -12, // position besides Typography
+                          borderRadius: 50,
+                          px: 2,
+                          py: 0.5,
+                          ml: { xs: 0, sm: -12 },
                           "&:hover": { bgcolor: "#d5d5d5ff" },
                         }}
                       />
                     </Stack>
                     {/* Pet Img Field */}
                     <Stack
-                      direction="row"
-                      alignItems="center"
+                      direction={{ xs: "column", sm: "row" }}
+                      alignItems={{ xs: "flex-start", sm: "center" }}
                       sx={{ width: "100%" }}
                     >
                       <Typography
                         sx={{
-                          width: 400,
+                          width: { xs: "100%", sm: 400 },
                           textAlign: "left",
                           fontWeight: "bold",
                         }}
                       >
                         !Comparte fotos de tu mascota!
                       </Typography>
-                      <Button // podria ser un icon button?
+                      <Button
                         sx={{
                           color: "black",
                           fontSize: 50,
@@ -333,7 +311,7 @@ export default function WelcomeUser() {
                           borderRadius: 10,
                           px: 2,
                           py: 0.5,
-                          ml: -12, // position besides Typography
+                          ml: { xs: 0, sm: -12 },
                           "&:hover": { bgcolor: "#d5d5d5ff" },
                         }}
                       >
@@ -341,7 +319,7 @@ export default function WelcomeUser() {
                       </Button>
                     </Stack>
                     {/* Aditional Info Field */}
-                    <Box sx={{ width: "100%" /*use all horitzontal space*/ }}>
+                    <Box sx={{ width: "100%" }}>
                       <Typography
                         sx={{
                           width: 400,
@@ -353,123 +331,102 @@ export default function WelcomeUser() {
                       </Typography>
                     </Box>
                     <Stack
-                      direction="row"
-                      alignItems="center"
+                      direction={{ xs: "column", sm: "row" }}
+                      alignItems={{ xs: "flex-start", sm: "center" }}
+                      flexWrap="wrap"
+                      gap={2}
                       sx={{ width: "100%", pt: -30 }}
                     >
                       {/* Age Field */}
-                      <Typography
-                        sx={{
-                          width: 120,
-                          textAlign: "left",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        Edad:
-                      </Typography>
-                      <TextField
-                        autoComplete="off"
-                        onKeyDown={onlyNumbers}
-                        variant="standard"
-                        InputProps={{
-                          disableUnderline: true,
-                        }}
-                        slotProps={{ htmlInput: { maxLength: 2 } }} //max 2 digits
-                        sx={{
-                          width: 60,
-                          bgcolor: "white",
-                          borderRadius: 50,
-                          px: 2,
-                          py: 0.5,
-                          ml: -8, // position besides Typographyç
-                          "&:hover": { bgcolor: "#d5d5d5ff" },
-                        }}
-                      />
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <Typography sx={{ fontWeight: "bold", minWidth: 50 }}>
+                          Edad:
+                        </Typography>
+                        <TextField
+                          autoComplete="off"
+                          onKeyDown={onlyNumbers}
+                          variant="standard"
+                          InputProps={{
+                            disableUnderline: true,
+                          }}
+                          slotProps={{ htmlInput: { maxLength: 2 } }}
+                          sx={{
+                            width: 60,
+                            bgcolor: "white",
+                            borderRadius: 50,
+                            px: 2,
+                            py: 0.5,
+                            "&:hover": { bgcolor: "#d5d5d5ff" },
+                          }}
+                        />
+                      </Stack>
                       {/* Weight Field */}
-                      <Typography
-                        sx={{
-                          width: 120,
-                          textAlign: "left",
-                          fontWeight: "bold",
-                          ml: 4,
-                        }}
-                      >
-                        Peso:
-                      </Typography>
-                      <TextField
-                        autoComplete="off"
-                        onKeyDown={onlyNumbers}
-                        variant="standard"
-                        InputProps={{
-                          disableUnderline: true,
-                        }}
-                        slotProps={{ htmlInput: { maxLength: 2 } }} //max 2 digits
-                        sx={{
-                          width: 60,
-                          bgcolor: "white",
-                          borderRadius: 50,
-                          px: 2,
-                          py: 0.5,
-                          ml: -8, // position besides Typography
-                          "&:hover": { bgcolor: "#d5d5d5ff" },
-                        }}
-                      />
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <Typography sx={{ fontWeight: "bold", minWidth: 50 }}>
+                          Peso:
+                        </Typography>
+                        <TextField
+                          autoComplete="off"
+                          onKeyDown={onlyNumbers}
+                          variant="standard"
+                          InputProps={{
+                            disableUnderline: true,
+                          }}
+                          slotProps={{ htmlInput: { maxLength: 2 } }}
+                          sx={{
+                            width: 60,
+                            bgcolor: "white",
+                            borderRadius: 50,
+                            px: 2,
+                            py: 0.5,
+                            "&:hover": { bgcolor: "#d5d5d5ff" },
+                          }}
+                        />
+                      </Stack>
                       {/* Vacunas Field */}
-                      <Typography
-                        sx={{
-                          width: 120,
-                          textAlign: "left",
-                          fontWeight: "bold",
-                          ml: 4,
-                        }}
-                      >
-                        ¿Vacunas?:
-                      </Typography>
-                      <Select // Combo box
-                        variant="standard"
-                        disableUnderline
-                        value={vacunas} // initial value equal to vacunas wich is ""
-                        onChange={(e) => setVacunas(e.target.value)} //on change set value of vacunas to the one selected
-                        sx={{
-                          width: 77,
-                          bgcolor: "white",
-                          borderRadius: 50,
-                          px: 2,
-                          py: 0.5,
-                          ml: -2, // position besides Typography
-                          "&:hover": { bgcolor: "#d5d5d5ff" },
-                        }}
-                      >
-                        <MenuItem value="yes">Si</MenuItem>
-                        <MenuItem value="no">No</MenuItem>
-                      </Select>
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <Typography sx={{ fontWeight: "bold", minWidth: 80 }}>
+                          ¿Vacunas?:
+                        </Typography>
+                        <Select
+                          variant="standard"
+                          disableUnderline
+                          value={vacunas}
+                          onChange={(e) => setVacunas(e.target.value)}
+                          sx={{
+                            width: 77,
+                            bgcolor: "white",
+                            borderRadius: 50,
+                            px: 2,
+                            py: 0.5,
+                            "&:hover": { bgcolor: "#d5d5d5ff" },
+                          }}
+                        >
+                          <MenuItem value="yes">Si</MenuItem>
+                          <MenuItem value="no">No</MenuItem>
+                        </Select>
+                      </Stack>
                       {/* Breed Field */}
-                      <Typography
-                        sx={{
-                          width: 120,
-                          textAlign: "left",
-                          fontWeight: "bold",
-                          ml: 4,
-                        }}
-                      >
-                        Raza:
-                      </Typography>
-                      <TextField
-                        autoComplete="off"
-                        variant="standard"
-                        InputProps={{
-                          disableUnderline: true,
-                        }}
-                        sx={{
-                          width: 60,
-                          bgcolor: "white",
-                          borderRadius: 50,
-                          px: 2,
-                          py: 0.5,
-                          ml: -8, // position besides Typographyç
-                          "&:hover": { bgcolor: "#d5d5d5ff" },
-                        }}
-                      />
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <Typography sx={{ fontWeight: "bold", minWidth: 50 }}>
+                          Raza:
+                        </Typography>
+                        <TextField
+                          autoComplete="off"
+                          variant="standard"
+                          InputProps={{
+                            disableUnderline: true,
+                          }}
+                          sx={{
+                            width: 60,
+                            bgcolor: "white",
+                            borderRadius: 50,
+                            px: 2,
+                            py: 0.5,
+                            "&:hover": { bgcolor: "#d5d5d5ff" },
+                          }}
+                        />
+                      </Stack>
                     </Stack>
                   </Stack>
                 </Box>
@@ -479,66 +436,29 @@ export default function WelcomeUser() {
                 <Box>
                   <Box
                     sx={{
-                      // Box that contains and share the space between the two note boxes
-                      display: "wrap-flex", //  makes the content share evenly the space
-                      justifyContent: "center", // justify the contents in the center
+                      display: "flex",
+                      flexWrap: "wrap",
+                      justifyContent: "center",
                       columnGap: 8,
+                      rowGap: 3,
                       mt: 3,
                     }}
                   >
                     {/* WHITE BOX */}
                     <Box
                       sx={{
-                        // Note
-                        bgcolor: "white",
-                        height: 400, // note size
-                        width: 450,
-                        borderRadius: 10,
-                        overflow: "hidden",
-                        px: 3.5, // text placement inside
-                        py: 2,
-                        border: "3px solid transparent", // transparent border
-                        "&:hover": {
-                          border: "3px solid #BEF1F3", // color blue border on hover
-                        },
-                      }}
-                    >
-                      {" "}
-                      {/* TOP TEXT */}
-                      <Typography>Notas del centro vet:</Typography>
-                      {/* TEXT FIELD */}
-                      <TextField
-                        multiline // allow multiple lines
-                        rows={14} // only 14 rows ( matches the size of the white box)
-                        fullWidth // uses all the box width
-                        variant="standard"
-                        InputProps={{
-                          disableUnderline: true,
-                          style: { color: "black" }, // color black letters
-                        }}
-                        sx={{
-                          mt: 1, // top & bottom separation
-                          mb: -1,
-                        }}
-                      ></TextField>
-                    </Box>
-                    {/* WHITE BOX */}
-                    <Box
-                      sx={{
                         bgcolor: "white",
                         height: 400,
-                        width: 450,
+                        width: { xs: "100%", sm: 450 },
                         borderRadius: 10,
+                        overflow: "hidden",
                         px: 3.5,
                         py: 2,
                         border: "3px solid transparent",
                         "&:hover": { border: "3px solid #BEF1F3" },
                       }}
                     >
-                      {" "}
-                      {/* TOP TEXT */}
-                      <Typography>Notas del usuario:</Typography>
-                      {/* TEXT FIELD */}
+                      <Typography>Notas del centro vet:</Typography>
                       <TextField
                         multiline
                         rows={14}
@@ -546,12 +466,35 @@ export default function WelcomeUser() {
                         variant="standard"
                         InputProps={{
                           disableUnderline: true,
-                          style: { color: "black" }, // color black letters
+                          style: { color: "black" },
                         }}
-                        sx={{
-                          mt: 1,
-                          mb: -1,
+                        sx={{ mt: 1, mb: -1 }}
+                      ></TextField>
+                    </Box>
+                    {/* WHITE BOX */}
+                    <Box
+                      sx={{
+                        bgcolor: "white",
+                        height: 400,
+                        width: { xs: "100%", sm: 450 },
+                        borderRadius: 10,
+                        px: 3.5,
+                        py: 2,
+                        border: "3px solid transparent",
+                        "&:hover": { border: "3px solid #BEF1F3" },
+                      }}
+                    >
+                      <Typography>Notas del usuario:</Typography>
+                      <TextField
+                        multiline
+                        rows={14}
+                        fullWidth
+                        variant="standard"
+                        InputProps={{
+                          disableUnderline: true,
+                          style: { color: "black" },
                         }}
+                        sx={{ mt: 1, mb: -1 }}
                       ></TextField>
                     </Box>
                   </Box>
@@ -561,7 +504,6 @@ export default function WelcomeUser() {
             {/* Buttons */}
             <Box
               sx={{
-                // fills the free space before the info and notes tabs  & make the buttons sit at the end of the axis
                 display: "flex",
                 justifyContent: "flex-end",
                 gap: 6,
