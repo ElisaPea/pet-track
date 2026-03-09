@@ -94,6 +94,17 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({ open, onClose, 
             onClose={onClose}
             fullWidth
             maxWidth="md"
+            // Customize the popup background effect
+            slotProps={{
+                backdrop: {
+                    sx: {
+                        // Pop Up background color transparent
+                        backgroundColor: 'transparent',
+                        // Blur effect
+                        backdropFilter: 'blur(2px)',
+                    }
+                }
+            }}
             // PaperProps: UI Customization: Background colors and border radius configuration
             PaperProps={{
                 sx: {
