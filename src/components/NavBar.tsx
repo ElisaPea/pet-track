@@ -1,154 +1,136 @@
-import { AppBar, Toolbar, Typography, Box, Button, Stack } from "@mui/material";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Stack,
+  IconButton,
+  Drawer,
+  Box,
+  List,
+  ListItemButton,
+  ListItemText,
+  useTheme,
+  useMediaQuery,
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
+import FootprintIcon from "./FootprintIcon";
 
 export default function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // I added this to dynamically update the NavBar title based on the current page.
-  // 1. Mapping object for the titles; these can be changed as you see fit, they are just examples for now.
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  const [openMenu, setOpenMenu] = useState(false);
+
   const titles = {
-    // [SCREEN.HOME]: "Bienvenido a Pet Track",
     [SCREEN.LOGIN]: "Iniciar Sesión",
     [SCREEN.HOME_VET]: "Centro veterinario",
-    // Add more as needed...
   };
 
-  // 2. Get the current title based on the pathname. Defaults to 'Pet Track' if no match is found.
   const currentTitle = titles[location.pathname] || "Pet Track";
 
+  const menuItems = [
+    { label: "Home", screen: SCREEN.WELCOME_USER },
+    { label: "HomeVet", screen: SCREEN.HOME_VET },
+    { label: "Perfil", screen: SCREEN.settingsUser },
+    { label: "PerfilVet", screen: SCREEN.settingsVet },
+    { label: "Log in", screen: SCREEN.LOGIN },
+  ];
+
   return (
-    <AppBar
-      position="fixed"
-      elevation={0}
-      sx={{ bgcolor: "#B2EBF2", color: "black", width: "100%", zIndex: 1200 }}
-    >
-      <Toolbar sx={{ justifyContent: "space-between" }}>
-        {/* LEFT SECTION: Logo and App Name */}
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Box
-            sx={{
-              width: { xs: 28, sm: 30 },
-              height: { xs: 28, sm: 30 },
-              bgcolor: "white",
-              borderRadius: "50%",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
-            🐾
-          </Box>
-          <Typography
-            variant="h6"
-            sx={{
-              fontSize: { xs: "1rem", sm: "1.1rem" },
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-            onClick={() => {
-              navigate(SCREEN.LANDING_PAGE);
-            }}
-          >
-            Pet Track
-          </Typography>
-        </Stack>
+    <>
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{ bgcolor: "#B2EBF2", color: "black" }}
+      >
+        <Toolbar sx={{ justifyContent: "space-between" }}>
+          {/* LOGO */}
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <FootprintIcon />
+            <Typography
+              variant="h6"
+              sx={{
+                fontSize: { xs: "1rem", sm: "1.1rem" },
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+              onClick={() => navigate(SCREEN.LANDING_PAGE)}
+            >
+              Pet Track
+            </Typography>
+          </Stack>
 
-        {/* CENTER SECTION: Dynamic Title */}
-        <Typography
-          variant="h6"
-          sx={{
-            flex: 1,
-            textAlign: "center",
-            fontWeight: "bold",
-            fontSize: "1.1rem",
-          }}
-        >
-          {/* When data is fetched, we need to include the center and/or user names for better personalization, if you agree. */}
-          {currentTitle}
-        </Typography>
+          {/* TITULO SOLO DESKTOP */}
+          {!isMobile && (
+            <Typography
+              variant="h6"
+              sx={{
+                flexGrow: 1,
+                textAlign: "center",
+                fontWeight: "bold",
+                fontSize: "1.1rem",
+              }}
+            >
+              {currentTitle}
+            </Typography>
+          )}
 
-        {/* RIGHT SECTION: Navigation Buttons */}
+          {/* DESKTOP MENU */}
+          {!isMobile && (
+            <Stack direction="row" spacing={3}>
+              {menuItems.map((item) => (
+                <Button
+                  key={item.label}
+                  color="inherit"
+                  sx={{
+                    textTransform: "none",
+                    borderBottom:
+                      location.pathname === item.screen
+                        ? "2px solid black"
+                        : "",
+                  }}
+                  onClick={() => navigate(item.screen)}
+                >
+                  {item.label}
+                </Button>
+              ))}
+            </Stack>
+          )}
 
-        <Stack direction="row" spacing={{ xs: 1, sm: 3 }}>
-          <Button
-            color="inherit"
-            sx={{
-              textTransform: "none",
-              borderBottom:
-                location.pathname === SCREEN.WELCOME_USER
-                  ? "2px solid black"
-                  : "",
-            }}
-            onClick={() => {
-              navigate(SCREEN.WELCOME_USER);
-            }}
-          >
-            Home
-          </Button>
+          {/* MOBILE MENU BUTTON */}
+          {isMobile && (
+            <IconButton onClick={() => setOpenMenu(true)}>
+              <MenuIcon />
+            </IconButton>
+          )}
+        </Toolbar>
+      </AppBar>
 
-          {/* If the user is logged in, Malcon's test.*/}
-
-          <Button
-            color="inherit"
-            sx={{
-              textTransform: "none",
-              borderBottom:
-                location.pathname === SCREEN.HOME_VET ? "2px solid black" : "",
-            }}
-            onClick={() => {
-              navigate(SCREEN.HOME_VET);
-            }}
-          >
-            HomeVet
-          </Button>
-          <Button
-            color="inherit"
-            sx={{
-              textTransform: "none",
-              borderBottom:
-                location.pathname === SCREEN.settingsUser
-                  ? "2px solid black"
-                  : "",
-            }}
-            onClick={() => {
-              navigate(SCREEN.settingsUser); //No es correcto dejarlo en el Home, se debe proteger, si no está el login hecho no debería aparecer.
-            }}
-          >
-            Perfil
-          </Button>
-
-          <Button
-            color="inherit"
-            sx={{
-              textTransform: "none",
-              borderBottom:
-                location.pathname === SCREEN.settingsVet
-                  ? "2px solid black"
-                  : "",
-            }}
-            onClick={() => {
-              navigate(SCREEN.settingsVet); //No es correcto dejarlo en el Home, se debe proteger, si no está el login hecho no debería aparecer.
-            }}
-          >
-            PerfilVet
-          </Button>
-          <Button
-            color="inherit"
-            sx={{
-              textTransform: "none",
-              borderBottom:
-                location.pathname === SCREEN.LOGIN ? "2px solid black" : "",
-            }}
-            onClick={() => {
-              navigate(SCREEN.LOGIN);
-            }}
-          >
-            Log in
-          </Button>
-        </Stack>
-      </Toolbar>
-    </AppBar>
+      {/* DRAWER MENU MOBILE */}
+      <Drawer anchor="right" open={openMenu} onClose={() => setOpenMenu(false)}>
+        <Box sx={{ width: 250 }}>
+          <List>
+            {menuItems.map((item) => (
+              <ListItemButton
+                key={item.label}
+                onClick={() => {
+                  navigate(item.screen);
+                  setOpenMenu(false);
+                }}
+              >
+                <ListItemText primary={item.label} />
+              </ListItemButton>
+            ))}
+          </List>
+        </Box>
+      </Drawer>
+    </>
   );
 }

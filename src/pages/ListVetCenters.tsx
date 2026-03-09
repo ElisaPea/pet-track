@@ -5,30 +5,35 @@ import IconButton from "@mui/material/IconButton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
-
-
-{/* Array nombres centro veterinarios*/}
-
-const vetCentersData = [
-    {id:1, nombre: "Centro Vet Animal Lovers", email: "contacto@animallovers.com"},
-    {id:2, nombre: "Vet El bosque", email: "info@elbosque.es"},
-    {id:3, nombre: "nombreVet", email: "info@vet.es"},
-    {id:4, nombre: "nombreVet", email: "info@vet.es"},
-    {id:5, nombre: "nombreVet", email: "info@vet.es"},
-    {id:6, nombre: "nombreVet", email: "info@vet.es"}
-]
-
+import { getVetCenters } from "../api/query";
+import { useEffect, useState } from "react";
+import { CircularProgress } from "@mui/material";
 
 export default function ListVetCenters() {
-const navigate = useNavigate(); //Declarar para navegar. 
-const handleEmail = (emailCentro: string, nombreCentro: string) => { //Botón para email. 
-  console.log(`Enviando solicitud a: ${nombreCentro} (${emailCentro})`);
-  window.location.href = `mailto:${emailCentro}?subject=Solicitud de Asociación&body=Hola, me gustaría asociarme a su centro...`;}
+  const navigate = useNavigate();
+  const [vetCenters, setVetCenters] = useState<any[]>([]); // Lista que vendrá de la DB
+  const [searchTerm, setSearchTerm] = useState("");      // Para el buscador
+  const [loading, setLoading] = useState(true);          // Control de carga
 
-  //Buscar en el buscador. 
-  function setSearchTerm(value: string): void {
-    throw new Error("Function not implemented.");
-  }
+  // EFECTO PARA DISPARAR LA CONSULTA A SUPABASE-- View module
+  useEffect(() => {
+    async function loadData() {
+      const data = await getVetCenters();
+      setVetCenters(data || []);
+      setLoading(false);
+    }
+    loadData();
+  }, []);
+
+  // Lógica de filtrado para el buscador
+  const filteredCenters = vetCenters.filter((center) =>
+    center.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleEmail = (emailCenter: string, nameCenter: string) => {
+    console.log(`Enviando solicitud a: ${nameCenter} (${emailCenter})`);
+    window.location.href = `mailto:${emailCenter}?subject=Solicitud de Asociación&body=Hola, me gustaría asociarme a su centro...`;
+  };
 
   return (
     <BasicScreen>
@@ -115,49 +120,62 @@ const handleEmail = (emailCentro: string, nombreCentro: string) => { //Botón pa
               </Stack>      
           </Box>
   
-
         {/* Línea decorativa ajustada */}
         <Box sx={{ width: 200, height: 4, bgcolor: "#00BCD4", mb: 4, alignSelf: "center" }} />
 
-        {/* COMIENZA TABLA DE DATOS */}
-        <Paper elevation={0} sx={{ border: "2px solid #333", borderRadius: 0, mt: 4}}>
-          {vetCentersData.map((center, index) => (
-            <Box
-              key={index}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                p: 2,
-                borderBottom: index !== vetCentersData.length - 1 ? "2px solid #333" : "none",
-                bgcolor: "#D1F2F5", // Fondo grisáceo de la tabla
-              }}
-            >
-              <Typography sx={{ fontWeight: "600", fontSize: "1.1rem" }}>
-                {center.nombre}
-              </Typography>
+          {/* COMIENZA TABLA DE DATOS DINÁMICA */}
+          <Paper elevation={0} sx={{ border: "2px solid #333", borderRadius: 0, mt: 4, overflow: "hidden" }}>
+            {loading ? (
+              // Mientras la base de datos responde, mostramos carga
+              <Box sx={{ p: 4, display: "flex", justifyContent: "center" }}>
+                <CircularProgress color="inherit" />
+              </Box>
+            ) : filteredCenters.length > 0 ? (
+              // Mapeamos los datos filtrados usando paréntesis () para el retorno del JSX
+              filteredCenters.map((center, index) => (
+                <Box
+                  key={center.id} // Usamos el ID único de Supabase
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 2,
+                    borderBottom: index !== filteredCenters.length - 1 ? "2px solid #333" : "none",
+                    bgcolor: "#D1F2F5",
+                  }}
+                >
+                  <Typography sx={{ fontWeight: "600", fontSize: "1.1rem" }}>
+                    {center.name}
+                  </Typography>
 
-              <Button
-                variant="contained"
-                onClick={() => handleEmail(center.email, center.nombre)}
-                sx={{
-                  bgcolor: "#66BB6A", // Verde del botón
-                  color: "black",
-                  borderRadius: 50,
-                  textTransform: "none",
-                  fontWeight: "bold",
-                  px: 3,
-                  border: "1px solid #2E7D32",
-                  "&:hover": { bgcolor: "#4CAF50" },
-                }}
-              >
-                ENVIAR CORREO DE ASOCIACIÓN
-              </Button>
-            </Box>
-          ))}
-        </Paper>
-        </Box> 
+                  <Button
+                    variant="contained"
+                    onClick={() => handleEmail(center.email, center.name)}
+                    sx={{
+                      bgcolor: "#66BB6A",
+                      color: "black",
+                      borderRadius: 50,
+                      textTransform: "none",
+                      fontWeight: "bold",
+                      px: 3,
+                      border: "1px solid #2E7D32",
+                      "&:hover": { bgcolor: "#4CAF50" },
+                    }}
+                  >
+                    ENVIAR CORREO DE ASOCIACIÓN
+                  </Button>
+                </Box>
+              ))
+            ) : (
+              // Mensaje si no hay datos o el filtro no coincide
+              <Box sx={{ p: 4, textAlign: "center" }}>
+                <Typography>No se encontraron centros veterinarios.</Typography>
+              </Box>
+            )}
+          </Paper>
+        </Box>
       </Box>
     </BasicScreen>
   );
 }
+

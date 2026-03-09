@@ -22,5 +22,10 @@ export const SCREEN = {
   SETTINGS_USER: "/account-settings-user",
   SETTINGS_VET: "/account-settings-vet",
   LIST_VET: "/list-vet-centers",
-}; */
+}; 
+
+y que los nombres de los ficheros sean:
+NombreFichero.tsx - export const NombreFichero() {}
+el único que habría que cambiar es Welcome-User.tsx por WelcomeUser.tsx
+*/
 }
