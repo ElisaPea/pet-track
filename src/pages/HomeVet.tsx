@@ -11,7 +11,12 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt"; // Alternative arrow icon can be used if preferred
+import ClientDetailsPopup from "../components/ClientDetailsPopup";
+import { useState } from "react";
+
+// Pictures import for testing (TO DELETE)
 import beni from "../assets/Beni_perfil.jpeg";
+import test1 from "../assets/test_1.jpg";
 import test2 from "../assets/test_2.jpeg";
 import arya from "../assets/arya.jpeg";
 
@@ -22,8 +27,23 @@ export default function HomeVet() {
     { id: 2, client: "Aroa", dni: "B9876543", pet: "Luna", image: undefined }, // Null image state for testing fallback UI
     { id: 3, client: "Ventura", dni: "C4561237", pet: "Thor", image: test2 },
     { id: 4, client: "Elisa", dni: "D1928374", pet: "Atena", image: arya },
+    { id: 5, client: "Malcon", dni: "A1234567", pet: "Beni", image: undefined }, // Null image state for testing fallback UI
+    { id: 6, client: "Aroa", dni: "B9876543", pet: "Luna", image: test1 },
+    { id: 7, client: "Ventura", dni: "C4561237", pet: "Thor", image: test2 },
+    { id: 8, client: "Elisa", dni: "D1928374", pet: "Atena", image: test1 },
     // Add as many items as needed...
   ];
+
+  // Create the 'switch'. It is closed by default (false)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
+
+  // Function to open the popup with a specific ID
+  const handleOpenDetails = (id: number) => {
+    setSelectedClientId(id);
+    setIsModalOpen(true);
+  };
 
   return (
     <BasicScreen>
@@ -120,13 +140,13 @@ export default function HomeVet() {
       </Box>
       {/* End of Actions Bar */}
 
-      {/* CONTENEDOR DINÁMICO */}
+      {/* DYNAMIC CONTAINER */}
       <Box
         sx={{
           display: "flex",
-          flexWrap: "wrap", // Permite que bajen a la siguiente fila
-          gap: 3, // Espacio entre tarjetas
-          justifyContent: "center", // Centra las tarjetas si sobra espacio
+          flexWrap: "wrap", // Enable flex wrapping
+          gap: 3, // Gap between card elements
+          justifyContent: "center", // Center justify content when items are fewer than row width
           mt: 5,
           p: 2,
         }}
@@ -205,12 +225,12 @@ export default function HomeVet() {
                   width: 70, // Avatar size
                   height: 70, // Avatar size
                   borderRadius: "15px", // More subtle rounded corners
-                  boxShadow: 2, // Corregido el valor de sombra para que sea más natural
+                  boxShadow: 2,
                   bgcolor: "#B2EBF2",
                   color: "black",
                 }}
               >
-                {/* Inicial si no hay imagen */}
+                {/* Initial if no image is available */}
                 {item.pet.charAt(0)}
               </Avatar>
 
@@ -236,11 +256,19 @@ export default function HomeVet() {
                   borderRadius: "50%", // Circular button
                   p: 1, // Internal padding
                   ml: 2, // Left margin to separate it
+                  "&:hover": { bgcolor: "#00838F" }, // Change color on hover
                 }}
-                onClick={() => console.log(`Abrir popup de ${item.pet}`)} // Modify
+                onClick={() => handleOpenDetails(item.id)} // Pass the item.id (client ID from the pressed card) to the button handler
               >
                 <ArrowRightAltIcon /> {/* Arrow icon */}
               </IconButton>
+
+              {/* Place the Modal at the bottom. It will be 'listening' to the isModalOpen switch. */}
+              <ClientDetailsPopup
+                open={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                clientId={selectedClientId}
+              />
             </Box>
           </Box>
         ))}
