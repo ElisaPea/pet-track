@@ -63,12 +63,12 @@ export default function ListVetCenters() {
         </Box>
         
           {/* Tipografia Asociarte a un centro veterinario */}
-            <Typography variant="h4" sx={{ fontWeight: "600", color: "#000000", mb: 0.5 }}>
+            <Typography variant="h4" sx={{ fontWeight: "600", color: "#000000", mb: 0.5, textAlign: "center"}}>
               Asociate a un centro veterinario
             </Typography>
 
             {/* Línea decorativa */}
-            <Box sx={{ width: 100, height: 4, bgcolor: "#00BCD4", mb: 5 }} />
+            <Box sx={{ width: 100, height: 4, bgcolor: "#00BCD4", mb: 5}} />
 
         {/* Contenedor Principal (Cuadrado azul claro) */}
         <Box
@@ -76,8 +76,8 @@ export default function ListVetCenters() {
             bgcolor: "#D1F2F5", // Azul pastel de la imagen
             width: "100%",
             maxWidth: 700,
-            borderRadius: 10, // Bordes muy redondeados
-            p: 4,
+            borderRadius: 10,
+            p: { xs: 3, sm: 4 }, // Bordes muy redondeados
             boxShadow: "0px 4px 10px rgba(0,0,0,0.05)",
             textAlign: "center",
           }}
@@ -87,9 +87,9 @@ export default function ListVetCenters() {
           <Box component="form" noValidate sx={{ mt: 1 }}>
             <Stack spacing={3} alignItems="center">
               {/* Busca tu centro */}
-              <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={3} alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 200, textAlign: "center", fontWeight: "bold", fontSize: "1.5rem"}}
+                  sx={{ width: 200, textAlign: { xs: "center", sm: "left" },fontWeight: "bold", fontSize: "1.5rem"}}
                 >
                   Busca tu centro:
                 </Typography>
@@ -109,7 +109,7 @@ export default function ListVetCenters() {
                     borderRadius: 50,
                     px: 2,
                     py: 0.4,
-                    width:"50%",
+                    width: { xs: "100%", sm: "50%" },
                     ml: "auto",
                     input: { 
                     color: "black", // Texto blanco para que contraste
@@ -119,17 +119,16 @@ export default function ListVetCenters() {
               </Stack>
               </Stack>      
           </Box>
-  
-        {/* Línea decorativa ajustada */}
-        <Box sx={{ width: 200, height: 4, bgcolor: "#00BCD4", mb: 4, alignSelf: "center" }} />
+
 
           {/* COMIENZA TABLA DE DATOS DINÁMICA */}
           <Paper elevation={0} sx={{ border: "2px solid #333", borderRadius: 0, mt: 4, overflow: "hidden" }}>
             {loading ? (
               // Mientras la base de datos responde, mostramos carga
-              <Box sx={{ p: 4, display: "flex", justifyContent: "center" }}>
-                <CircularProgress color="inherit" />
+              <Box sx={{ p: 4, display: "flex", justifyContent: "center" }}> 
+                <CircularProgress color="inherit"/>
               </Box>
+              
             ) : filteredCenters.length > 0 ? (
               // Mapeamos los datos filtrados usando paréntesis () para el retorno del JSX
               filteredCenters.map((center, index) => (
@@ -139,9 +138,11 @@ export default function ListVetCenters() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
+                    flexDirection: { xs: "column", sm: "row" },
                     p: 2,
                     borderBottom: index !== filteredCenters.length - 1 ? "2px solid #333" : "none",
                     bgcolor: "#D1F2F5",
+                    textAlign: { xs: "center", sm: "left" }
                   }}
                 >
                   <Typography sx={{ fontWeight: "600", fontSize: "1.1rem" }}>
