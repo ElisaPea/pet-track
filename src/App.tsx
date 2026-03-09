@@ -3,7 +3,7 @@ import "./App.css";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import HomeVet from "./pages/HomeVet";
-import WelcomeUser from "./pages/Welcome-User";
+import WelcomeUser from "./pages/WelcomeUser";
 import AccountSettingsUser from "./pages/AccountSettingsUser";
 import AccountSettingsVet from "./pages/AccountSettingsVet";
 import ListVetCenters from "./pages/ListVetCenters";
