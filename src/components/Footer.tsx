@@ -12,13 +12,25 @@ export default function Footer() {
       }}
     >
       <Stack direction="row" spacing={2} justifyContent="center">
-        <IconButton color="primary" aria-label="Instagram">
+        <IconButton
+          onClick={() => window.open("https://www.instagram.com/weratedogs/")}
+          color="primary"
+          aria-label="Instagram"
+        >
           <Instagram />
         </IconButton>
-        <IconButton color="primary" aria-label="LinkedIn">
+        <IconButton
+          onClick={() => window.open("https://neal.fun/deep-sea/")}
+          color="primary"
+          aria-label="LinkedIn"
+        >
           <LinkedIn />
         </IconButton>
-        <IconButton color="primary" aria-label="Email">
+        <IconButton
+          onClick={() => window.open("https://neal.fun/spend/")}
+          color="primary"
+          aria-label="Email"
+        >
           <Mail />
         </IconButton>
       </Stack>

@@ -51,7 +51,17 @@ export default function Login() {
 
   const handleChange = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => ({ ...prev, [field]: "" })); // limpiar error al escribir
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const handleChangeTypeUser = (value: string) => {
+    setForm({
+      ...initialFormState,
+      email: form.email,
+      password: form.password,
+      typeUser: value as "user" | "professional",
+    });
+    if (Object.keys(errors).length > 0) setErrors({});
   };
 
   const testEmail = (value: string) => {
@@ -76,13 +86,11 @@ export default function Login() {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      // Aquí iría la acción real de login/register
-      alert(`Formulario válido!\n${JSON.stringify(form, null, 2)}`);
+      // Acción real de login/register aquí
     }
   };
 
   const handleChangeEmail = (value: string) => {
-    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (value && !testEmail(value)) {
       setForm((prev) => ({ ...prev, email: value }));
       setErrors((prev) => ({ ...prev, email: "El correo no es válido." }));
@@ -97,6 +105,7 @@ export default function Login() {
           justifyContent: "center",
           alignItems: "center",
           mt: 8,
+          px: 2,
         }}
       >
         <Box
@@ -105,17 +114,18 @@ export default function Login() {
             width: "100%",
             maxWidth: 550,
             borderRadius: 10,
-            p: 4,
+            p: { xs: 3, sm: 4 },
             boxShadow: "0px 4px 10px rgba(0,0,0,0.05)",
             textAlign: "center",
           }}
         >
+          {/* Titulo */}
           <Stack
             direction="row"
             spacing={2}
             justifyContent="center"
             alignItems="center"
-            sx={{ mb: 4 }}
+            sx={{ mb: 4, flexWrap: "wrap" }}
           >
             <FootprintIcon />
             <Typography variant="h4" sx={{ fontWeight: "500", color: "#333" }}>
@@ -124,38 +134,43 @@ export default function Login() {
           </Stack>
 
           <Box component="form" noValidate sx={{ mt: 1 }}>
-            <Stack spacing={3} alignItems="center">
+            <Stack spacing={{ xs: 3, sm: 3.5 }} alignItems="center">
               {/* Correo */}
               <Stack
-                direction="column"
+                direction={{ xs: "column", sm: "row" }}
+                alignItems={{ xs: "flex-start", sm: "center" }}
+                spacing={{ xs: 1, sm: 0 }}
                 sx={{ width: "100%", position: "relative" }}
               >
-                <Stack direction="row" alignItems="center">
-                  <Typography
-                    sx={{ width: 180, textAlign: "left", fontWeight: "bold" }}
-                  >
-                    Correo: *
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    variant="standard"
-                    value={form.email}
-                    onChange={(e) => handleChangeEmail(e.target.value)}
-                    InputProps={{ disableUnderline: true }}
-                    sx={{
-                      bgcolor: "white",
-                      borderRadius: 50,
-                      px: 2,
-                      py: 0.5,
-                    }}
-                  />
-                </Stack>
+                <Typography
+                  sx={{
+                    width: { xs: "100%", sm: 180 },
+                    textAlign: "left",
+                    fontWeight: "bold",
+                    mb: { xs: 0.5, sm: 0 },
+                  }}
+                >
+                  Correo: *
+                </Typography>
+                <TextField
+                  fullWidth
+                  variant="standard"
+                  value={form.email}
+                  onChange={(e) => handleChangeEmail(e.target.value)}
+                  InputProps={{ disableUnderline: true }}
+                  sx={{
+                    bgcolor: "white",
+                    borderRadius: 50,
+                    px: 2,
+                    py: 0.5,
+                  }}
+                />
                 {errors.email && (
                   <Typography
                     sx={{
                       color: "red",
                       position: "absolute",
-                      left: "50%",
+                      left: { xs: 0, sm: "50%" },
                       top: "100%",
                       fontSize: "0.8rem",
                     }}
@@ -167,31 +182,41 @@ export default function Login() {
 
               {/* Password */}
               <Stack
-                direction="column"
+                direction={{ xs: "column", sm: "row" }}
+                alignItems={{ xs: "flex-start", sm: "center" }}
+                spacing={{ xs: 1, sm: 0 }}
                 sx={{ width: "100%", position: "relative" }}
               >
-                <Stack direction="row" alignItems="center">
-                  <Typography
-                    sx={{ width: 180, textAlign: "left", fontWeight: "bold" }}
-                  >
-                    Password: *
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    type="password"
-                    variant="standard"
-                    value={form.password}
-                    onChange={(e) => handleChange("password", e.target.value)}
-                    InputProps={{ disableUnderline: true }}
-                    sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
-                  />
-                </Stack>
+                <Typography
+                  sx={{
+                    width: { xs: "100%", sm: 180 },
+                    textAlign: "left",
+                    fontWeight: "bold",
+                    mb: { xs: 0.5, sm: 0 },
+                  }}
+                >
+                  Password: *
+                </Typography>
+                <TextField
+                  fullWidth
+                  type="password"
+                  variant="standard"
+                  value={form.password}
+                  onChange={(e) => handleChange("password", e.target.value)}
+                  InputProps={{ disableUnderline: true }}
+                  sx={{
+                    bgcolor: "white",
+                    borderRadius: 50,
+                    px: 2,
+                    py: 0.5,
+                  }}
+                />
                 {errors.password && (
                   <Typography
                     sx={{
                       color: "red",
                       position: "absolute",
-                      left: "50%",
+                      left: { xs: 0, sm: "50%" },
                       top: "100%",
                       fontSize: "0.8rem",
                     }}
@@ -204,22 +229,23 @@ export default function Login() {
               {/* Tipo de usuario */}
               {!isLogin && (
                 <Stack
-                  direction="row"
-                  alignItems="center"
+                  direction={{ xs: "column", sm: "row" }}
+                  alignItems={{ xs: "flex-start", sm: "center" }}
+                  spacing={{ xs: 0.5, sm: 0 }}
                   sx={{ width: "100%" }}
                 >
                   <Typography
-                    sx={{ width: 180, textAlign: "left", fontWeight: "bold" }}
+                    sx={{
+                      width: { xs: "100%", sm: 180 },
+                      fontWeight: "bold",
+                    }}
                   >
                     Tipo de usuario:
                   </Typography>
                   <RadioGroup
-                    row
+                    row={!isLogin && !isProfessional}
                     value={form.typeUser}
-                    onChange={(e) => {
-                      handleChange("typeUser", e.target.value);
-                      setErrors({});
-                    }}
+                    onChange={(e) => handleChangeTypeUser(e.target.value)}
                   >
                     <FormControlLabel
                       value="user"
@@ -238,42 +264,43 @@ export default function Login() {
               {/* Campos profesionales */}
               {!isLogin && isProfessional && (
                 <>
+                  {/* Nº Colegiado */}
                   <Stack
-                    direction="column"
+                    direction={{ xs: "column", sm: "row" }}
+                    alignItems={{ xs: "flex-start", sm: "center" }}
+                    spacing={{ xs: 1, sm: 0 }}
                     sx={{ width: "100%", position: "relative" }}
                   >
-                    <Stack direction="row" alignItems="center">
-                      <Typography
-                        sx={{
-                          width: 180,
-                          textAlign: "left",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        Nº Colegiado: *
-                      </Typography>
-                      <TextField
-                        fullWidth
-                        variant="standard"
-                        value={form.licenseNumber}
-                        onChange={(e) =>
-                          handleChange("licenseNumber", e.target.value)
-                        }
-                        InputProps={{ disableUnderline: true }}
-                        sx={{
-                          bgcolor: "white",
-                          borderRadius: 50,
-                          px: 2,
-                          py: 0.5,
-                        }}
-                      />
-                    </Stack>
+                    <Typography
+                      sx={{
+                        width: { xs: "100%", sm: 180 },
+                        fontWeight: "bold",
+                        mb: { xs: 0.5, sm: 0 },
+                      }}
+                    >
+                      Nº Colegiado: *
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      variant="standard"
+                      value={form.licenseNumber}
+                      onChange={(e) =>
+                        handleChange("licenseNumber", e.target.value)
+                      }
+                      InputProps={{ disableUnderline: true }}
+                      sx={{
+                        bgcolor: "white",
+                        borderRadius: 50,
+                        px: 2,
+                        py: 0.5,
+                      }}
+                    />
                     {errors.licenseNumber && (
                       <Typography
                         sx={{
                           color: "red",
                           position: "absolute",
-                          left: "50%",
+                          left: { xs: 0, sm: "50%" },
                           top: "100%",
                           fontSize: "0.8rem",
                         }}
@@ -283,46 +310,47 @@ export default function Login() {
                     )}
                   </Stack>
 
+                  {/* Centro Vet */}
                   <Stack
-                    direction="column"
+                    direction={{ xs: "column", sm: "row" }}
+                    alignItems={{ xs: "flex-start", sm: "center" }}
+                    spacing={{ xs: 1, sm: 0 }}
                     sx={{ width: "100%", position: "relative" }}
                   >
-                    <Stack direction="row" alignItems="center">
-                      <Typography
-                        sx={{
-                          width: 180,
-                          textAlign: "left",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        Centro Vet: *
-                      </Typography>
-                      <Select
-                        value={form.selectedVet}
-                        onChange={(e) =>
-                          handleChange("selectedVet", e.target.value)
-                        }
-                        displayEmpty
-                        sx={{
-                          minWidth: 360,
-                          bgcolor: "white",
-                          borderRadius: 50,
-                          px: 2,
-                          py: 0.5,
-                          "& .MuiSelect-select": { padding: "6px 8px" },
-                        }}
-                      >
-                        <MenuItem value="Centro vet 1">Centro Vet 1</MenuItem>
-                        <MenuItem value="Centro vet 2">Centro Vet 2</MenuItem>
-                        <MenuItem value="Centro vet 3">Centro Vet 3</MenuItem>
-                      </Select>
-                    </Stack>
+                    <Typography
+                      sx={{
+                        width: { xs: "100%", sm: 180 },
+                        fontWeight: "bold",
+                        mb: { xs: 0.5, sm: 0 },
+                      }}
+                    >
+                      Centro Vet: *
+                    </Typography>
+                    <Select
+                      value={form.selectedVet}
+                      onChange={(e) =>
+                        handleChange("selectedVet", e.target.value)
+                      }
+                      displayEmpty
+                      fullWidth
+                      sx={{
+                        bgcolor: "white",
+                        borderRadius: 50,
+                        px: 2,
+                        py: 0.5,
+                        "& .MuiSelect-select": { padding: "6px 8px" },
+                      }}
+                    >
+                      <MenuItem value="Centro vet 1">Centro Vet 1</MenuItem>
+                      <MenuItem value="Centro vet 2">Centro Vet 2</MenuItem>
+                      <MenuItem value="Centro vet 3">Centro Vet 3</MenuItem>
+                    </Select>
                     {errors.selectedVet && (
                       <Typography
                         sx={{
                           color: "red",
                           position: "absolute",
-                          left: "50%",
+                          left: { xs: 0, sm: "50%" },
                           top: "100%",
                           fontSize: "0.8rem",
                         }}

@@ -203,7 +203,7 @@ export default function WelcomeUser() {
           <Box sx={{ borderBottom: "2px solid black" }}>
             <Tabs
               value={tabActual}
-              onChange={(e, newValue) => setTabActual(newValue)}
+              onChange={(_, newValue) => setTabActual(newValue)}
               TabIndicatorProps={{ sx: { display: "none" } }}
               variant="fullWidth"
             >
@@ -272,17 +272,17 @@ export default function WelcomeUser() {
                           style: { color: "white" },
                         }}
                         sx={{
+                          bgcolor: "white",
                           width: { xs: "100%", sm: 300 },
                           border:
                             sumbitted && nameError
                               ? "2px solid #F02F0A"
                               : "2px solid transparent",
-                          bgcolor: "#685F5F",
                           borderRadius: 50,
                           px: 2,
                           py: 0.5,
                           ml: { xs: 0, sm: -12 },
-                          "&:hover": { bgcolor: " #555353" },
+                          "&:hover": { bgcolor: "#d5d5d5ff" },
                         }}
                       />
                     </Stack>
@@ -307,12 +307,12 @@ export default function WelcomeUser() {
                           fontSize: 50,
                           width: 100,
                           height: 90,
-                          bgcolor: "#685F5F",
+                          bgcolor: "white",
                           borderRadius: 10,
                           px: 2,
                           py: 0.5,
                           ml: { xs: 0, sm: -12 },
-                          "&:hover": { bgcolor: "#555353" },
+                          "&:hover": { bgcolor: "#d5d5d5ff" },
                         }}
                       >
                         +
@@ -348,16 +348,15 @@ export default function WelcomeUser() {
                           variant="standard"
                           InputProps={{
                             disableUnderline: true,
-                            style: { color: "white" },
                           }}
                           slotProps={{ htmlInput: { maxLength: 2 } }}
                           sx={{
                             width: 60,
-                            bgcolor: "#685F5F",
+                            bgcolor: "white",
                             borderRadius: 50,
                             px: 2,
                             py: 0.5,
-                            "&:hover": { bgcolor: "#555353" },
+                            "&:hover": { bgcolor: "#d5d5d5ff" },
                           }}
                         />
                       </Stack>
@@ -372,16 +371,15 @@ export default function WelcomeUser() {
                           variant="standard"
                           InputProps={{
                             disableUnderline: true,
-                            style: { color: "white" },
                           }}
                           slotProps={{ htmlInput: { maxLength: 2 } }}
                           sx={{
                             width: 60,
-                            bgcolor: "#685F5F",
+                            bgcolor: "white",
                             borderRadius: 50,
                             px: 2,
                             py: 0.5,
-                            "&:hover": { bgcolor: "#555353" },
+                            "&:hover": { bgcolor: "#d5d5d5ff" },
                           }}
                         />
                       </Stack>
@@ -397,11 +395,11 @@ export default function WelcomeUser() {
                           onChange={(e) => setVacunas(e.target.value)}
                           sx={{
                             width: 77,
-                            bgcolor: "#685F5F",
+                            bgcolor: "white",
                             borderRadius: 50,
                             px: 2,
                             py: 0.5,
-                            "&:hover": { bgcolor: "#555353" },
+                            "&:hover": { bgcolor: "#d5d5d5ff" },
                           }}
                         >
                           <MenuItem value="yes">Si</MenuItem>
@@ -418,15 +416,14 @@ export default function WelcomeUser() {
                           variant="standard"
                           InputProps={{
                             disableUnderline: true,
-                            style: { color: "white" },
                           }}
                           sx={{
                             width: 60,
-                            bgcolor: "#685F5F",
+                            bgcolor: "white",
                             borderRadius: 50,
                             px: 2,
                             py: 0.5,
-                            "&:hover": { bgcolor: "#555353" },
+                            "&:hover": { bgcolor: "#d5d5d5ff" },
                           }}
                         />
                       </Stack>
