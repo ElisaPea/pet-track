@@ -175,7 +175,7 @@ export default function AccountSettingsUser() {
               {/* Campo email */}
               <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 400, textAlign: { xs: "center", sm: "left"}, fontWeight: "bold" }}
                 >
                   Correo electrónico*:
                 </Typography>
@@ -199,7 +199,7 @@ export default function AccountSettingsUser() {
               {/* Campo telefono */}
               <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 400, textAlign: { xs: "center", sm: "left"}, fontWeight: "bold" }}
                 >
                   Número de teléfono*:
                 </Typography>
@@ -223,7 +223,7 @@ export default function AccountSettingsUser() {
               {/* Campo Dirección */}
               <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 400, textAlign: { xs: "center", sm: "left"}, fontWeight: "bold" }}
                 >
                   Dirección:
                 </Typography>
@@ -245,7 +245,7 @@ export default function AccountSettingsUser() {
               {/* Campo Centro vet asociado */}
               <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 400, textAlign: { xs: "center", sm: "left"}, fontWeight: "bold" }}
                 >
                   Nº Colegiado*:
                 </Typography>
@@ -283,7 +283,7 @@ export default function AccountSettingsUser() {
                     color: "black",
                     fontWeight: "bold",
                     borderRadius: 2,
-                    width: "50%",
+                    width: { xs: "100%", sm: "50%"},
                     border: "2px solid #64B5F6", // Borde azul del diseño
                     "&:hover": { bgcolor: "#f9a825" },
                   }}
