@@ -149,9 +149,9 @@ export default function AccountSettingsUser() {
 
             <Stack spacing={3} alignItems="center">
               {/* Campo Nombre*/}
-              <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={{ xs: 1, sm: 0}} alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 400, textAlign: { xs: "center", sm: "left"}, fontWeight: "bold" }}
                 >
                   Nombre*:
                 </Typography>
@@ -173,9 +173,9 @@ export default function AccountSettingsUser() {
               </Stack>
 
               {/* Campo email */}
-              <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
+              <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 300, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
                 >
                   Correo electrónico*:
                 </Typography>
@@ -197,9 +197,9 @@ export default function AccountSettingsUser() {
               </Stack>
 
               {/* Campo telefono */}
-              <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
+              <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
                 >
                   Número de teléfono*:
                 </Typography>
@@ -221,9 +221,9 @@ export default function AccountSettingsUser() {
               </Stack>
 
               {/* Campo Dirección */}
-              <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
+              <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 150, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
                 >
                   Dirección:
                 </Typography>
@@ -243,7 +243,7 @@ export default function AccountSettingsUser() {
               </Stack>
 
               {/* Campo Centro vet asociado */}
-              <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
+              <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
                 <Typography
                   sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
                 >
@@ -270,7 +270,7 @@ export default function AccountSettingsUser() {
                 sx={{
                   width: "100%",
                   display: "flex",
-                  justifyContent: "space-between",
+                  justifyContent: "flex-end",
                   alignItems: "center",
                   pt: 2,
                 }}
@@ -283,7 +283,7 @@ export default function AccountSettingsUser() {
                     color: "black",
                     fontWeight: "bold",
                     borderRadius: 2,
-                    mb: 2,
+                    width: "50%",
                     border: "2px solid #64B5F6", // Borde azul del diseño
                     "&:hover": { bgcolor: "#f9a825" },
                   }}

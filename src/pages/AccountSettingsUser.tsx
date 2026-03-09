@@ -148,7 +148,7 @@ export default function AccountSettingsUser() {
               {/* Campo Nombre*/}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 120, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
                 >
                   Nombre*:
                 </Typography>
@@ -172,7 +172,7 @@ export default function AccountSettingsUser() {
               {/* Campo email */}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 300, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
                 >
                   Correo electrónico*:
                 </Typography>
@@ -196,7 +196,7 @@ export default function AccountSettingsUser() {
               {/* Campo telefono */}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 160, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
                 >
                   Número de teléfono*:
                 </Typography>
@@ -213,7 +213,7 @@ export default function AccountSettingsUser() {
                     borderRadius: 50,
                     px: 2,
                     py: 0.5,
-                    width: "50%",
+                    width: "100%",
                     ml: "auto",
                   }}
                 />
@@ -222,7 +222,7 @@ export default function AccountSettingsUser() {
               {/* Campo Dirección */}
               <Stack direction="row" alignItems="center" sx={{ width: "100%" }}>
                 <Typography
-                  sx={{ width: 150, textAlign: "left", fontWeight: "bold" }}
+                  sx={{ width: 400, textAlign: "left", fontWeight: "bold" }}
                 >
                   Dirección:
                 </Typography>
@@ -277,7 +277,9 @@ export default function AccountSettingsUser() {
                 sx={{
                   width: "100%",
                   display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
                   justifyContent: "space-between",
+                  gap: 4,
                   alignItems: "center",
                   pt: 2,
                 }}
@@ -292,7 +294,7 @@ export default function AccountSettingsUser() {
                     color: "black",
                     fontWeight: "bold",
                     borderRadius: 2,
-                    mb: 2,
+                    width: "100%",
                     border: "2px solid #64B5F6", // Borde azul del diseño
                     "&:hover": { bgcolor: "#f9a825" },
                   }}
@@ -307,7 +309,7 @@ export default function AccountSettingsUser() {
                     color: "black",
                     fontWeight: "bold",
                     borderRadius: 2,
-                    mb: 2,
+                    width: "100%",
                     border: "2px solid #64B5F6", // Borde azul del diseño
                     "&:hover": { bgcolor: "#f9a825" },
                   }}
