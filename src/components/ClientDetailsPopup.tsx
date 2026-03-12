@@ -14,7 +14,6 @@ import {
   FormControlLabel,
   Radio,
   Avatar,
-  Grid,
 } from "@mui/material";
 
 // Pictures import for testing (TO DELETE)
@@ -147,7 +146,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
   const selectedClient = clientList.find((c) => c.id === clientId);
 
   // 2. Filtramos las mascotas asociadas a ese ID
-  const filteredPets = petList.filter((p) => p.clientId === clientId);
+  // const filteredPets = petList.filter((p) => p.clientId === clientId);
 
   // Si no hay ID o no se encuentra el cliente, no mostramos el contenido
   //if (!selectedClient) return null;
