@@ -17,9 +17,9 @@ import {
 } from "@mui/material";
 
 // Pictures import for testing (TO DELETE)
-import beni from "../assets/Beni_perfil.jpeg";
-import test1 from "../assets/test_1.jpg";
-import test2 from "../assets/test_2.jpeg";
+// import beni from "../assets/Beni_perfil.jpeg";
+// import test1 from "../assets/test_1.jpg";
+// import test2 from "../assets/test_2.jpeg";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -98,49 +98,49 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
   ];
 
   // Mock pets data array
-  const petList = [
-    {
-      id: 1,
-      clientId: 1,
-      name: "Beni",
-      species: "Gato",
-      chip: 109284478563826,
-      image: beni,
-      vetNotes: "Tiene que tomarse una tila porque está como una cabra",
-      userNotes: "Solo hace que comer, dormir y cagar",
-    },
-    {
-      id: 2,
-      clientId: 1,
-      name: "Thor",
-      species: "Gato",
-      chip: 109284478745294,
-      image: test1,
-      vetNotes: "Tiene que moverse más",
-      userNotes: "Si sigue durmiendo más, pensaré que está muerto",
-    },
-    {
-      id: 3,
-      clientId: 1,
-      name: "Atena",
-      species: "Gato",
-      chip: 909421478563826,
-      image: test2,
-      vetNotes: "Si sigue comiendo así va a rodar",
-      userNotes: "Todo correcto",
-    },
-    {
-      id: 4,
-      clientId: 1,
-      name: "Luna",
-      species: "Gato",
-      chip: 109772241563826,
-      image: beni,
-      vetNotes: "Nada que destacar",
-      userNotes: "No se mueve más que para ir a comer",
-    },
-    // Add as many items as needed...
-  ];
+  // const petList = [
+  //   {
+  //     id: 1,
+  //     clientId: 1,
+  //     name: "Beni",
+  //     species: "Gato",
+  //     chip: 109284478563826,
+  //     image: beni,
+  //     vetNotes: "Tiene que tomarse una tila porque está como una cabra",
+  //     userNotes: "Solo hace que comer, dormir y cagar",
+  //   },
+  //   {
+  //     id: 2,
+  //     clientId: 1,
+  //     name: "Thor",
+  //     species: "Gato",
+  //     chip: 109284478745294,
+  //     image: test1,
+  //     vetNotes: "Tiene que moverse más",
+  //     userNotes: "Si sigue durmiendo más, pensaré que está muerto",
+  //   },
+  //   {
+  //     id: 3,
+  //     clientId: 1,
+  //     name: "Atena",
+  //     species: "Gato",
+  //     chip: 909421478563826,
+  //     image: test2,
+  //     vetNotes: "Si sigue comiendo así va a rodar",
+  //     userNotes: "Todo correcto",
+  //   },
+  //   {
+  //     id: 4,
+  //     clientId: 1,
+  //     name: "Luna",
+  //     species: "Gato",
+  //     chip: 109772241563826,
+  //     image: beni,
+  //     vetNotes: "Nada que destacar",
+  //     userNotes: "No se mueve más que para ir a comer",
+  //   },
+  //   // Add as many items as needed...
+  // ];
 
   // 1. Buscamos los datos del cliente en el array mockeado
   const selectedClient = clientList.find((c) => c.id === clientId);
