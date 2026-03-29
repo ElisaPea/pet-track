@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
-import AccountSettingsUser from '../AccountSettingsUser';
+import AccountSettingsUser from '../pages/AccountSettingsUser';
 
 // Mock de la navegación para evitar errores de ejecución
 const mockNavigate = vi.fn();
