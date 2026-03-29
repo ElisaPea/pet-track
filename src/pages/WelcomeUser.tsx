@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import BasicScreen from "../components/BasicScreen";
+import { getEtapaVida } from "../utils/getEtapaVida";
 
 export default function WelcomeUser() {
   {
@@ -20,6 +21,7 @@ export default function WelcomeUser() {
   const [open, setOpen] = useState(false);
   const [tabActual, setTabActual] = useState(0);
   const [vacunas, setVacunas] = useState("");
+  const [edad, setEdad] = useState("");
   {
     /* Validations */
   }
@@ -269,7 +271,7 @@ export default function WelcomeUser() {
                         variant="standard"
                         InputProps={{
                           disableUnderline: true,
-                          style: { color: "white" },
+                          style: { color: "black" },
                         }}
                         sx={{
                           bgcolor: "white",
@@ -338,27 +340,46 @@ export default function WelcomeUser() {
                       sx={{ width: "100%", pt: -30 }}
                     >
                       {/* Age Field */}
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <Typography sx={{ fontWeight: "bold", minWidth: 50 }}>
-                          Edad:
-                        </Typography>
-                        <TextField
-                          autoComplete="off"
-                          onKeyDown={onlyNumbers}
-                          variant="standard"
-                          InputProps={{
-                            disableUnderline: true,
-                          }}
-                          slotProps={{ htmlInput: { maxLength: 2 } }}
+                      <Stack direction="column" alignItems="flex-start" spacing={0.5} sx={{ position: "relative" }}>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography sx={{ fontWeight: "bold", minWidth: 50 }}>
+                            Edad:
+                          </Typography>
+                          <TextField
+                            autoComplete="off"
+                            onKeyDown={onlyNumbers}
+                            value={edad}
+                            onChange={(e) => setEdad(e.target.value)}
+                            variant="standard"
+                            InputProps={{ disableUnderline: true }}
+                            slotProps={{ htmlInput: { maxLength: 2 } }}
+                            sx={{
+                              width: 60,
+                              bgcolor: "white",
+                              color: "black",
+                              borderRadius: 50,
+                              px: 2,
+                              py: 0.5,
+                              "&:hover": { bgcolor: "#d5d5d5ff" },
+                            }}
+                          />
+                        </Stack>
+                        {/* Texto de etapa de vida*/}
+                        <Typography
                           sx={{
-                            width: 60,
-                            bgcolor: "white",
-                            borderRadius: 50,
-                            px: 2,
-                            py: 0.5,
-                            "&:hover": { bgcolor: "#d5d5d5ff" },
+                            ml: 7,
+                            fontSize: 13,
+                            fontWeight: "bold",
+                            color: "#00ADBA",
+                            position: "absolute",
+                            top: "100%",
+                            left: 0,
+                            whiteSpace: "nowrap",
+                            visibility: getEtapaVida(edad) ? "visible" : "hidden",
                           }}
-                        />
+                        >
+                          {getEtapaVida(edad) || "placeholder"}
+                        </Typography>
                       </Stack>
                       {/* Weight Field */}
                       <Stack direction="row" alignItems="center" spacing={1}>
@@ -376,6 +397,7 @@ export default function WelcomeUser() {
                           sx={{
                             width: 60,
                             bgcolor: "white",
+                            color: "black",
                             borderRadius: 50,
                             px: 2,
                             py: 0.5,
@@ -420,6 +442,7 @@ export default function WelcomeUser() {
                           sx={{
                             width: 60,
                             bgcolor: "white",
+                            color: "black",
                             borderRadius: 50,
                             px: 2,
                             py: 0.5,
