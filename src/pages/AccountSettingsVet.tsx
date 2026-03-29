@@ -9,15 +9,20 @@ import {
   Alert,
 } from "@mui/material";
 import React, { useState } from "react";
+import {
+  validateEmail,
+  validatePhone,
+  validateColegiado,
+  isNotEmpty,
+} from "../utils/validationUtils";
 
 export default function AccountSettingsUser() {
   //Nuevo estado para controlar mensaje de error.
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   //Nuevo estado para controlar mensaje de error.
-  const [error2, setError2] = useState(false);
+  const [error2, setError2] = useState<string | null>(null);
   //Nuevo estado para controlar mensaje guardado con éxito.
   const [success, setSuccess] = useState(false);
-
   //ArrayList Campos
   const [formData, setFormData] = useState({
     nombre: "",
@@ -28,51 +33,54 @@ export default function AccountSettingsUser() {
   });
 
   // Manejador de cambios en los inputs
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError(false); // Limpiar error mientras escriben
-    if (error2) setError2(false); // Limpiar error mientras escriben
+    if (error) setError(null); // Limpiar error mientras escriben
+    if (error2) setError2(null); // Limpiar error mientras escriben
     // Ocultamos el éxito si el usuario vuelve a escribir
     if (success) setSuccess(false);
   };
+
   //Funcion campos obligatorios
   const handleGuardar = () => {
-    const { nombre, email, telefono } = formData;
+    const { nombre, email, telefono, numeroColegiado } = formData;
 
     // Reiniciamos estados al principio para evitar que se pisen
-    setError(false);
-    setError2(false);
+    setError(null);
+    setError2(null);
     setSuccess(false);
 
-    //Reglas de validación
-
-    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Validación Email: Verifica formato estándar (texto@texto.extensión)
-    const soloNumeros = telefono.replace(/\D/g, ""); // Validación Teléfono: Extraemos solo los números para contar
-    const esTelefonoValido = soloNumeros.length === 11; // +34 (2) + 9 números
-    const colegiadoValid = /^\d{4,6}$/.test(formData.numeroColegiado); //Validación específica para Colegiado (Solo números y longitud 4-6)
-
     // Validación de campos VACÍOS
-    if (
-      !nombre.trim() ||
-      !email.trim() ||
-      telefono.trim() === "+34" ||
-      !formData.numeroColegiado.trim()
-    ) {
-      setError(true);
+    const faltan: string[] = [];
+    if (!isNotEmpty(nombre)) faltan.push("Nombre");
+    if (!isNotEmpty(email)) faltan.push("Email");
+    if (!isNotEmpty(telefono)) faltan.push("Teléfono");
+    if (!isNotEmpty(numeroColegiado)) faltan.push("Nº Colegiado");
+
+    if (faltan.length > 0) {
+      setError(`Faltan campos obligatorios: ${faltan.join(", ")}.`);
       return;
     }
 
     //Validación de FORMATO
-    if (!emailValid.test(email) || !esTelefonoValido || !colegiadoValid) {
-      setError2(true);
+    const invalidFields: string[] = [];
+    if (!validateEmail(email)) invalidFields.push("Email");
+    if (!validatePhone(telefono))
+      invalidFields.push("Teléfono (+34 + 9 números)");
+    if (!validateColegiado(numeroColegiado))
+      invalidFields.push("Nº Colegiado (4-6 números)");
+
+    if (invalidFields.length > 0) {
+      setError2(`El formato es incorrecto en: ${invalidFields.join(", ")}.`);
       return;
     }
 
     //Exito:
-    setError(false);
-    setError2(false);
+    setError(null);
+    setError2(null);
     setSuccess(true);
-
     console.log("Datos guardados con éxito:", formData);
 
     // Vaciamos el formulario (Reset)
@@ -83,8 +91,8 @@ export default function AccountSettingsUser() {
       direccion: "",
       numeroColegiado: "",
     });
-    setTimeout(() => setSuccess(false), 3000);
 
+    setTimeout(() => setSuccess(false), 3000);
     // Aquí va conexión a Supabase más adelante
   };
 
@@ -106,10 +114,8 @@ export default function AccountSettingsUser() {
         >
           Actualiza tu perfil
         </Typography>
-
         {/* Línea decorativa */}
         <Box sx={{ width: 60, height: 4, bgcolor: "#00BCD4", mb: 4 }} />
-
         {/* Contenedor Principal (Cuadrado azul claro) */}
         <Box
           sx={{
@@ -125,28 +131,23 @@ export default function AccountSettingsUser() {
           {/* Formulario */}
           <Box component="form" noValidate sx={{ mt: 1 }}>
             {/* Mensaje de Error Visual */}
-            <Collapse in={error}>
+            <Collapse in={Boolean(error)}>
               <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
-                Por favor, rellena todos los campos obligatorios (Nombre, Email,
-                Teléfono y Número de colegiado).
+                {error}
               </Alert>
             </Collapse>
-
             {/* Mensaje de Error Visual  Rellenar correctamente los campos obligatorios*/}
-            <Collapse in={error2}>
+            <Collapse in={Boolean(error2)}>
               <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
-                Por favor, rellena con el formato adecuado los campos
-                obligatorios(Email, Teléfono y Número Colegiado).
+                {error2}
               </Alert>
             </Collapse>
-
             {/* Mensaje de Error Guardado */}
             <Collapse in={success}>
               <Alert severity="success" sx={{ mb: 3, borderRadius: 5 }}>
                 ¡Datos guardados correctamente!
               </Alert>
             </Collapse>
-
             <Stack spacing={3} alignItems="center">
               {/* Campo Nombre*/}
               <Stack
@@ -170,7 +171,7 @@ export default function AccountSettingsUser() {
                   variant="standard"
                   value={formData.nombre}
                   onChange={handleChange}
-                  error={error && !formData.nombre}
+                  error={Boolean(error) && !isNotEmpty(formData.nombre)}
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "white",
@@ -180,7 +181,6 @@ export default function AccountSettingsUser() {
                   }}
                 />
               </Stack>
-
               {/* Campo email */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
@@ -202,7 +202,10 @@ export default function AccountSettingsUser() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  error={error && !formData.email}
+                  error={
+                    (Boolean(error) && !isNotEmpty(formData.email)) ||
+                    (Boolean(error2) && !validateEmail(formData.email))
+                  }
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "white",
@@ -212,7 +215,6 @@ export default function AccountSettingsUser() {
                   }}
                 />
               </Stack>
-
               {/* Campo telefono */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
@@ -234,7 +236,10 @@ export default function AccountSettingsUser() {
                   name="telefono"
                   value={formData.telefono}
                   onChange={handleChange}
-                  error={error && formData.telefono.trim() === "+34"}
+                  error={
+                    (Boolean(error) && !isNotEmpty(formData.telefono)) ||
+                    (Boolean(error2) && !validatePhone(formData.telefono))
+                  }
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "white",
@@ -244,7 +249,6 @@ export default function AccountSettingsUser() {
                   }}
                 />
               </Stack>
-
               {/* Campo Dirección */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
@@ -263,6 +267,7 @@ export default function AccountSettingsUser() {
                 <TextField
                   fullWidth
                   variant="standard"
+                  name="direccion"
                   value={formData.direccion}
                   onChange={handleChange}
                   InputProps={{ disableUnderline: true }}
@@ -274,7 +279,6 @@ export default function AccountSettingsUser() {
                   }}
                 />
               </Stack>
-
               {/* Campo Centro vet asociado */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
@@ -296,6 +300,11 @@ export default function AccountSettingsUser() {
                   onChange={handleChange}
                   name="numeroColegiado"
                   value={formData.numeroColegiado}
+                  error={
+                    (Boolean(error) && !isNotEmpty(formData.numeroColegiado)) ||
+                    (Boolean(error2) &&
+                      !validateColegiado(formData.numeroColegiado))
+                  }
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "white",
@@ -305,7 +314,6 @@ export default function AccountSettingsUser() {
                   }}
                 />
               </Stack>
-
               {/* Botón guardar*/}
               <Box
                 sx={{
