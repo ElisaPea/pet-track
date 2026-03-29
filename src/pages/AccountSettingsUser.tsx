@@ -152,6 +152,8 @@ export default function AccountSettingsUser() {
                 sx={{ width: "100%" }}
               >
                 <Typography
+                  component="label" 
+                  htmlFor="nombre-input"
                   sx={{
                     width: 400,
                     textAlign: { xs: "center", sm: "left" },
@@ -162,6 +164,7 @@ export default function AccountSettingsUser() {
                 </Typography>
                 <TextField
                   fullWidth
+                  id="nombre-input"
                   name="nombre"
                   variant="standard"
                   value={formData.nombre}
