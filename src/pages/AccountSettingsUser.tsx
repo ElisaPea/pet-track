@@ -187,6 +187,8 @@ export default function AccountSettingsUser() {
                 sx={{ width: "100%" }}
               >
                 <Typography
+                  component="label" 
+                  htmlFor="email-input"
                   sx={{
                     width: 400,
                     textAlign: { xs: "center", sm: "left" },
@@ -196,6 +198,7 @@ export default function AccountSettingsUser() {
                   Correo electrónico*:
                 </Typography>
                 <TextField
+                  id="email-input"
                   fullWidth
                   variant="standard"
                   name="email"
