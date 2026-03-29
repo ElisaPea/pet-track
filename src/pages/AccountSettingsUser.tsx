@@ -222,6 +222,8 @@ export default function AccountSettingsUser() {
                 sx={{ width: "100%" }}
               >
                 <Typography
+                  component="label" 
+                  htmlFor="telefono-input" 
                   sx={{
                     width: 400,
                     textAlign: { xs: "center", sm: "left" },
@@ -231,6 +233,7 @@ export default function AccountSettingsUser() {
                   Número de teléfono*:
                 </Typography>
                 <TextField
+                id="telefono-input"
                   fullWidth
                   variant="standard"
                   name="telefono"
