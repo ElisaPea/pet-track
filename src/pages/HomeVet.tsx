@@ -12,6 +12,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt"; // Alternative arrow icon can be used if preferred
 import ClientDetailsPopup from "../components/ClientDetailsPopup";
+import AddClientPopup from '../components/AddClientPopup';
 import { useState } from "react";
 
 // Pictures import for testing (TO DELETE)
@@ -36,8 +37,8 @@ export default function HomeVet() {
 
   // Create the 'switch'. It is closed by default (false)
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
+  const [isAddClientOpen, setIsAddClientOpen] = useState(false);
 
   // Function to open the popup with a specific ID
   const handleOpenDetails = (id: number) => {
@@ -132,7 +133,7 @@ export default function HomeVet() {
               width: 50,
               height: 50,
             }}
-            onClick={() => console.log("Agregar cliente")}
+            onClick={() => setIsAddClientOpen(true)}
           >
             <AddIcon sx={{ fontSize: 30, color: "#00ADBA" }} />
           </IconButton>
@@ -263,11 +264,17 @@ export default function HomeVet() {
                 <ArrowRightAltIcon /> {/* Arrow icon */}
               </IconButton>
 
-              {/* Place the Modal at the bottom. It will be 'listening' to the isModalOpen switch. */}
+              {/* POPUPS SECTION */}
+              {/* CLIENT DETAILS POPUP: Place the Modal at the bottom. It will be 'listening' to the isModalOpen switch. */}
               <ClientDetailsPopup
                 open={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 clientId={selectedClientId}
+              />
+              {/* ADD CLIENT POPUP: Triggered from the top "+" button */}
+              <AddClientPopup
+                open={isAddClientOpen}
+                onClose={() => setIsAddClientOpen(false)}
               />
             </Box>
           </Box>
