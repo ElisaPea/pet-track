@@ -14,6 +14,7 @@ import {
   FormControlLabel,
   Radio,
   Avatar,
+  FormControl,
 } from "@mui/material";
 
 // Pictures import for testing (TO DELETE)
@@ -58,6 +59,10 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
 }) => {
   // STATE: Active tab index controller (0: Client Details, 1: Pets)
   const [tabValue, setTabValue] = useState(0);
+
+  // --- State Management ---
+  // Controls the "Associated to user" radio selection. Default is "no".
+  const [associated, setAssociated] = useState<string>("no");
 
   // EVENT HANDLER: Updates the active tab state upon selection
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -222,6 +227,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
         {/* TAB 1: CLIENT DATA FORM */}
         <TabPanel value={tabValue} index={0}>
           <Stack spacing={2.5} sx={{ maxWidth: 600, mx: "auto" }}>
+
             {/* Name field */}
             <Box
               sx={{
@@ -234,6 +240,34 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
               }}
             >
               <Typography sx={{ fontWeight: "bold" }}>Nombre</Typography>
+              <TextField
+                key={selectedClient?.id || "empty"}
+                size="small"
+                variant="standard"
+                defaultValue={selectedClient?.client || "VACIO"}
+                InputProps={{ disableUnderline: true }}
+                sx={{
+                  bgcolor: "white",
+                  borderRadius: 50,
+                  px: 2,
+                  py: 0.5,
+                  width: { xs: "100%", sm: 350 },
+                }}
+              />
+            </Box>
+
+            {/* DNI field */}
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                alignItems: { xs: "flex-start", sm: "center" },
+                justifyContent: "space-between",
+                gap: { xs: 1, sm: 2 },
+                width: "100%",
+              }}
+            >
+              <Typography sx={{ fontWeight: "bold" }}>DNI</Typography>
               <TextField
                 key={selectedClient?.id || "empty"}
                 size="small"
@@ -310,42 +344,39 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
             </Box>
 
             {/* Radio Selection: Associated Client */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: 4, mt: 1 }}>
-              <Typography sx={{ fontWeight: "bold" }}>
-                Cliente asociado a usuario
+            {/* --- Association Logic Section --- */}
+            <Box>
+              <Typography sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                El cliente está asociado a un usuario?
               </Typography>
-              <RadioGroup row defaultValue="no">
-                <FormControlLabel
-                  value="si"
-                  control={
-                    <Radio sx={{ "&.Mui-checked": { color: "#00ADBA" } }} />
-                  }
-                  label="Si"
-                />
-                <FormControlLabel
-                  value="no"
-                  control={
-                    <Radio sx={{ "&.Mui-checked": { color: "#00ADBA" } }} />
-                  }
-                  label="No"
-                />
-              </RadioGroup>
+              <FormControl component="fieldset">
+                <RadioGroup
+                  row
+                  value={associated}
+                  onChange={(e) => setAssociated(e.target.value)}
+                >
+                  <FormControlLabel value="si" control={<Radio size="small" />} label="Si" />
+                  <FormControlLabel value="no" control={<Radio size="small" />} label="No" />
+                </RadioGroup>
+              </FormControl>
             </Box>
-
-            {/* Send association email button */}
+            {/* Logic: This button remains disabled unless "Yes" is selected.
+                Target for future modification: Add the email sending logic here. */}
             <Button
               variant="contained"
+              disabled={associated === "no"}
               sx={{
-                bgcolor: "#66BB6A",
-                color: "black",
-                borderRadius: 5,
-                width: "fit-content",
-                textTransform: "none",
-                fontWeight: "bold",
-                "&:hover": { bgcolor: "#52a552ff" },
+                bgcolor: '#66BB6A',
+                borderRadius: 10,
+                textTransform: 'none',
+                fontWeight: 'bold',
+                py: 1,
+                '&:hover': { bgcolor: '#52a552ff' },
+                // Custom style for disabled state to maintain UI clarity
+                '&.Mui-disabled': { bgcolor: '#BDBDBD', color: '#F5F5F5' }
               }}
             >
-              ENVIAR CORREO DE ASOCIACIÓN
+              Enviar correo de asociación
             </Button>
           </Stack>
         </TabPanel>

@@ -17,6 +17,55 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
     // Controls the "Associated to user" radio selection. Default is "no".
     const [associated, setAssociated] = useState<string>("no");
 
+    // Form inputs state
+    const [formData, setFormData] = useState({
+        Nombre: '',
+        DNI: '',
+        Email: '',
+        Teléfono: ''
+    });
+
+    // Form validation errors state
+    const [errors, setErrors] = useState({
+        DNI: ''
+    });
+
+    // --- Validation Logic ---
+    // IMPORTANT: Validation function for DNI and NIE formats
+    // Keep this regex updated if ID formats change in the future
+    const validateDNI = () => {
+        const dniValue = formData.DNI.trim().toUpperCase();
+
+        // Wait until user types something to validate
+        if (!dniValue) {
+            setErrors((prev) => ({ ...prev, DNI: '' }));
+            return;
+        }
+
+        // Regex for DNI: Exactly 8 digits followed by 1 letter (A-Z)
+        const isValidDNI = /^[0-9]{8}[A-Z]$/.test(dniValue);
+
+        // Regex for NIE: Exactly 1 letter (A-Z), followed by 7 digits, followed by 1 letter (A-Z)
+        const isValidNIE = /^[A-Z][0-9]{7}[A-Z]$/.test(dniValue);
+
+        // Check if value passes either regex. Automatically rejects special characters, wrong length, etc.
+        if (!isValidDNI && !isValidNIE) {
+            setErrors((prev) => ({ ...prev, DNI: 'Formato inválido o incorrecto' }));
+        } else {
+            setErrors((prev) => ({ ...prev, DNI: '' }));
+        }
+    };
+
+    // Generic input handler to update state and clear errors
+    const handleInputChange = (field: string, value: string) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+
+        // Provide immediate feedback by clearing error when user starts typing again
+        if (field === 'DNI' && errors.DNI) {
+            setErrors((prev) => ({ ...prev, DNI: '' }));
+        }
+    };
+
     // --- Styling Constants ---
     // Centralized styles for the dark-gray inputs to ensure consistency
     const grayInputStyle = {
@@ -71,14 +120,14 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
             <DialogContent>
                 <Stack spacing={2} sx={{ mt: 1 }}>
                     {/* --- Input Fields Section --- 
-                        If you need to add more fields (e.g., Address), 
+                        If we need to add more fields,
                         just add a new object to this array.
                     */}
                     {[
-                        { label: "Nombre", type: "text", placeholder: "Nombre completo ..." },
-                        { label: "DNI", type: "text", placeholder: "DNI ..." },
-                        { label: "Email", type: "email", placeholder: "ejemplo@mail.com ..." },
-                        { label: "Teléfono", type: "tel", placeholder: "600 000 000 ..." }
+                        { label: "Nombre", fieldKey: "Nombre", type: "text", placeholder: "Nombre completo ..." },
+                        { label: "DNI", fieldKey: "DNI", type: "text", placeholder: "DNI ..." },
+                        { label: "Email", fieldKey: "Email", type: "email", placeholder: "ejemplo@mail.com ..." },
+                        { label: "Teléfono", fieldKey: "Teléfono", type: "tel", placeholder: "600 000 000 ..." }
                     ].map((field) => (
                         <Box
                             key={field.label}
@@ -106,6 +155,11 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
                                 variant="standard"
                                 placeholder={field.placeholder}
                                 InputProps={{ disableUnderline: true }}
+                                value={formData[field.fieldKey as keyof typeof formData]}
+                                onChange={(e) => handleInputChange(field.fieldKey, e.target.value)}
+                                onBlur={field.fieldKey === 'DNI' ? validateDNI : undefined}
+                                error={field.fieldKey === 'DNI' ? !!errors.DNI : false}
+                                helperText={field.fieldKey === 'DNI' ? errors.DNI : ''}
                                 sx={{ ...grayInputStyle, width: { xs: '100%', sm: 300 } }}
                             />
                         </Box>
