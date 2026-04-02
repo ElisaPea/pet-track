@@ -1,3 +1,4 @@
+
 describe("Requisitos Funcionales - Gestión de Mascotas", () => {
   // Antes de cada test, que visite la página principal
   beforeEach(() => {
