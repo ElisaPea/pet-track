@@ -18,7 +18,7 @@ import { getEtapaVida } from "../utils/getEtapaVida";
 import { createPet } from "../api/query";
 
 // ID de prueba para Cypress/Pruebas funcionales
-const TEST_USER_ID = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb";
+const TEST_USER_ID = "2427a02c-b1c9-423e-9aab-4ed448c34b5b";
 
 export function PopupCreatePetUser({
   open,
@@ -190,223 +190,321 @@ export function PopupCreatePetUser({
           <Box sx={{ flex: 1 }}>
             {/* Pet Info Tab */}
             {tabActual == 0 && (
-              <Box>
-                <Stack spacing={4} alignItems="center">
-                  {/* Pet Name Field */}
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    alignItems={{ xs: "flex-start", sm: "center" }}
-                    sx={{ width: "100%" }}
+              <Box
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 4,
+                  py: 1,
+                  px: { xs: 1, sm: 2, md: 4 },
+                }}
+              >
+                {/* Tarjeta Datos Principales */}
+                <Box
+                  sx={{
+                    bgcolor: "white",
+                    borderRadius: 5,
+                    p: { xs: 3, md: 4 },
+                    boxShadow: "0px 10px 30px rgba(0,0,0,0.05)",
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: { xs: 3, md: 6 },
+                    alignItems: "center",
+                    minHeight: 220,
+                  }}
+                >
+                  {/* Pet Img (Ahora a la izquierda y más grande) */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      minWidth: 160,
+                    }}
                   >
                     <Typography
+                      variant="subtitle1"
                       sx={{
-                        width: { xs: "100%", sm: 400 },
-                        textAlign: "left",
                         fontWeight: "bold",
+                        color: "text.secondary",
+                        mb: 1.5,
+                      }}
+                    >
+                      Foto de perfil
+                    </Typography>
+                    <Button
+                      sx={{
+                        color: "#00ADBA",
+                        fontSize: 50,
+                        width: 150,
+                        height: 150,
+                        bgcolor: "#F7F9FA",
+                        borderRadius: 5,
+                        border: "3px dashed #BEF1F3",
+                        "&:hover": {
+                          bgcolor: "#E4F7FB",
+                          borderColor: "#00ADBA",
+                        },
+                      }}
+                    >
+                      +
+                    </Button>
+                  </Box>
+
+                  {/* Pet Name */}
+                  <Box sx={{ flex: 1, width: "100%" }}>
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontWeight: "bold",
+                        color: "#00ADBA",
+                        mb: 2,
                       }}
                     >
                       ¿Cual es el nombre de tu mascota?
                     </Typography>
                     <TextField
+                      fullWidth
                       autoComplete="off"
                       value={name}
                       onChange={(e) => nameValidation(e.target.value)}
                       error={sumbitted && !!nameError}
                       helperText={sumbitted ? nameError : ""}
                       onClick={() => setSumbitted(false)}
-                      variant="standard"
-                      InputProps={{
-                        disableUnderline: true,
-                        style: { color: "black" },
+                      variant="outlined"
+                      slotProps={{
+                        htmlInput: {
+                          "data-testid": "input-pet-name",
+                        },
                       }}
                       sx={{
-                        bgcolor: "white",
-                        width: { xs: "100%", sm: 300 },
-                        border:
-                          sumbitted && nameError
-                            ? "2px solid #F02F0A"
-                            : "2px solid transparent",
-                        borderRadius: 50,
-                        px: 2,
-                        py: 0.5,
-                        ml: { xs: 0, sm: -12 },
-                        "&:hover": { bgcolor: "#d5d5d5ff" },
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 50,
+                          bgcolor: "#F7F9FA",
+                          height: 60,
+                          fontSize: "1.2rem",
+                          px: 2,
+                          "& fieldset": {
+                            borderColor:
+                              sumbitted && nameError
+                                ? "#F02F0A"
+                                : "transparent",
+                          },
+                          "&:hover fieldset": {
+                            borderColor: "#BEF1F3",
+                          },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "#00ADBA",
+                          },
+                        },
                       }}
                     />
-                  </Stack>
-                  {/* Pet Img Field */}
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    alignItems={{ xs: "flex-start", sm: "center" }}
-                    sx={{ width: "100%" }}
-                  >
-                    <Typography
-                      sx={{
-                        width: { xs: "100%", sm: 400 },
-                        textAlign: "left",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      !Comparte fotos de tu mascota!
-                    </Typography>
-                    <Button
-                      sx={{
-                        color: "black",
-                        fontSize: 50,
-                        width: 100,
-                        height: 90,
-                        bgcolor: "white",
-                        borderRadius: 10,
-                        px: 2,
-                        py: 0.5,
-                        ml: { xs: 0, sm: -12 },
-                        "&:hover": { bgcolor: "#d5d5d5ff" },
-                      }}
-                    >
-                      +
-                    </Button>
-                  </Stack>
-                  {/* Aditional Info Field */}
-                  <Box sx={{ width: "100%" }}>
-                    <Typography
-                      sx={{
-                        width: 400,
-                        textAlign: "left",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      Informacion adicional:
-                    </Typography>
                   </Box>
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    alignItems={{ xs: "flex-start", sm: "center" }}
-                    flexWrap="wrap"
-                    gap={2}
-                    sx={{ width: "100%", pt: -30 }}
+                </Box>
+
+                {/* Tarjeta Información adicional */}
+                <Box
+                  sx={{
+                    bgcolor: "white",
+                    borderRadius: 5,
+                    p: { xs: 3, md: 4 },
+                    boxShadow: "0px 10px 30px rgba(0,0,0,0.05)",
+                    flex: 1,
+                    minHeight: 200,
+                  }}
+                >
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: "bold",
+                      color: "#00ADBA",
+                      mb: 4,
+                    }}
                   >
-                    {/* Age Field */}
-                    <Stack
-                      direction="column"
-                      alignItems="flex-start"
-                      spacing={0.5}
-                      sx={{ position: "relative" }}
-                    >
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <Typography sx={{ fontWeight: "bold", minWidth: 50 }}>
-                          Edad:
-                        </Typography>
-                        <TextField
-                          autoComplete="off"
-                          onKeyDown={onlyNumbers}
-                          value={edad}
-                          onChange={(e) => setEdad(e.target.value)}
-                          variant="standard"
-                          InputProps={{ disableUnderline: true }}
-                          slotProps={{ htmlInput: { maxLength: 2 } }}
-                          sx={{
-                            width: 60,
-                            bgcolor: "white",
-                            color: "black",
-                            borderRadius: 50,
-                            px: 2,
-                            py: 0.5,
-                            "&:hover": { bgcolor: "#d5d5d5ff" },
-                          }}
-                        />
-                      </Stack>
-                      {/* Texto de etapa de vida*/}
+                    Informacion adicional:
+                  </Typography>
+
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: {
+                        xs: "1fr",
+                        sm: "1fr 1fr",
+                        md: "repeat(4, 1fr)",
+                      },
+                      gap: { xs: 3, md: 4 },
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    {/* Edad */}
+                    <Box sx={{ position: "relative" }}>
                       <Typography
                         sx={{
-                          ml: 7,
+                          fontWeight: "bold",
+                          mb: 1.5,
+                          fontSize: 16,
+                          color: "text.secondary",
+                        }}
+                      >
+                        Edad
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        autoComplete="off"
+                        onKeyDown={onlyNumbers}
+                        value={edad}
+                        onChange={(e) => setEdad(e.target.value)}
+                        variant="outlined"
+                        slotProps={{
+                          htmlInput: {
+                            maxLength: 2,
+                            "data-testid": "input-pet-age",
+                          },
+                        }}
+                        sx={{
+                          "& .MuiOutlinedInput-root": {
+                            borderRadius: 50,
+                            bgcolor: "#F7F9FA",
+                            "& fieldset": { borderColor: "transparent" },
+                            "&:hover fieldset": { borderColor: "#BEF1F3" },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#00ADBA",
+                            },
+                          },
+                        }}
+                      />
+                      <Typography
+                        sx={{
                           fontSize: 13,
                           fontWeight: "bold",
                           color: "#00ADBA",
                           position: "absolute",
-                          top: "100%",
-                          left: 0,
-                          whiteSpace: "nowrap",
+                          bottom: -24,
+                          left: 10,
                           visibility: getEtapaVida(edad) ? "visible" : "hidden",
                         }}
                       >
                         {getEtapaVida(edad) || "placeholder"}
                       </Typography>
-                    </Stack>
-                    {/* Weight Field */}
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Typography sx={{ fontWeight: "bold", minWidth: 50 }}>
-                        Peso:
+                    </Box>
+
+                    {/* Peso */}
+                    <Box>
+                      <Typography
+                        sx={{
+                          fontWeight: "bold",
+                          mb: 1.5,
+                          fontSize: 16,
+                          color: "text.secondary",
+                        }}
+                      >
+                        Peso (kg)
                       </Typography>
                       <TextField
+                        fullWidth
                         autoComplete="off"
                         onKeyDown={onlyNumbers}
                         value={peso}
                         onChange={(e) => setPeso(e.target.value)}
-                        variant="standard"
-                        InputProps={{
-                          disableUnderline: true,
+                        variant="outlined"
+                        slotProps={{
+                          htmlInput: {
+                            maxLength: 3,
+                            "data-testid": "input-pet-weight",
+                          },
                         }}
-                        slotProps={{ htmlInput: { maxLength: 2 } }}
                         sx={{
-                          width: 60,
-                          bgcolor: "white",
-                          color: "black",
-                          borderRadius: 50,
-                          px: 2,
-                          py: 0.5,
-                          "&:hover": { bgcolor: "#d5d5d5ff" },
+                          "& .MuiOutlinedInput-root": {
+                            borderRadius: 50,
+                            bgcolor: "#F7F9FA",
+                            "& fieldset": { borderColor: "transparent" },
+                            "&:hover fieldset": { borderColor: "#BEF1F3" },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#00ADBA",
+                            },
+                          },
                         }}
                       />
-                    </Stack>
-                    {/* Vacunas Field */}
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Typography sx={{ fontWeight: "bold", minWidth: 80 }}>
-                        ¿Vacunas?:
-                      </Typography>
-                      <Select
-                        variant="standard"
-                        disableUnderline
-                        value={vacunas}
-                        onChange={(e) => setVacunas(e.target.value)}
+                    </Box>
+
+                    {/* Vacunas */}
+                    <Box>
+                      <Typography
                         sx={{
-                          width: 77,
-                          bgcolor: "white",
-                          borderRadius: 50,
-                          px: 2,
-                          py: 0.5,
-                          "&:hover": { bgcolor: "#d5d5d5ff" },
+                          fontWeight: "bold",
+                          mb: 1.5,
+                          fontSize: 16,
+                          color: "text.secondary",
                         }}
                       >
-                        <MenuItem value="yes">Si</MenuItem>
+                        ¿Vacunas?
+                      </Typography>
+                      <Select
+                        fullWidth
+                        variant="outlined"
+                        value={vacunas}
+                        onChange={(e) => setVacunas(e.target.value)}
+                        inputProps={{ "data-testid": "select-pet-vaccines" }}
+                        sx={{
+                          borderRadius: 50,
+                          bgcolor: "#F7F9FA",
+                          "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "transparent",
+                          },
+                          "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "#BEF1F3",
+                          },
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: "#00ADBA",
+                          },
+                        }}
+                      >
+                        <MenuItem value="yes">Sí</MenuItem>
                         <MenuItem value="no">No</MenuItem>
                       </Select>
-                    </Stack>
-                    {/* Breed Field */}
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Typography sx={{ fontWeight: "bold", minWidth: 50 }}>
-                        Raza:
+                    </Box>
+
+                    {/* Raza */}
+                    <Box>
+                      <Typography
+                        sx={{
+                          fontWeight: "bold",
+                          mb: 1.5,
+                          fontSize: 16,
+                          color: "text.secondary",
+                        }}
+                      >
+                        Raza
                       </Typography>
                       <TextField
+                        fullWidth
                         autoComplete="off"
                         value={raza}
                         onChange={(e) => setRaza(e.target.value)}
-                        variant="standard"
-                        InputProps={{
-                          disableUnderline: true,
+                        variant="outlined"
+                        slotProps={{
+                          htmlInput: {
+                            "data-testid": "input-pet-breed",
+                          },
                         }}
                         sx={{
-                          width: 100,
-                          bgcolor: "white",
-                          color: "black",
-                          borderRadius: 50,
-                          px: 2,
-                          py: 0.5,
-                          "&:hover": { bgcolor: "#d5d5d5ff" },
+                          "& .MuiOutlinedInput-root": {
+                            borderRadius: 50,
+                            bgcolor: "#F7F9FA",
+                            "& fieldset": { borderColor: "transparent" },
+                            "&:hover fieldset": { borderColor: "#BEF1F3" },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "#00ADBA",
+                            },
+                          },
                         }}
                       />
-                    </Stack>
-                  </Stack>
-                </Stack>
+                    </Box>
+                  </Box>
+                </Box>
               </Box>
             )}
             {/* Pet Notes Tab */}
@@ -487,7 +585,7 @@ export function PopupCreatePetUser({
             sx={{
               display: "flex",
               justifyContent: "flex-end",
-              gap: 6,
+              gap: 10,
               pb: 3,
             }}
           >
@@ -514,6 +612,7 @@ export function PopupCreatePetUser({
               variant="contained"
               onClick={handleGuardar}
               disabled={loading}
+              data-testid="btn-save-pet"
               sx={{
                 width: 125,
                 height: 35,
@@ -543,6 +642,7 @@ export function PopupCreatePetUser({
         <Alert
           severity={toast.severity}
           variant="filled"
+          data-testid="toast-feedback-message"
           sx={{ width: "100%" }}
         >
           {toast.message}
