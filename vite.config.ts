@@ -9,6 +9,7 @@ export default defineConfig({
   test: {
     globals: true, // Permite usar 'describe' y 'it' sin importarlos
     environment: "jsdom", // Simula un navegador para probar componentes
-    setupFiles: "./src/setupTests.ts", // Archivo para configurar extensiones
+    setupFiles: "./src/setupTests.ts", 
+    include: ['src/**/*.test.{ts,tsx}'],// Archivo para configurar extensiones
   },
 });
