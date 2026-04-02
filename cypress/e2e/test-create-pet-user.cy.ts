@@ -2,7 +2,7 @@ describe("Flujo de Creación de Mascota", () => {
   beforeEach(() => {
     cy.visit("/WelcomeUser");
 
-    // Abre el popup (ajusta el testid si lo agregas al botón de abrir)
+    // Abre el popup
     cy.contains("button", "!AÑADE UNA MASCOTA!").click();
 
     // Verificamos que el popup esté visible
@@ -23,7 +23,7 @@ describe("Flujo de Creación de Mascota", () => {
     // Escribimos nombre
     cy.get('[data-testid="input-pet-name"]').type("Firulais");
 
-    // Opcional: completar más campos
+    // Completar más campos
     cy.get('[data-testid="input-pet-age"]').type("3");
     cy.get('[data-testid="input-pet-weight"]').type("10");
     cy.get('[data-testid="input-pet-breed"]').type("Labrador");
