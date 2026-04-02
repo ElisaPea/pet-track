@@ -152,6 +152,8 @@ export default function AccountSettingsUser() {
                 sx={{ width: "100%" }}
               >
                 <Typography
+                  component="label" 
+                  htmlFor="nombre-input"
                   sx={{
                     width: 400,
                     textAlign: { xs: "center", sm: "left" },
@@ -162,6 +164,7 @@ export default function AccountSettingsUser() {
                 </Typography>
                 <TextField
                   fullWidth
+                  id="nombre-input"
                   name="nombre"
                   variant="standard"
                   value={formData.nombre}
@@ -184,6 +187,8 @@ export default function AccountSettingsUser() {
                 sx={{ width: "100%" }}
               >
                 <Typography
+                  component="label" 
+                  htmlFor="email-input"
                   sx={{
                     width: 400,
                     textAlign: { xs: "center", sm: "left" },
@@ -193,6 +198,7 @@ export default function AccountSettingsUser() {
                   Correo electrónico*:
                 </Typography>
                 <TextField
+                  id="email-input"
                   fullWidth
                   variant="standard"
                   name="email"
@@ -216,6 +222,8 @@ export default function AccountSettingsUser() {
                 sx={{ width: "100%" }}
               >
                 <Typography
+                  component="label" 
+                  htmlFor="telefono-input" 
                   sx={{
                     width: 400,
                     textAlign: { xs: "center", sm: "left" },
@@ -225,6 +233,7 @@ export default function AccountSettingsUser() {
                   Número de teléfono*:
                 </Typography>
                 <TextField
+                id="telefono-input"
                   fullWidth
                   variant="standard"
                   name="telefono"
