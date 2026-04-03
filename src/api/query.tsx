@@ -21,3 +21,16 @@ export async function getVetCenters() {
   }
   return data;
 }
+
+// Function to create a new client
+export async function createVetClient(clientData: { Nombre: string; DNI: string; Email: string; Teléfono: string; associated: string }) {
+  const { data, error } = await supabase
+    .from("Client") // Name of the table in the database
+    .insert([clientData]);
+
+  if (error) {
+    console.error("Error al crear cliente:", error);
+    throw error;
+  }
+  return data;
+}

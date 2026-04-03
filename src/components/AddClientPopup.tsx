@@ -5,6 +5,7 @@ import {
     Radio, RadioGroup, FormControlLabel, FormControl,
     Divider
 } from '@mui/material';
+import { createVetClient } from '../api/query';
 
 // --- Types & Interfaces ---
 interface AddClientPopupProps {
@@ -79,9 +80,15 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
     };
 
     // --- Handlers ---
-    const handleSave = () => {
-        alert("Saved successfully!"); // Placeholder for future API call
-        onClose();
+    const handleSave = async () => {
+        try {
+            await createVetClient({ ...formData, associated });
+            alert("Saved successfully!"); 
+            onClose();
+        } catch (error) {
+            console.error("Error al guardar cliente:", error);
+            alert("Ocurrió un error al guardar el cliente.");
+        }
     };
 
     const handleExit = () => {
