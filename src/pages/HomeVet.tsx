@@ -24,14 +24,14 @@ import arya from "../assets/arya.jpeg";
 export default function HomeVet() {
   // Mock data array
   const petList = [
-    { id: 1, client: "Malcon", dni: "A1234567", pet: "Beni", image: beni },
-    { id: 2, client: "Aroa", dni: "B9876543", pet: "Luna", image: undefined }, // Null image state for testing fallback UI
-    { id: 3, client: "Ventura", dni: "C4561237", pet: "Thor", image: test2 },
-    { id: 4, client: "Elisa", dni: "D1928374", pet: "Atena", image: arya },
-    { id: 5, client: "Malcon", dni: "A1234567", pet: "Beni", image: undefined }, // Null image state for testing fallback UI
-    { id: 6, client: "Aroa", dni: "B9876543", pet: "Luna", image: test1 },
-    { id: 7, client: "Ventura", dni: "C4561237", pet: "Thor", image: test2 },
-    { id: 8, client: "Elisa", dni: "D1928374", pet: "Atena", image: test1 },
+    { id: 1, client: "Malcon", pet: "Beni", image: beni },
+    { id: 2, client: "Aroa", pet: "Luna", image: undefined }, // Null image state for testing fallback UI
+    { id: 3, client: "Ventura", pet: "Thor", image: test2 },
+    { id: 4, client: "Elisa", pet: "Atena", image: arya },
+    { id: 5, client: "Malcon", pet: "Beni", image: undefined }, // Null image state for testing fallback UI
+    { id: 6, client: "Aroa", pet: "Luna", image: test1 },
+    { id: 7, client: "Ventura", pet: "Thor", image: test2 },
+    { id: 8, client: "Elisa", pet: "Atena", image: test1 },
     // Add as many items as needed...
   ];
 
@@ -183,12 +183,6 @@ export default function HomeVet() {
                   >
                     Cliente:
                   </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: "bold", color: "black" }}
-                  >
-                    DNI:
-                  </Typography>
                 </Box>
                 <Box sx={{ textAlign: "right", flex: 1 }}>
                   <Typography
@@ -196,12 +190,6 @@ export default function HomeVet() {
                     sx={{ fontWeight: "bold", color: "black" }}
                   >
                     {item.client}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: "bold", color: "black" }}
-                  >
-                    {item.dni}
                   </Typography>
                 </Box>
               </Stack>

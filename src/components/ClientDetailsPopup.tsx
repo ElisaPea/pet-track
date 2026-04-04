@@ -256,34 +256,6 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
               />
             </Box>
 
-            {/* DNI field */}
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: { xs: "column", sm: "row" },
-                alignItems: { xs: "flex-start", sm: "center" },
-                justifyContent: "space-between",
-                gap: { xs: 1, sm: 2 },
-                width: "100%",
-              }}
-            >
-              <Typography sx={{ fontWeight: "bold" }}>DNI</Typography>
-              <TextField
-                key={selectedClient?.id || "empty"}
-                size="small"
-                variant="standard"
-                defaultValue={selectedClient?.client || "VACIO"}
-                InputProps={{ disableUnderline: true }}
-                sx={{
-                  bgcolor: "white",
-                  borderRadius: 50,
-                  px: 2,
-                  py: 0.5,
-                  width: { xs: "100%", sm: 350 },
-                }}
-              />
-            </Box>
-
             {/* E-mail field */}
             <Box
               sx={{

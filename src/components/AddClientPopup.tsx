@@ -3,9 +3,13 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Button, TextField, Typography, Box, Stack,
     Radio, RadioGroup, FormControlLabel, FormControl,
-    Divider
+    Divider,
+    Alert,
+    Collapse
 } from '@mui/material';
 import { createVetClient } from '../api/query';
+import { validateEmail, validatePhone } from '../utils/validationUtils';
+import { validateName } from '../utils/validatorName';
 
 // --- Types & Interfaces ---
 interface AddClientPopupProps {
@@ -18,53 +22,41 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
     // Controls the "Associated to user" radio selection. Default is "no".
     const [associated, setAssociated] = useState<string>("no");
 
+    // State for empty required fields
+    const [error, setError] = useState(false);
+
+    // 3 distinct states to control format errors
+    const [errorName, setErrorName] = useState(false);
+    const [errorEmail, setErrorEmail] = useState(false);
+    const [errorPhone, setErrorPhone] = useState(false);
+
+    // State for database error
+    const [dbError, setDbError] = useState(false);
+
+    // State for success
+    const [success, setSuccess] = useState(false);
+
     // Form inputs state
     const [formData, setFormData] = useState({
         Nombre: '',
-        DNI: '',
         Email: '',
         Teléfono: ''
     });
 
-    // Form validation errors state
-    const [errors, setErrors] = useState({
-        DNI: ''
-    });
+    // Handler for changes in the inputs
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+        if (error) setError(false); // Clear empty error
 
-    // --- Validation Logic ---
-    // IMPORTANT: Validation function for DNI and NIE formats
-    // Keep this regex updated if ID formats change in the future
-    const validateDNI = () => {
-        const dniValue = formData.DNI.trim().toUpperCase();
+        // Clear individual errors while typing
+        if (e.target.name === 'Nombre' && errorName) setErrorName(false);
+        if (e.target.name === 'Email' && errorEmail) setErrorEmail(false);
+        if (e.target.name === 'Teléfono' && errorPhone) setErrorPhone(false);
 
-        // Wait until user types something to validate
-        if (!dniValue) {
-            setErrors((prev) => ({ ...prev, DNI: '' }));
-            return;
-        }
+        if (dbError) setDbError(false);
 
-        // Regex for DNI: Exactly 8 digits followed by 1 letter (A-Z)
-        const isValidDNI = /^[0-9]{8}[A-Z]$/.test(dniValue);
-
-        // Regex for NIE: Exactly 1 letter (A-Z), followed by 7 digits, followed by 1 letter (A-Z)
-        const isValidNIE = /^[A-Z][0-9]{7}[A-Z]$/.test(dniValue);
-
-        // Check if value passes either regex. Automatically rejects special characters, wrong length, etc.
-        if (!isValidDNI && !isValidNIE) {
-            setErrors((prev) => ({ ...prev, DNI: 'Formato inválido o incorrecto' }));
-        } else {
-            setErrors((prev) => ({ ...prev, DNI: '' }));
-        }
-    };
-
-    // Generic input handler to update state and clear errors
-    const handleInputChange = (field: string, value: string) => {
-        setFormData((prev) => ({ ...prev, [field]: value }));
-
-        // Provide immediate feedback by clearing error when user starts typing again
-        if (field === 'DNI' && errors.DNI) {
-            setErrors((prev) => ({ ...prev, DNI: '' }));
-        }
+        // Hide success if the user types again
+        if (success) setSuccess(false);
     };
 
     // --- Styling Constants ---
@@ -81,18 +73,63 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
 
     // --- Handlers ---
     const handleSave = async () => {
+        const { Nombre, Email, Teléfono } = formData;
+
+        setError(false);
+        setErrorName(false);
+        setErrorEmail(false);
+        setErrorPhone(false);
+        setDbError(false);
+        setSuccess(false);
+
+        if (!Nombre.trim() || !Email.trim() || !Teléfono.trim()) {
+            setError(true);
+            return;
+        }
+
+        const isNameValid = validateName(Nombre);
+        const isEmailValid = validateEmail(Email);
+        const isPhoneValid = validatePhone(Teléfono);
+
+        if (!isNameValid || !isEmailValid || !isPhoneValid) {
+            if (!isNameValid) setErrorName(true);
+            if (!isEmailValid) setErrorEmail(true);
+            if (!isPhoneValid) setErrorPhone(true);
+            return;
+        }
+
         try {
-            await createVetClient({ ...formData, associated });
-            alert("Saved successfully!"); 
-            onClose();
-        } catch (error) {
-            console.error("Error al guardar cliente:", error);
-            alert("Ocurrió un error al guardar el cliente.");
+            await createVetClient({
+                name: Nombre,
+                email: Email,
+                phone: Teléfono,
+                // If the radio button is "no", we send null. 
+                // For now, if it's "yes" we'll also send null 
+                // but we already leave this logic prepared.
+                userid: associated === "no" ? null : null
+            });
+            setSuccess(true);
+            setTimeout(() => {
+                setSuccess(false);
+                setFormData({ Nombre: '', Email: '', Teléfono: '' });
+                onClose();
+            }, 2000);
+        } catch (err) {
+            console.error(err);
+            setDbError(true);
         }
     };
 
     const handleExit = () => {
-        alert("Exited without saving");
+        // Clear forms and error states
+        setFormData({ Nombre: '', Email: '', Teléfono: '' });
+        setError(false);
+        setErrorName(false);
+        setErrorEmail(false);
+        setErrorPhone(false);
+        setDbError(false);
+        setSuccess(false);
+
         onClose();
     };
 
@@ -125,6 +162,38 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
             </DialogTitle>
 
             <DialogContent>
+                {/* Visual Error Message Fill in required fields */}
+                <Collapse in={error}>
+                    <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+                        Por favor, rellena todos los campos obligatorios (Nombre, Email
+                        y Teléfono).
+                    </Alert>
+                </Collapse>
+
+                {/* Visual Error Message Specific format */}
+                <Collapse in={errorName || errorEmail || errorPhone}>
+                    <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+                        Por favor, corrige el formato de los siguientes campos: {[
+                            errorName && 'Nombre',
+                            errorEmail && 'Email',
+                            errorPhone && 'Teléfono'
+                        ].filter(Boolean).join(', ')}.
+                    </Alert>
+                </Collapse>
+
+                {/* Database Error Message */}
+                <Collapse in={dbError}>
+                    <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+                        Ocurrió un error al intentar guardar en la base de datos.
+                    </Alert>
+                </Collapse>
+
+                {/* Success Message */}
+                <Collapse in={success}>
+                    <Alert severity="success" sx={{ mb: 3, borderRadius: 5 }}>
+                        ¡Datos guardados correctamente!
+                    </Alert>
+                </Collapse>
                 <Stack spacing={2} sx={{ mt: 1 }}>
                     {/* --- Input Fields Section --- 
                         If we need to add more fields,
@@ -132,7 +201,6 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
                     */}
                     {[
                         { label: "Nombre", fieldKey: "Nombre", type: "text", placeholder: "Nombre completo ..." },
-                        { label: "DNI", fieldKey: "DNI", type: "text", placeholder: "DNI ..." },
                         { label: "Email", fieldKey: "Email", type: "email", placeholder: "ejemplo@mail.com ..." },
                         { label: "Teléfono", fieldKey: "Teléfono", type: "tel", placeholder: "600 000 000 ..." }
                     ].map((field) => (
@@ -163,10 +231,8 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
                                 placeholder={field.placeholder}
                                 InputProps={{ disableUnderline: true }}
                                 value={formData[field.fieldKey as keyof typeof formData]}
-                                onChange={(e) => handleInputChange(field.fieldKey, e.target.value)}
-                                onBlur={field.fieldKey === 'DNI' ? validateDNI : undefined}
-                                error={field.fieldKey === 'DNI' ? !!errors.DNI : false}
-                                helperText={field.fieldKey === 'DNI' ? errors.DNI : ''}
+                                name={field.fieldKey}
+                                onChange={handleChange}
                                 sx={{ ...grayInputStyle, width: { xs: '100%', sm: 300 } }}
                             />
                         </Box>
