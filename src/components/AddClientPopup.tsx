@@ -40,7 +40,7 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
     const [formData, setFormData] = useState({
         Nombre: '',
         Email: '',
-        Teléfono: ''
+        Telefono: ''
     });
 
     // Handler for changes in the inputs
@@ -73,7 +73,7 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
 
     // --- Handlers ---
     const handleSave = async () => {
-        const { Nombre, Email, Teléfono } = formData;
+        const { Nombre, Email, Telefono } = formData;
 
         setError(false);
         setErrorName(false);
@@ -82,14 +82,14 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
         setDbError(false);
         setSuccess(false);
 
-        if (!Nombre.trim() || !Email.trim() || !Teléfono.trim()) {
+        if (!Nombre.trim() || !Email.trim() || !Telefono.trim()) {
             setError(true);
             return;
         }
 
         const isNameValid = validateName(Nombre);
         const isEmailValid = validateEmail(Email);
-        const isPhoneValid = validatePhone(Teléfono);
+        const isPhoneValid = validatePhone(Telefono);
 
         if (!isNameValid || !isEmailValid || !isPhoneValid) {
             if (!isNameValid) setErrorName(true);
@@ -102,7 +102,7 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
             await createVetClient({
                 name: Nombre,
                 email: Email,
-                phone: Teléfono,
+                phone: Telefono,
                 // If the radio button is "no", we send null. 
                 // For now, if it's "yes" we'll also send null 
                 // but we already leave this logic prepared.
@@ -111,7 +111,7 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
             setSuccess(true);
             setTimeout(() => {
                 setSuccess(false);
-                setFormData({ Nombre: '', Email: '', Teléfono: '' });
+                setFormData({ Nombre: '', Email: '', Telefono: '' });
                 onClose();
             }, 2000);
         } catch (err) {
@@ -122,7 +122,7 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
 
     const handleExit = () => {
         // Clear forms and error states
-        setFormData({ Nombre: '', Email: '', Teléfono: '' });
+        setFormData({ Nombre: '', Email: '', Telefono: '' });
         setError(false);
         setErrorName(false);
         setErrorEmail(false);
@@ -137,6 +137,7 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
         <Dialog
             open={open}
             onClose={onClose}
+            data-testid="add-client-popup-container" // For cypress
             fullWidth
             maxWidth="sm"
             // --- Backdrop Blur Effect ---
@@ -164,7 +165,9 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
             <DialogContent>
                 {/* Visual Error Message Fill in required fields */}
                 <Collapse in={error}>
-                    <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+                    <Alert
+                        data-testid="error-fields-required" // For cypress test
+                        severity="error" sx={{ mb: 3, borderRadius: 5 }}>
                         Por favor, rellena todos los campos obligatorios (Nombre, Email
                         y Teléfono).
                     </Alert>
@@ -202,7 +205,7 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
                     {[
                         { label: "Nombre", fieldKey: "Nombre", type: "text", placeholder: "Nombre completo ..." },
                         { label: "Email", fieldKey: "Email", type: "email", placeholder: "ejemplo@mail.com ..." },
-                        { label: "Teléfono", fieldKey: "Teléfono", type: "tel", placeholder: "600 000 000 ..." }
+                        { label: "Teléfono", fieldKey: "Telefono", type: "tel", placeholder: "600 000 000 ..." }
                     ].map((field) => (
                         <Box
                             key={field.label}
@@ -229,9 +232,11 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
                                 size="small"
                                 variant="standard"
                                 placeholder={field.placeholder}
-                                InputProps={{ disableUnderline: true }}
-                                value={formData[field.fieldKey as keyof typeof formData]}
                                 name={field.fieldKey}
+                                InputProps={{ disableUnderline: true }}
+                                // This creates data-testid="input-nombre", data-testid="input-email", etc.
+                                inputProps={{ "data-testid": `input-${field.fieldKey}` }}
+                                value={formData[field.fieldKey as keyof typeof formData]}
                                 onChange={handleChange}
                                 sx={{ ...grayInputStyle, width: { xs: '100%', sm: 300 } }}
                             />
@@ -300,6 +305,7 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
                 {/* --- GUARDAR button --- */}
                 <Button
                     onClick={handleSave}
+                    data-testid="save-client-btn" // ID for the test
                     variant="contained"
                     sx={{
                         bgcolor: '#FFCA28',

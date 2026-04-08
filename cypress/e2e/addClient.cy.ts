@@ -1,37 +1,56 @@
-describe("Requisitos Funcionales - Creación de Cliente", () => {
-  // Antes de cada test, visitamos la página principal del veterinario
+describe("RF - Creación de Cliente en Pet-Track", () => {
+
   beforeEach(() => {
-    cy.visit("/Home-Vet"); // La ruta en donde vive el botón de agregar
+    // Ruta correcta del proyecto
+    cy.visit("/Home-Vet");
   });
 
-  it("RF-01: Debe permitir abrir el popup y escribir los datos de un nuevo cliente", () => {
-    // 1. Damos clic al botón con el ícono de '+'
-    // Cypress buscará el elemento que contenga ese data-testid genérico de Material UI
-    cy.get('[data-testid="AddIcon"]').click();
+  it("Debe crear un cliente correctamente interceptando la llamada a Supabase", () => {
 
-    // 2. Esperamos a que aparezca la ventana buscando su título
-    cy.contains("Agregar nuevo cliente").should("be.visible");
+    // 1. Interceptamos la llamada a Supabase
+    // Usamos 'POST' y el patrón de URL que usa Supabase para la tabla 'Client'
+    cy.intercept('POST', '**/rest/v1/Client*', {
+      statusCode: 201,
+      body: [{ id: 1, name: "Juan Perez", email: "juan@test.com" }]
+    }).as('supabasePost');
 
-    // 3. Rellenamos los inputs basándonos en su orden de aparición (0=Nombre, 1=Email, 2=Teléfono)
-    // Usamos eq() como en tu ejemplo de test-cypress
-    cy.get("input").eq(0).type("Cliente Prueba");
-    cy.get("input").eq(1).type("prueba@correo.com");
-    cy.get("input").eq(2).type("611222333");
+    // 2. Abrimos el popup
+    cy.get('[data-testid="add-client-button"]').click();
 
-    // 4. Verificamos que el botón de GUARDAR esté visible
-    // Como es un entorno de pruebas básico, simplemente podemos verificar que existe
-    // o darle click.
-    cy.contains("button", "GUARDAR").should("be.visible").click();
+    // 3. ENTORNO LIMITADO AL POPUP
+    cy.get('[data-testid="add-client-popup-container"]').last().within(() => {
+      cy.get('[data-testid="input-Nombre"]').type("Juan Perez");
+      cy.get('[data-testid="input-Email"]').type("juan@test.com");
+      cy.get('[data-testid="input-Telefono"]').type("+34600111222");
+
+      // 4. Click en Guardar
+      cy.get('[data-testid="save-client-btn"]').click();
+    });
+
+    // 5. Verificamos la comunicación con la API
+    cy.wait('@supabasePost').then((interception) => {
+      // Validamos que el JSON enviado a Supabase sea el correcto
+      const body = interception.request.body[0];
+      expect(body.name).to.equal("Juan Perez");
+      expect(body.email).to.equal("juan@test.com");
+      expect(body.phone).to.equal("+34600111222");
+    });
+
+    // 6. Verificamos que el popup se cierra (después de los 2 segundos de timeout)
+    // Cypress esperará automáticamente
+    cy.get('Agregar nuevo cliente').should('not.exist');
   });
 
-  it("RF-02: Debe mostrar error si los campos obligatorios están vacíos", () => {
-    // 1. Abrimos el popup de nuevo
-    cy.get('[data-testid="AddIcon"]').click();
+  it("Debe mostrar error de validación si faltan campos", () => {
+    cy.get('[data-testid="add-client-button"]').click();
+    // Aquí también lo limitamos para que no busque el botón de guardar de la tabla de fondo
+    cy.get('[data-testid="add-client-popup-container"]').last().within(() => {
+      cy.get('[data-testid="save-client-btn"]').click();
+    });
 
-    // 2. Intentamos dar clic en GUARDAR sin rellenar absolutamente nada
-    cy.contains("button", "GUARDAR").click();
-
-    // 3. Verificamos visualmente que el sistema nos alerta por los campos vacíos
-    cy.contains("Por favor, rellena todos los campos obligatorios").should("be.visible");
+    // Verificamos el Alert de campos obligatorios
+    cy.get('[data-testid="error-fields-required"]')
+      .should("be.visible")
+      .and('contain', 'Por favor, rellena todos los campos obligatorios (Nombre, Email y Teléfono).');
   });
 });

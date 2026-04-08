@@ -126,6 +126,8 @@ export default function HomeVet() {
           </Typography>
           <IconButton
             color="primary"
+            // --- THIS IS THE KEY LINE FOR CYPRESS ---
+            data-testid="add-client-button"
             sx={{
               bgcolor: "white",
               boxShadow: 2,
