@@ -62,4 +62,45 @@ export async function createVetClient(
 
   // If everything goes well, we return the newly created information
   return vetClient;
+// Función para crear una mascota y vincularla a un usuario
+export async function createPet(
+  petData: { name: string; breed?: string; birthDate?: string },
+  userId: string,
+) {
+  if (!userId) throw new Error("No se ha detectado un usuario válido.");
+
+  // 1. Insertamos la mascota en la tabla "Pet"
+  const { data: pet, error: petError } = await supabase
+    .from("Pet")
+    .insert([
+      {
+        name: petData.name,
+        breed: petData.breed,
+        birthdate: petData.birthDate,
+        isverified: false,
+      },
+    ])
+    .select()
+    .single();
+
+  if (petError) {
+    // Si Supabase devuelve error (ej: el nombre es demasiado largo o falta un campo obligatorio)
+    console.error("Error al crear mascota:", petError);
+    throw new Error("Error en la base de datos al crear la mascota.");
+  }
+
+  // 2. Creamos la relación en "PetUser"
+  const { error: relationError } = await supabase.from("PetUser").insert([
+    {
+      petid: pet.id,
+      userid: userId,
+    },
+  ]);
+
+  if (relationError) {
+    console.error("Error al vincular mascota con usuario:", relationError);
+    throw new Error("La mascota se creó pero no pudo vincularse a tu cuenta.");
+  }
+
+  return pet;
 }
