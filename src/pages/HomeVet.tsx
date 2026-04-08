@@ -12,6 +12,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt"; // Alternative arrow icon can be used if preferred
 import ClientDetailsPopup from "../components/ClientDetailsPopup";
+import AddClientPopup from '../components/AddClientPopup';
 import { useState } from "react";
 
 // Pictures import for testing (TO DELETE)
@@ -23,21 +24,21 @@ import arya from "../assets/arya.jpeg";
 export default function HomeVet() {
   // Mock data array
   const petList = [
-    { id: 1, client: "Malcon", dni: "A1234567", pet: "Beni", image: beni },
-    { id: 2, client: "Aroa", dni: "B9876543", pet: "Luna", image: undefined }, // Null image state for testing fallback UI
-    { id: 3, client: "Ventura", dni: "C4561237", pet: "Thor", image: test2 },
-    { id: 4, client: "Elisa", dni: "D1928374", pet: "Atena", image: arya },
-    { id: 5, client: "Malcon", dni: "A1234567", pet: "Beni", image: undefined }, // Null image state for testing fallback UI
-    { id: 6, client: "Aroa", dni: "B9876543", pet: "Luna", image: test1 },
-    { id: 7, client: "Ventura", dni: "C4561237", pet: "Thor", image: test2 },
-    { id: 8, client: "Elisa", dni: "D1928374", pet: "Atena", image: test1 },
+    { id: 1, client: "Malcon", pet: "Beni", image: beni },
+    { id: 2, client: "Aroa", pet: "Luna", image: undefined }, // Null image state for testing fallback UI
+    { id: 3, client: "Ventura", pet: "Thor", image: test2 },
+    { id: 4, client: "Elisa", pet: "Atena", image: arya },
+    { id: 5, client: "Malcon", pet: "Beni", image: undefined }, // Null image state for testing fallback UI
+    { id: 6, client: "Aroa", pet: "Luna", image: test1 },
+    { id: 7, client: "Ventura", pet: "Thor", image: test2 },
+    { id: 8, client: "Elisa", pet: "Atena", image: test1 },
     // Add as many items as needed...
   ];
 
   // Create the 'switch'. It is closed by default (false)
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
+  const [isAddClientOpen, setIsAddClientOpen] = useState(false);
 
   // Function to open the popup with a specific ID
   const handleOpenDetails = (id: number) => {
@@ -125,6 +126,8 @@ export default function HomeVet() {
           </Typography>
           <IconButton
             color="primary"
+            // --- THIS IS THE KEY LINE FOR CYPRESS ---
+            data-testid="add-client-button"
             sx={{
               bgcolor: "white",
               boxShadow: 2,
@@ -132,7 +135,7 @@ export default function HomeVet() {
               width: 50,
               height: 50,
             }}
-            onClick={() => console.log("Agregar cliente")}
+            onClick={() => setIsAddClientOpen(true)}
           >
             <AddIcon sx={{ fontSize: 30, color: "#00ADBA" }} />
           </IconButton>
@@ -182,12 +185,6 @@ export default function HomeVet() {
                   >
                     Cliente:
                   </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: "bold", color: "black" }}
-                  >
-                    DNI:
-                  </Typography>
                 </Box>
                 <Box sx={{ textAlign: "right", flex: 1 }}>
                   <Typography
@@ -195,12 +192,6 @@ export default function HomeVet() {
                     sx={{ fontWeight: "bold", color: "black" }}
                   >
                     {item.client}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: "bold", color: "black" }}
-                  >
-                    {item.dni}
                   </Typography>
                 </Box>
               </Stack>
@@ -263,11 +254,17 @@ export default function HomeVet() {
                 <ArrowRightAltIcon /> {/* Arrow icon */}
               </IconButton>
 
-              {/* Place the Modal at the bottom. It will be 'listening' to the isModalOpen switch. */}
+              {/* POPUPS SECTION */}
+              {/* CLIENT DETAILS POPUP: Place the Modal at the bottom. It will be 'listening' to the isModalOpen switch. */}
               <ClientDetailsPopup
                 open={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 clientId={selectedClientId}
+              />
+              {/* ADD CLIENT POPUP: Triggered from the top "+" button */}
+              <AddClientPopup
+                open={isAddClientOpen}
+                onClose={() => setIsAddClientOpen(false)}
               />
             </Box>
           </Box>
