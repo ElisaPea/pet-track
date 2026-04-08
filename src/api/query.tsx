@@ -62,6 +62,9 @@ export async function createVetClient(
 
   // If everything goes well, we return the newly created information
   return vetClient;
+
+}
+
 // Función para crear una mascota y vincularla a un usuario
 export async function createPet(
   petData: { name: string; breed?: string; birthDate?: string },
@@ -104,3 +107,5 @@ export async function createPet(
 
   return pet;
 }
+
+
