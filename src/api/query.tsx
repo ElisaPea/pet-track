@@ -104,8 +104,8 @@ export async function createPet(
 
   return pet;
 }
-//------------------------------------------
-
+//-------------------------------------------aroa---AccountSettingsVet------------------------------------------
+// 1. Get Vet Data (Read)
 export async function getVetProfile(userId: string) {
   const { data, error } = await supabase
     .from("User")
@@ -121,30 +121,35 @@ export async function getVetProfile(userId: string) {
 
   if (error) throw error;
 
-  // 1. Creamos una constante con el casteo 'as any' 
-  // Esto le quita las "gafas" de lectura estricta a TypeScript
+  // We cast to 'any' to avoid strict TypeScript errors on joined tables
   const result = data as any;
 
   return {
-    nombre: result?.name || "",
-    telefono: result?.phone || "",
-    // Accedemos al primer elemento del array Professional
-    numeroColegiado: result?.Professional?.[0]?.licensenumber || ""
+    name: result?.name || "",
+    phone: result?.phone || "",
+    // We access the first element of the Professional array
+    licenseNumber: result?.Professional?.[0]?.licensenumber || ""
   };
 }
 
-// 2. Actualizar datos (Escritura)
-export async function updateVetProfile(userId: string, updateData: { nombre: string, telefono: string, numeroColegiado: string }) {
+// 2. Update Vet Data (Write)
+export async function updateVetProfile(
+  userId: string, 
+  updateData: { name: string; phone: string; licenseNumber: string }
+) {
+  // Update User table (name and phone)
   const { error: errorUser } = await supabase
     .from("User")
-    .update({ name: updateData.nombre, phone: updateData.telefono })
+    .update({ name: updateData.name, phone: updateData.phone })
     .eq("id", userId);
 
   if (errorUser) throw errorUser;
 
+  // Update Professional table (license number)
   const { error: errorPro } = await supabase
     .from("Professional")
-    .update({ licensenumber: updateData.numeroColegiado })
+    .update({ licensenumber: updateData.licenseNumber })
     .eq("userid", userId);
+    
   if (errorPro) throw errorPro;
 }

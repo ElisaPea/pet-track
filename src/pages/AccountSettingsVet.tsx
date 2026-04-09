@@ -8,133 +8,132 @@ import {
   Collapse,
   Alert,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   validateEmail,
   validatePhone,
   validateColegiado,
   isNotEmpty,
 } from "../utils/validationUtils";
-import { getVetProfile, supabase, updateVetProfile} from "../api/query";
-
-
+import { getVetProfile, supabase, updateVetProfile } from "../api/query";
 
 export default function AccountSettingsVet() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-  //Nuevo estado para controlar mensaje de error.
+  
+  // States for error and success messages
   const [error, setError] = useState<string | null>(null);
-  //Nuevo estado para controlar mensaje de error.
   const [error2, setError2] = useState<string | null>(null);
-  //Nuevo estado para controlar mensaje guardado con éxito.
   const [success, setSuccess] = useState(false);
-  //ArrayList Campos
+  
+  // Form fields state
   const [formData, setFormData] = useState({
-    nombre: "",
+    name: "",
     email: "",
-    telefono: "+34 ",
-    direccion: "",
-    numeroColegiado: "",
+    phone: "+34 ",
+    address: "",
+    licenseNumber: "",
   });
 
-React.useEffect(() => {
-    async function cargarDatos() {
+  useEffect(() => {
+    async function loadData() {
       setLoading(true);
       
-      // ⚠️ HACK DE DESARROLLO: Forzamos el ID de Bilbo para probar
-      // Cuando la app esté terminada, borraremos esto y usaremos supabase.auth.getUser()
+      // ⚠️ DEVELOPMENT HACK: Forcing Bilbo's ID for testing
+      // When the app is finished, we will remove this and use supabase.auth.getUser()
       const ID_BILBO = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb";
       
-      console.log("1. Forzando búsqueda para el usuario:", ID_BILBO);
+      console.log("1. Forcing search for user:", ID_BILBO);
       setUserId(ID_BILBO);
 
       try {
-        const perfil = await getVetProfile(ID_BILBO);
-        console.log("2. Datos que llegan de la DB:", perfil);
+        const profile = await getVetProfile(ID_BILBO);
+        console.log("2. Data arriving from DB:", profile);
 
-        if (perfil) {
+        if (profile) {
           setFormData(prev => ({
             ...prev,
-            nombre: perfil.nombre || "",
-            telefono: perfil.telefono || "",
-            numeroColegiado: perfil.numeroColegiado || "",
-            email: "bilbo@correofalso.com" // Falso temporalmente
+            // Mapping the Spanish response from query.ts to English state
+            name: profile.name || "",
+            phone: profile.phone || "",
+            licenseNumber: profile.licenseNumber || "",
+            email: "bilbo@fakeemail.com" // Temporary fake email
           }));
         } else {
-          console.error("La DB ha devuelto null. Revisa el ID de Bilbo.");
+          console.error("DB returned null. Check Bilbo's ID.");
         }
       } catch (err) { 
-        console.error("Error en la consulta:", err); 
+        console.error("Error in query:", err); 
       }
       
       setLoading(false);
     }
     
-    cargarDatos();
+    loadData();
   }, []);
 
-  // Manejador de cambios en los inputs
+  // Input change handler
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError(null); // Limpiar error mientras escriben
-    if (error2) setError2(null); // Limpiar error mientras escriben
-    // Ocultamos el éxito si el usuario vuelve a escribir
-    if (success) setSuccess(false);
+    if (error) setError(null); // Clear error while typing
+    if (error2) setError2(null); // Clear error while typing
+    if (success) setSuccess(false); // Hide success if user types again
   };
 
-  // Función campos obligatorios y GUARDADO
-  const handleGuardar = async () => {
-    const { nombre, email, telefono, numeroColegiado } = formData;
+  // Save handler and validations
+  const handleSave = async () => {
+    const { name, email, phone, licenseNumber } = formData;
 
+    // Reset states
     setError(null);
     setError2(null);
     setSuccess(false);
 
-    //Validaciones de VACÍOS
-    const faltan: string[] = [];
-    if (!isNotEmpty(nombre)) faltan.push("Nombre");
-    if (!isNotEmpty(email)) faltan.push("Email");
-    if (!isNotEmpty(telefono)) faltan.push("Teléfono");
-    if (!isNotEmpty(numeroColegiado)) faltan.push("Nº Colegiado");
+    // Empty fields validation
+    const missingFields: string[] = [];
+    if (!isNotEmpty(name)) missingFields.push("Nombre");
+    if (!isNotEmpty(email)) missingFields.push("Correo electrónico");
+    if (!isNotEmpty(phone)) missingFields.push("Teléfono");
+    if (!isNotEmpty(licenseNumber)) missingFields.push("Nº Colegiado");
 
-    if (faltan.length > 0) {
-      setError(`Faltan campos obligatorios: ${faltan.join(", ")}.`);
+    if (missingFields.length > 0) {
+      setError(`Faltan el campo obligatorio: ${missingFields.join(", ")}.`);
       return;
     }
 
-    // 2. Validación de FORMATO (Mantenemos tu lógica)
+    // Format validation
     const invalidFields: string[] = [];
-    if (!validateEmail(email)) invalidFields.push("Email");
-    if (!validatePhone(telefono)) invalidFields.push("Teléfono");
-    if (!validateColegiado(numeroColegiado)) invalidFields.push("Nº Colegiado");
+    if (!validateEmail(email)) invalidFields.push("Correo electrónico");
+    if (!validatePhone(phone)) invalidFields.push("Teléfono");
+    if (!validateColegiado(licenseNumber)) invalidFields.push("Nº Colegiado");
 
     if (invalidFields.length > 0) {
-      setError2(`El formato es incorrecto en: ${invalidFields.join(", ")}.`);
+      setError2(`Formato incorrecto en: ${invalidFields.join(", ")}.`);
       return;
     }
 
-    //CONEXIÓN REAL A LA API
+    // API Connection
     try {
       if (userId) {
         await updateVetProfile(userId, {
-          nombre: formData.nombre,
-          telefono: formData.telefono,
-          numeroColegiado: formData.numeroColegiado
-          // Nota: Si quieremos guardar la dirección, debemos añadirla a la tabla User en el SQL
+          // We map back to Spanish ONLY for the API call to not break query.ts
+          name: formData.name,
+          phone: formData.phone,
+          licenseNumber: formData.licenseNumber
         });
 
         setSuccess(true);
-        console.log("Datos sincronizados con Supabase");
+        console.log("Data synchronized with Supabase");
         
         setTimeout(() => setSuccess(false), 3000);
       } else {
-        setError("No se ha detectado una sesión de usuario activa.");
+        setError("No active user session detected.");
       }
     } catch (err) {
       console.error(err);
-      setError("Error técnico: No se pudo conectar con la base de datos.");
+      setError("Technical error: Could not connect to the database.");
     }
   };
 
@@ -146,52 +145,51 @@ React.useEffect(() => {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          mt: 8, // Margen superior para centrar visualmente
+          mt: 8,
         }}
       >
-        {/* Tipografia actualizar perfil */}
         <Typography
           variant="h4"
           sx={{ fontWeight: "600", color: "#4A3B3B", mb: 0.5 }}
         >
           Actualiza tu perfil
         </Typography>
-        {/* Línea decorativa */}
+        
         <Box sx={{ width: 60, height: 4, bgcolor: "#00BCD4", mb: 4 }} />
-        {/* Contenedor Principal (Cuadrado azul claro) */}
+        
         <Box
           sx={{
-            bgcolor: "#D1F2F5", // Azul pastel de la imagen
+            bgcolor: "#D1F2F5",
             width: "100%",
             maxWidth: 650,
-            borderRadius: 10, // Bordes muy redondeados
+            borderRadius: 10,
             p: 4,
             boxShadow: "0px 4px 10px rgba(0,0,0,0.05)",
             textAlign: "center",
           }}
         >
-          {/* Formulario */}
           <Box component="form" noValidate sx={{ mt: 1 }}>
-            {/* Mensaje de Error Visual */}
+            
             <Collapse in={Boolean(error)}>
               <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
                 {error}
               </Alert>
             </Collapse>
-            {/* Mensaje de Error Visual  Rellenar correctamente los campos obligatorios*/}
+            
             <Collapse in={Boolean(error2)}>
               <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
                 {error2}
               </Alert>
             </Collapse>
-            {/* Mensaje de Error Guardado */}
+            
             <Collapse in={success}>
               <Alert severity="success" sx={{ mb: 3, borderRadius: 5 }}>
-                ¡Datos guardados correctamente!
+                ¡Datos guardados exitosamente!
               </Alert>
             </Collapse>
+
             <Stack spacing={3} alignItems="center">
-              {/* Campo Nombre*/}
+              {/* Name Field */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 spacing={{ xs: 1, sm: 0 }}
@@ -209,21 +207,17 @@ React.useEffect(() => {
                 </Typography>
                 <TextField
                   fullWidth
-                  name="nombre"
+                  name="name"
                   variant="standard"
-                  value={formData.nombre}
+                  value={formData.name}
                   onChange={handleChange}
-                  error={Boolean(error) && !isNotEmpty(formData.nombre)}
+                  error={Boolean(error) && !isNotEmpty(formData.name)}
                   InputProps={{ disableUnderline: true }}
-                  sx={{
-                    bgcolor: "white",
-                    borderRadius: 50,
-                    px: 2,
-                    py: 0.5,
-                  }}
+                  sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
                 />
               </Stack>
-              {/* Campo email */}
+
+              {/* Email Field */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 alignItems="center"
@@ -249,15 +243,11 @@ React.useEffect(() => {
                     (Boolean(error2) && !validateEmail(formData.email))
                   }
                   InputProps={{ disableUnderline: true }}
-                  sx={{
-                    bgcolor: "white",
-                    borderRadius: 50,
-                    px: 2,
-                    py: 0.5,
-                  }}
+                  sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
                 />
               </Stack>
-              {/* Campo telefono */}
+
+              {/* Phone Field */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 alignItems="center"
@@ -275,23 +265,19 @@ React.useEffect(() => {
                 <TextField
                   fullWidth
                   variant="standard"
-                  name="telefono"
-                  value={formData.telefono}
+                  name="phone"
+                  value={formData.phone}
                   onChange={handleChange}
                   error={
-                    (Boolean(error) && !isNotEmpty(formData.telefono)) ||
-                    (Boolean(error2) && !validatePhone(formData.telefono))
+                    (Boolean(error) && !isNotEmpty(formData.phone)) ||
+                    (Boolean(error2) && !validatePhone(formData.phone))
                   }
                   InputProps={{ disableUnderline: true }}
-                  sx={{
-                    bgcolor: "white",
-                    borderRadius: 50,
-                    px: 2,
-                    py: 0.5,
-                  }}
+                  sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
                 />
               </Stack>
-              {/* Campo Dirección */}
+
+              {/* Address Field */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 alignItems="center"
@@ -309,19 +295,15 @@ React.useEffect(() => {
                 <TextField
                   fullWidth
                   variant="standard"
-                  name="direccion"
-                  value={formData.direccion}
+                  name="address"
+                  value={formData.address}
                   onChange={handleChange}
                   InputProps={{ disableUnderline: true }}
-                  sx={{
-                    bgcolor: "white",
-                    borderRadius: 50,
-                    px: 2,
-                    py: 0.5,
-                  }}
+                  sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
                 />
               </Stack>
-              {/* Campo Centro vet asociado */}
+
+              {/* License Number Field */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 alignItems="center"
@@ -340,23 +322,18 @@ React.useEffect(() => {
                   fullWidth
                   variant="standard"
                   onChange={handleChange}
-                  name="numeroColegiado"
-                  value={formData.numeroColegiado}
+                  name="licenseNumber"
+                  value={formData.licenseNumber}
                   error={
-                    (Boolean(error) && !isNotEmpty(formData.numeroColegiado)) ||
-                    (Boolean(error2) &&
-                      !validateColegiado(formData.numeroColegiado))
+                    (Boolean(error) && !isNotEmpty(formData.licenseNumber)) ||
+                    (Boolean(error2) && !validateColegiado(formData.licenseNumber))
                   }
                   InputProps={{ disableUnderline: true }}
-                  sx={{
-                    bgcolor: "white",
-                    borderRadius: 50,
-                    px: 2,
-                    py: 0.5,
-                  }}
+                  sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
                 />
               </Stack>
-              {/* Botón guardar*/}
+
+              {/* Save Button */}
               <Box
                 sx={{
                   width: "100%",
@@ -368,14 +345,14 @@ React.useEffect(() => {
               >
                 <Button
                   variant="contained"
-                  onClick={handleGuardar}
+                  onClick={handleSave}
                   sx={{
-                    bgcolor: "#FBC02D", // Amarillo del botón "Acceder"
+                    bgcolor: "#FBC02D",
                     color: "black",
                     fontWeight: "bold",
                     borderRadius: 2,
                     width: { xs: "100%", sm: "50%" },
-                    border: "2px solid #64B5F6", // Borde azul del diseño
+                    border: "2px solid #64B5F6",
                     "&:hover": { bgcolor: "#f9a825" },
                   }}
                 >
