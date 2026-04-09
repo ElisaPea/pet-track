@@ -75,6 +75,14 @@ export default function AccountSettingsUser() {
     }
     
     loadData();
+
+    // 🌟 AQUI LEEMOS EL LOCALSTORAGE
+    // Comprobamos si el navegador tiene una nota de solicitud pendiente
+    const pendingRequest = localStorage.getItem("pendingVetRequest");
+    if (pendingRequest) {
+      setVetRequestStatus(`Esperando confirmación de: ${pendingRequest}`);
+    }
+
   }, []);
 
   // Input change handler
