@@ -108,4 +108,37 @@ export async function createPet(
   return pet;
 }
 
+//--------------aroa--------------GET Account User-----------------
+// 1. Get User Data (Read)
+export async function getUserProfile(userId: string) {
+  const { data, error } = await supabase
+    .from("User")
+    .select(`
+      name,
+      phone
+    `)
+    .eq("id", userId)
+    .maybeSingle();
 
+  if (error) throw error;
+
+  const result = data as any;
+
+  return {
+    name: result?.name || "",
+    phone: result?.phone || "",
+  };
+}
+
+// 2. Update User Data (Write)
+export async function updateUserProfile(
+  userId: string, 
+  updateData: { name: string; phone: string }
+) {
+  const { error } = await supabase
+    .from("User")
+    .update({ name: updateData.name, phone: updateData.phone })
+    .eq("id", userId);
+
+  if (error) throw error;
+}

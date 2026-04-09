@@ -10,79 +10,131 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+
+// Importamos las validaciones centralizadas
+import {
+  validateEmail,
+  validatePhone,
+  isNotEmpty,
+} from "../utils/validationUtils";
+
+// Importamos las queries de Supabase para el usuario normal
+import { getUserProfile, supabase, updateUserProfile } from "../api/query";
 
 export default function AccountSettingsUser() {
-  // Hook de navegación (debe estar dentro del componente)
+  const [vetRequestStatus, setVetRequestStatus] = useState("Ninguno seleccionado");
   const navigate = useNavigate();
-  //Nuevo estado para controlar mensaje de error.
-  const [error, setError] = useState(false);
-  //Nuevo estado para controlar mensaje de error.
-  const [error2, setError2] = useState(false);
-  //Nuevo estado para controlar mensaje guardado con éxito.
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // States for error and success messages (changed to string to show specific messages)
+  const [error, setError] = useState<string | null>(null);
+  const [error2, setError2] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  //ArrayList Campos
+  // Form fields state in English
   const [formData, setFormData] = useState({
-    nombre: "",
+    name: "",
     email: "",
-    telefono: "+34 ",
-    direccion: "",
+    phone: "+34 ",
+    address: "",
   });
 
-  // Manejador de cambios en los inputs
+  // Load Initial Data
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      
+      // ⚠️ DEVELOPMENT HACK: Forcing a regular user ID (like Vin) for testing
+      // Remember to change this to supabase.auth.getUser() when Auth is ready
+      const ID_NORMAL_USER = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb"; 
+      
+      console.log("1. Forcing search for regular user:", ID_NORMAL_USER);
+      setUserId(ID_NORMAL_USER);
+
+      try {
+        const profile = await getUserProfile(ID_NORMAL_USER);
+        console.log("2. Data arriving from DB:", profile);
+
+        if (profile) {
+          setFormData(prev => ({
+            ...prev,
+            name: profile.name || "",
+            phone: profile.phone || "",
+            email: "vin@fakeemail.com" // Falso temporalmente
+          }));
+        } else {
+          console.error("DB returned null. Check the user ID.");
+        }
+      } catch (err) { 
+        console.error("Error in query:", err); 
+      }
+      
+      setLoading(false);
+    }
+    
+    loadData();
+  }, []);
+
+  // Input change handler
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError(false); // Limpiar error mientras escriben
-    if (error2) setError2(false); // Limpiar error mientras escriben
-    // Ocultamos el éxito si el usuario vuelve a escribir
-    if (success) setSuccess(false);
+    if (error) setError(null); // Clear error while typing
+    if (error2) setError2(null); // Clear error while typing
+    if (success) setSuccess(false); // Hide success if user types again
   };
 
-  //Funcion campos obligatorios
-  const handleGuardar = () => {
-    const { nombre, email, telefono } = formData;
+  // Save handler and validations
+  const handleSave = async () => {
+    const { name, email, phone } = formData;
 
-    // Reiniciamos estados al principio para evitar que se pisen
-    setError(false);
-    setError2(false);
+    // Reset states
+    setError(null);
+    setError2(null);
     setSuccess(false);
 
-    //Reglas de validación
+    // Empty fields validation using utils
+    const missingFields: string[] = [];
+    if (!isNotEmpty(name)) missingFields.push("Nombre");
+    if (!isNotEmpty(email)) missingFields.push("Correo electrónico");
+    if (!isNotEmpty(phone)) missingFields.push("Número de teléfono");
 
-    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Validación Email: Verifica formato estándar (texto@texto.extensión)
-    const soloNumeros = telefono.replace(/\D/g, ""); // Validación Teléfono: Extraemos solo los números para contar
-    const esTelefonoValido = soloNumeros.length === 11; // +34 (2) + 9 números
-
-    // Validación de campos VACÍOS
-    if (!nombre.trim() || !email.trim() || telefono.trim() === "+34") {
-      setError(true);
+    if (missingFields.length > 0) {
+      setError(`Campos requeridos faltantes: ${missingFields.join(", ")}.`);
       return;
     }
 
-    //Validación de FORMATO
-    if (!emailValid.test(email) || !esTelefonoValido) {
-      setError2(true);
+    // Format validation using utils
+    const invalidFields: string[] = [];
+    if (!validateEmail(email)) invalidFields.push("Correo electrónico");
+    if (!validatePhone(phone)) invalidFields.push("Número de teléfono");
+
+    if (invalidFields.length > 0) {
+      setError2(`Formato incorrecto en: ${invalidFields.join(", ")}.`);
       return;
     }
 
-    //Exito:
-    setError(false);
-    setError2(false);
-    setSuccess(true);
+    // API Connection
+    try {
+      if (userId) {
+        await updateUserProfile(userId, {
+          name: formData.name,
+          phone: formData.phone,
+          // Direccion no se guarda en DB por ahora según SQL
+        });
 
-    console.log("Datos guardados con éxito:", formData);
-
-    // Reset del formulario
-    setFormData({
-      nombre: "",
-      email: "",
-      telefono: "+34 ",
-      direccion: "",
-    });
-    setTimeout(() => setSuccess(false), 3000);
-
-    // Aquí va conexión a Supabase más adelante
+        setSuccess(true);
+        console.log("Data synchronized with Supabase");
+        
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        setError("No active user session detected.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Technical error: Could not connect to the database.");
+    }
   };
 
   return (
@@ -93,59 +145,51 @@ export default function AccountSettingsUser() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          mt: 8, // Margen superior para centrar visualmente
+          mt: 8,
         }}
       >
-        {/* Tipografia actualizar perfil */}
         <Typography
           variant="h4"
           sx={{ fontWeight: "600", color: "#4A3B3B", mb: 0.5 }}
         >
-          Actualiza tu perfil
+          Actualiza tu perfil 
         </Typography>
 
-        {/* Línea decorativa */}
         <Box sx={{ width: 60, height: 4, bgcolor: "#00BCD4", mb: 4 }} />
 
-        {/* Contenedor Principal (Cuadrado azul claro) */}
         <Box
           sx={{
-            bgcolor: "#D1F2F5", // Azul pastel de la imagen
+            bgcolor: "#D1F2F5", 
             width: "100%",
             maxWidth: 650,
-            borderRadius: 10, // Bordes muy redondeados
+            borderRadius: 10, 
             p: 4,
             boxShadow: "0px 4px 10px rgba(0,0,0,0.05)",
             textAlign: "center",
           }}
         >
-          {/* Formulario */}
           <Box component="form" noValidate sx={{ mt: 1 }}>
-            {/* Mensaje de Error Visual Rellenar campos obligatorios */}
-            <Collapse in={error}>
+            
+            <Collapse in={Boolean(error)}>
               <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
-                Por favor, rellena todos los campos obligatorios (Nombre, Email
-                y Teléfono).
+                {error}
               </Alert>
             </Collapse>
 
-            {/* Mensaje de Error Visual  Rellenar correctamente los campos obligatorios*/}
-            <Collapse in={error2}>
+            <Collapse in={Boolean(error2)}>
               <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
-                Por favor, rellena con el formato adecuado los campos
-                obligatorios(Email, Teléfono).
+                {error2}
               </Alert>
             </Collapse>
 
-            {/* Mensaje de Error Guardado */}
             <Collapse in={success}>
               <Alert severity="success" sx={{ mb: 3, borderRadius: 5 }}>
-                ¡Datos guardados correctamente!
+                ¡Datos guardados exitosamente!
               </Alert>
             </Collapse>
 
             <Stack spacing={3} alignItems="center">
-              {/* Campo Nombre*/}
+              {/* Name Field */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 alignItems="center"
@@ -153,7 +197,7 @@ export default function AccountSettingsUser() {
               >
                 <Typography
                   component="label" 
-                  htmlFor="nombre-input"
+                  htmlFor="name-input"
                   sx={{
                     width: 400,
                     textAlign: { xs: "center", sm: "left" },
@@ -164,12 +208,12 @@ export default function AccountSettingsUser() {
                 </Typography>
                 <TextField
                   fullWidth
-                  id="nombre-input"
-                  name="nombre"
+                  id="name-input"
+                  name="name" // Cuidado: ahora el name es "name"
                   variant="standard"
-                  value={formData.nombre}
+                  value={formData.name}
                   onChange={handleChange}
-                  error={error && !formData.nombre}
+                  error={Boolean(error) && !isNotEmpty(formData.name)}
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "white",
@@ -180,7 +224,7 @@ export default function AccountSettingsUser() {
                 />
               </Stack>
 
-              {/* Campo email */}
+              {/* Email Field */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 alignItems="center"
@@ -204,7 +248,10 @@ export default function AccountSettingsUser() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  error={error && !formData.email}
+                  error={
+                    (Boolean(error) && !isNotEmpty(formData.email)) ||
+                    (Boolean(error2) && !validateEmail(formData.email))
+                  }
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "white",
@@ -215,7 +262,7 @@ export default function AccountSettingsUser() {
                 />
               </Stack>
 
-              {/* Campo telefono */}
+              {/* Phone Field */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 alignItems="center"
@@ -223,7 +270,7 @@ export default function AccountSettingsUser() {
               >
                 <Typography
                   component="label" 
-                  htmlFor="telefono-input" 
+                  htmlFor="phone-input" 
                   sx={{
                     width: 400,
                     textAlign: { xs: "center", sm: "left" },
@@ -233,26 +280,27 @@ export default function AccountSettingsUser() {
                   Número de teléfono*:
                 </Typography>
                 <TextField
-                id="telefono-input"
+                  id="phone-input"
                   fullWidth
                   variant="standard"
-                  name="telefono"
-                  value={formData.telefono}
+                  name="phone" // Cuidado: ahora es "phone"
+                  value={formData.phone}
                   onChange={handleChange}
-                  error={error && formData.telefono.trim() === "+34"}
+                  error={
+                    (Boolean(error) && !isNotEmpty(formData.phone)) ||
+                    (Boolean(error2) && !validatePhone(formData.phone))
+                  }
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "white",
                     borderRadius: 50,
                     px: 2,
                     py: 0.5,
-                    width: "100%",
-                    ml: "auto",
                   }}
                 />
               </Stack>
 
-              {/* Campo Dirección */}
+              {/* Address Field */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 alignItems="center"
@@ -270,7 +318,8 @@ export default function AccountSettingsUser() {
                 <TextField
                   fullWidth
                   variant="standard"
-                  value={formData.direccion}
+                  name="address" 
+                  value={formData.address}
                   onChange={handleChange}
                   InputProps={{ disableUnderline: true }}
                   sx={{
@@ -282,7 +331,7 @@ export default function AccountSettingsUser() {
                 />
               </Stack>
 
-              {/* Campo Centro vet asociado */}
+              {/* Associated Vet Center Field */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 alignItems="center"
@@ -295,12 +344,12 @@ export default function AccountSettingsUser() {
                     fontWeight: "bold",
                   }}
                 >
-                  Centro veterinario asociado:
+                  Centro Veterinario Asociado:
                 </Typography>
                 <TextField
                   fullWidth
                   variant="standard"
-                  defaultValue="Ninguno seleccionado"
+                  value={vetRequestStatus}
                   InputProps={{ disableUnderline: true, readOnly: true }}
                   sx={{
                     bgcolor: "#bebebeff",
@@ -308,20 +357,10 @@ export default function AccountSettingsUser() {
                     px: 2,
                     py: 0.5,
                   }}
-                  // sx={{
-                  //   bgcolor: "#9E9E9E",
-                  //   borderRadius: 50,
-                  //   px: 2,
-                  //   py: 0.4,
-                  //   input: {
-                  //     color: "white", // Texto blanco para que contraste
-                  //     px: 2,
-                  //   },
-                  // }}
                 />
               </Stack>
 
-              {/* Botón guardar*/}
+              {/* Action Buttons */}
               <Box
                 sx={{
                   width: "100%",
@@ -339,27 +378,28 @@ export default function AccountSettingsUser() {
                     navigate(SCREEN.listVet);
                   }}
                   sx={{
-                    bgcolor: "#FBC02D", // Amarillo del botón "Acceder"
+                    bgcolor: "#FBC02D",
                     color: "black",
                     fontWeight: "bold",
                     borderRadius: 2,
                     width: "100%",
-                    border: "2px solid #64B5F6", // Borde azul del diseño
+                    border: "2px solid #64B5F6",
                     "&:hover": { bgcolor: "#f9a825" },
                   }}
                 >
-                  Buscar Centro Veterinario
+                  BUSCAR CENTRO VETERINARIO
                 </Button>
+                
                 <Button
                   variant="contained"
-                  onClick={handleGuardar}
+                  onClick={handleSave}
                   sx={{
-                    bgcolor: "#FBC02D", // Amarillo del botón "Acceder"
+                    bgcolor: "#FBC02D",
                     color: "black",
                     fontWeight: "bold",
                     borderRadius: 2,
                     width: "100%",
-                    border: "2px solid #64B5F6", // Borde azul del diseño
+                    border: "2px solid #64B5F6",
                     "&:hover": { bgcolor: "#f9a825" },
                   }}
                 >
