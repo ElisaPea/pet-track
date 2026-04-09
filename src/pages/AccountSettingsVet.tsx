@@ -61,7 +61,7 @@ React.useEffect(() => {
             email: "bilbo@correofalso.com" // Falso temporalmente
           }));
         } else {
-          console.error("3. La DB ha devuelto null. Revisa el ID de Bilbo.");
+          console.error("La DB ha devuelto null. Revisa el ID de Bilbo.");
         }
       } catch (err) { 
         console.error("Error en la consulta:", err); 
@@ -122,7 +122,7 @@ React.useEffect(() => {
           nombre: formData.nombre,
           telefono: formData.telefono,
           numeroColegiado: formData.numeroColegiado
-          // Nota: Si quieres guardar dirección, debes añadirla a la tabla User en el SQL
+          // Nota: Si quieremos guardar la dirección, debemos añadirla a la tabla User en el SQL
         });
 
         setSuccess(true);
