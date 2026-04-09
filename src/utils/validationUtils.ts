@@ -7,7 +7,7 @@ export const validateEmail = (email: string): boolean => {
 // Valida que el teléfono tenga el formato +34 más 9 números
 export const validatePhone = (phone: string): boolean => {
   const justNumbers = phone.replace(/\D/g, "");
-  return justNumbers.length === 11; // 34 + 9 dígitos
+  return justNumbers.length === 9; // 34 + 9 dígitos
 };
 
 // Valida que el número de colegiado sea de 4 a 6 dígitos
