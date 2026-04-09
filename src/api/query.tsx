@@ -6,9 +6,6 @@ const veterinarycenterid = "c41de394-45ad-47b2-9d4d-5d2c0b137cec";
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export function getUser() {
-  // LOGICA DE SUPABASE
-}
 
 // Función para obtener la lista de centros veterinarios
 export async function getVetCenters() {
@@ -107,5 +104,47 @@ export async function createPet(
 
   return pet;
 }
+//------------------------------------------
 
+export async function getVetProfile(userId: string) {
+  const { data, error } = await supabase
+    .from("User")
+    .select(`
+      name,
+      phone,
+      Professional (
+        licensenumber
+      )
+    `)
+    .eq("id", userId)
+    .maybeSingle();
 
+  if (error) throw error;
+
+  // 1. Creamos una constante con el casteo 'as any' 
+  // Esto le quita las "gafas" de lectura estricta a TypeScript
+  const result = data as any;
+
+  return {
+    nombre: result?.name || "",
+    telefono: result?.phone || "",
+    // Accedemos al primer elemento del array Professional
+    numeroColegiado: result?.Professional?.[0]?.licensenumber || ""
+  };
+}
+
+// 2. Actualizar datos (Escritura)
+export async function updateVetProfile(userId: string, updateData: { nombre: string, telefono: string, numeroColegiado: string }) {
+  const { error: errorUser } = await supabase
+    .from("User")
+    .update({ name: updateData.nombre, phone: updateData.telefono })
+    .eq("id", userId);
+
+  if (errorUser) throw errorUser;
+
+  const { error: errorPro } = await supabase
+    .from("Professional")
+    .update({ licensenumber: updateData.numeroColegiado })
+    .eq("userid", userId);
+  if (errorPro) throw errorPro;
+}

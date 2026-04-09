@@ -15,8 +15,13 @@ import {
   validateColegiado,
   isNotEmpty,
 } from "../utils/validationUtils";
+import { getVetProfile, supabase, updateVetProfile} from "../api/query";
 
-export default function AccountSettingsUser() {
+
+
+export default function AccountSettingsVet() {
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
   //Nuevo estado para controlar mensaje de error.
   const [error, setError] = useState<string | null>(null);
   //Nuevo estado para controlar mensaje de error.
@@ -32,6 +37,42 @@ export default function AccountSettingsUser() {
     numeroColegiado: "",
   });
 
+React.useEffect(() => {
+    async function cargarDatos() {
+      setLoading(true);
+      
+      // ⚠️ HACK DE DESARROLLO: Forzamos el ID de Bilbo para probar
+      // Cuando la app esté terminada, borraremos esto y usaremos supabase.auth.getUser()
+      const ID_BILBO = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb";
+      
+      console.log("1. Forzando búsqueda para el usuario:", ID_BILBO);
+      setUserId(ID_BILBO);
+
+      try {
+        const perfil = await getVetProfile(ID_BILBO);
+        console.log("2. Datos que llegan de la DB:", perfil);
+
+        if (perfil) {
+          setFormData(prev => ({
+            ...prev,
+            nombre: perfil.nombre || "",
+            telefono: perfil.telefono || "",
+            numeroColegiado: perfil.numeroColegiado || "",
+            email: "bilbo@correofalso.com" // Falso temporalmente
+          }));
+        } else {
+          console.error("3. La DB ha devuelto null. Revisa el ID de Bilbo.");
+        }
+      } catch (err) { 
+        console.error("Error en la consulta:", err); 
+      }
+      
+      setLoading(false);
+    }
+    
+    cargarDatos();
+  }, []);
+
   // Manejador de cambios en los inputs
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -43,16 +84,15 @@ export default function AccountSettingsUser() {
     if (success) setSuccess(false);
   };
 
-  //Funcion campos obligatorios
-  const handleGuardar = () => {
+  // Función campos obligatorios y GUARDADO
+  const handleGuardar = async () => {
     const { nombre, email, telefono, numeroColegiado } = formData;
 
-    // Reiniciamos estados al principio para evitar que se pisen
     setError(null);
     setError2(null);
     setSuccess(false);
 
-    // Validación de campos VACÍOS
+    //Validaciones de VACÍOS
     const faltan: string[] = [];
     if (!isNotEmpty(nombre)) faltan.push("Nombre");
     if (!isNotEmpty(email)) faltan.push("Email");
@@ -64,36 +104,38 @@ export default function AccountSettingsUser() {
       return;
     }
 
-    //Validación de FORMATO
+    // 2. Validación de FORMATO (Mantenemos tu lógica)
     const invalidFields: string[] = [];
     if (!validateEmail(email)) invalidFields.push("Email");
-    if (!validatePhone(telefono))
-      invalidFields.push("Teléfono (+34 + 9 números)");
-    if (!validateColegiado(numeroColegiado))
-      invalidFields.push("Nº Colegiado (4-6 números)");
+    if (!validatePhone(telefono)) invalidFields.push("Teléfono");
+    if (!validateColegiado(numeroColegiado)) invalidFields.push("Nº Colegiado");
 
     if (invalidFields.length > 0) {
       setError2(`El formato es incorrecto en: ${invalidFields.join(", ")}.`);
       return;
     }
 
-    //Exito:
-    setError(null);
-    setError2(null);
-    setSuccess(true);
-    console.log("Datos guardados con éxito:", formData);
+    //CONEXIÓN REAL A LA API
+    try {
+      if (userId) {
+        await updateVetProfile(userId, {
+          nombre: formData.nombre,
+          telefono: formData.telefono,
+          numeroColegiado: formData.numeroColegiado
+          // Nota: Si quieres guardar dirección, debes añadirla a la tabla User en el SQL
+        });
 
-    // Vaciamos el formulario (Reset)
-    setFormData({
-      nombre: "",
-      email: "",
-      telefono: "+34 ",
-      direccion: "",
-      numeroColegiado: "",
-    });
-
-    setTimeout(() => setSuccess(false), 3000);
-    // Aquí va conexión a Supabase más adelante
+        setSuccess(true);
+        console.log("Datos sincronizados con Supabase");
+        
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        setError("No se ha detectado una sesión de usuario activa.");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Error técnico: No se pudo conectar con la base de datos.");
+    }
   };
 
   return (
