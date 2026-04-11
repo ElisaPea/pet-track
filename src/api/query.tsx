@@ -6,9 +6,6 @@ const veterinarycenterid = "c41de394-45ad-47b2-9d4d-5d2c0b137cec";
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export function getUser() {
-  // LOGICA DE SUPABASE
-}
 
 // Función para obtener la lista de centros veterinarios
 export async function getVetCenters() {
@@ -107,7 +104,32 @@ export async function createPet(
 
   return pet;
 }
+//-------------------------------------------aroa---AccountSettingsVet------------------------------------------
+// 1. Get Vet Data (Read)
+export async function getVetProfile(userId: string) {
+  const { data, error } = await supabase
+    .from("User")
+    .select(`
+      name,
+      phone,
+      Professional (
+        licensenumber
+      )
+    `)
+    .eq("id", userId)
+    .maybeSingle();
 
+  if (error) throw error;
+
+  const result = data as any;
+
+  return {
+    name: result?.name || "",
+    phone: result?.phone || "",
+    // We access the first element of the Professional array
+    licenseNumber: result?.Professional?.[0]?.licensenumber || ""
+  };
+}
 //--------------aroa--------------GET Account User-----------------
 // 1. Get User Data (Read)
 export async function getUserProfile(userId: string) {
@@ -126,19 +148,35 @@ export async function getUserProfile(userId: string) {
 
   return {
     name: result?.name || "",
-    phone: result?.phone || "",
+    phone: result?.phone || ""
   };
 }
 
+// 2. Update Vet Data (Write)
+export async function updateVetProfile(
+  userId: string,
+  updateData: { name: string; phone: string; licenseNumber: string }
+) {
+  // Update Professional table (license number)
+  const { error: errorPro } = await supabase
+    .from("Professional")
+    .update({ licensenumber: updateData.licenseNumber })
+    .eq("userid", userId);
+
+  if (errorPro) throw errorPro;
+};
+
 // 2. Update User Data (Write)
 export async function updateUserProfile(
-  userId: string, 
+  userId: string,
   updateData: { name: string; phone: string }
 ) {
-  const { error } = await supabase
+  // Update User table (name and phone)
+  const { error: errorUser } = await supabase
     .from("User")
     .update({ name: updateData.name, phone: updateData.phone })
     .eq("id", userId);
 
-  if (error) throw error;
+  if (errorUser) throw errorUser;
 }
+
