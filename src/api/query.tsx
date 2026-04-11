@@ -121,7 +121,6 @@ export async function getVetProfile(userId: string) {
 
   if (error) throw error;
 
-  // We cast to 'any' to avoid strict TypeScript errors on joined tables
   const result = data as any;
 
   return {
@@ -131,11 +130,46 @@ export async function getVetProfile(userId: string) {
     licenseNumber: result?.Professional?.[0]?.licensenumber || ""
   };
 }
+//--------------aroa--------------GET Account User-----------------
+// 1. Get User Data (Read)
+export async function getUserProfile(userId: string) {
+  const { data, error } = await supabase
+    .from("User")
+    .select(`
+      name,
+      phone
+    `)
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  const result = data as any;
+
+  return {
+    name: result?.name || "",
+    phone: result?.phone || ""
+  };
+}
 
 // 2. Update Vet Data (Write)
 export async function updateVetProfile(
-  userId: string, 
+  userId: string,
   updateData: { name: string; phone: string; licenseNumber: string }
+) {
+  // Update Professional table (license number)
+  const { error: errorPro } = await supabase
+    .from("Professional")
+    .update({ licensenumber: updateData.licenseNumber })
+    .eq("userid", userId);
+
+  if (errorPro) throw errorPro;
+};
+
+// 2. Update User Data (Write)
+export async function updateUserProfile(
+  userId: string,
+  updateData: { name: string; phone: string }
 ) {
   // Update User table (name and phone)
   const { error: errorUser } = await supabase
@@ -144,12 +178,5 @@ export async function updateVetProfile(
     .eq("id", userId);
 
   if (errorUser) throw errorUser;
-
-  // Update Professional table (license number)
-  const { error: errorPro } = await supabase
-    .from("Professional")
-    .update({ licensenumber: updateData.licenseNumber })
-    .eq("userid", userId);
-    
-  if (errorPro) throw errorPro;
 }
+

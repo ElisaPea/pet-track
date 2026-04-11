@@ -1,5 +1,5 @@
 import BasicScreen from "../components/BasicScreen";
-import { Box, Typography, TextField, Button, Stack, Paper } from "@mui/material";
+import { Box, Typography, TextField, Button, Stack, Paper, CircularProgress } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import IconButton from "@mui/material/IconButton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -7,15 +7,18 @@ import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
 import { getVetCenters } from "../api/query";
 import { useEffect, useState } from "react";
-import { CircularProgress } from "@mui/material";
 
 export default function ListVetCenters() {
+  // Logic and State in English
   const navigate = useNavigate();
-  const [vetCenters, setVetCenters] = useState<any[]>([]); // Lista que vendrá de la DB
-  const [searchTerm, setSearchTerm] = useState("");      // Para el buscador
-  const [loading, setLoading] = useState(true);          // Control de carga
+  const [vetCenters, setVetCenters] = useState<any[]>([]); // List from DB
+  const [searchTerm, setSearchTerm] = useState("");      // Search filter
+  const [loading, setLoading] = useState(true);          // Loading control
+  
+  // Array to keep track of which specific centers we have sent emails to
+  const [sentEmails, setSentEmails] = useState<string[]>([]); 
 
-  // EFECTO PARA DISPARAR LA CONSULTA A SUPABASE-- View module
+  // Data fetching effect
   useEffect(() => {
     async function loadData() {
       const data = await getVetCenters();
@@ -25,13 +28,22 @@ export default function ListVetCenters() {
     loadData();
   }, []);
 
-  // Lógica de filtrado para el buscador
+  // Filter logic
   const filteredCenters = vetCenters.filter((center) =>
     center.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleEmail = (emailCenter: string, nameCenter: string) => {
-    console.log(`Enviando solicitud a: ${nameCenter} (${emailCenter})`);
+  // Email handler
+  const handleEmail = (centerId: string, emailCenter: string, nameCenter: string) => {
+    console.log(`Sending request to: ${nameCenter} (${emailCenter})`); // Dev log in English
+    
+    // Track sent email visually in this screen
+    setSentEmails((prev) => [...prev, centerId]);
+
+    // 🌟 NUEVO: Guardamos en la memoria del navegador el nombre de la clínica
+    localStorage.setItem("pendingVetRequest", nameCenter);
+
+    // UX Email text in Spanish
     window.location.href = `mailto:${emailCenter}?subject=Solicitud de Asociación&body=Hola, me gustaría asociarme a su centro...`;
   };
 
@@ -43,51 +55,47 @@ export default function ListVetCenters() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          mt: 8, // Margen superior para centrar visualmente
+          mt: 8,
           position: "relative",
         }}
       >
-          {/* Botón de atrás arriba, fuera del recuadro y amarillo */}
+          {/* Back Button */}
           <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-start", mb: 2 }}>
           <IconButton
             onClick={() => navigate(SCREEN.settingsUser)}
             sx={{
-              bgcolor: "#FBC02D", // Amarillo como tus otros botones
+              bgcolor: "#FBC02D",
               color: "black",
               "&:hover": { bgcolor: "#f9a825" },
-              boxShadow: "0px 2px 5px rgba(0,0,0,0.2)", // Un poco de sombra para que resalte
+              boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
             }}
           >
           <ArrowBackIcon fontSize="medium" />
           </IconButton>
         </Box>
         
-          {/* Tipografia Asociarte a un centro veterinario */}
-            <Typography variant="h4" sx={{ fontWeight: "600", color: "#000000", mb: 0.5, textAlign: "center"}}>
-              Asociate a un centro veterinario
-            </Typography>
+          {/* UX Title in Spanish */}
+          <Typography variant="h4" sx={{ fontWeight: "600", color: "#000000", mb: 0.5, textAlign: "center"}}>
+            Asóciate a un centro veterinario
+          </Typography>
 
-            {/* Línea decorativa */}
-            <Box sx={{ width: 100, height: 4, bgcolor: "#00BCD4", mb: 5}} />
+          <Box sx={{ width: 100, height: 4, bgcolor: "#00BCD4", mb: 5}} />
 
-        {/* Contenedor Principal (Cuadrado azul claro) */}
         <Box
           sx={{
-            bgcolor: "#D1F2F5", // Azul pastel de la imagen
+            bgcolor: "#D1F2F5",
             width: "100%",
             maxWidth: 700,
             borderRadius: 10,
-            p: { xs: 3, sm: 4 }, // Bordes muy redondeados
+            p: { xs: 3, sm: 4 },
             boxShadow: "0px 4px 10px rgba(0,0,0,0.05)",
             textAlign: "center",
           }}
-        
         >
-          {/* Formulario */}
           <Box component="form" noValidate sx={{ mt: 1 }}>
             <Stack spacing={3} alignItems="center">
-              {/* Busca tu centro */}
               <Stack direction={{ xs: "column", sm: "row" }} spacing={3} alignItems="center" sx={{ width: "100%" }}>
+                {/* UX Label in Spanish */}
                 <Typography
                   sx={{ width: 200, textAlign: { xs: "center", sm: "left" },fontWeight: "bold", fontSize: "1.5rem"}}
                 >
@@ -96,10 +104,10 @@ export default function ListVetCenters() {
                 <TextField
                   fullWidth
                   variant="standard"
-                  placeholder="Filtra la lista..." 
-                  onChange ={(e) =>setSearchTerm(e.target.value)}//conectar el buscador con onChange ={(e) =>setSearchTerm(e.target.value)}
+                  placeholder="Filtra la lista..." // UX Placeholder in Spanish
+                  onChange={(e) => setSearchTerm(e.target.value)} 
                   InputProps={{
-                    disableUnderline: true,// Añadimos la lupa para realizar busqueda
+                    disableUnderline: true, 
                      startAdornment: (
                     <SearchIcon sx={{ color: "black", ml: 1, opacity: 0.7 }} />
                      ),
@@ -112,63 +120,69 @@ export default function ListVetCenters() {
                     width: { xs: "100%", sm: "50%" },
                     ml: "auto",
                     input: { 
-                    color: "black", // Texto blanco para que contraste
+                    color: "black", 
                     px: 2}
                   }}
                 />
               </Stack>
-              </Stack>      
+            </Stack>      
           </Box>
 
-
-          {/* COMIENZA TABLA DE DATOS DINÁMICA */}
           <Paper elevation={0} sx={{ border: "2px solid #333", borderRadius: 0, mt: 4, overflow: "hidden" }}>
             {loading ? (
-              // Mientras la base de datos responde, mostramos carga
               <Box sx={{ p: 4, display: "flex", justifyContent: "center" }}> 
                 <CircularProgress color="inherit"/>
               </Box>
               
             ) : filteredCenters.length > 0 ? (
-              // Mapeamos los datos filtrados usando paréntesis () para el retorno del JSX
-              filteredCenters.map((center, index) => (
-                <Box
-                  key={center.id} // Usamos el ID único de Supabase
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    flexDirection: { xs: "column", sm: "row" },
-                    p: 2,
-                    borderBottom: index !== filteredCenters.length - 1 ? "2px solid #333" : "none",
-                    bgcolor: "#D1F2F5",
-                    textAlign: { xs: "center", sm: "left" }
-                  }}
-                >
-                  <Typography sx={{ fontWeight: "600", fontSize: "1.1rem" }}>
-                    {center.name}
-                  </Typography>
+              filteredCenters.map((center, index) => {
+                const isSent = sentEmails.includes(center.id); 
 
-                  <Button
-                    variant="contained"
-                    onClick={() => handleEmail(center.email, center.name)}
+                return (
+                  <Box
+                    key={center.id}
                     sx={{
-                      bgcolor: "#66BB6A",
-                      color: "black",
-                      borderRadius: 50,
-                      textTransform: "none",
-                      fontWeight: "bold",
-                      px: 3,
-                      border: "1px solid #2E7D32",
-                      "&:hover": { bgcolor: "#4CAF50" },
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      flexDirection: { xs: "column", sm: "row" },
+                      p: 2,
+                      borderBottom: index !== filteredCenters.length - 1 ? "2px solid #333" : "none",
+                      bgcolor: "#D1F2F5",
+                      textAlign: { xs: "center", sm: "left" }
                     }}
                   >
-                    ENVIAR CORREO DE ASOCIACIÓN
-                  </Button>
-                </Box>
-              ))
+                    <Typography sx={{ fontWeight: "600", fontSize: "1.1rem" }}>
+                      {center.name}
+                    </Typography>
+
+                    <Button
+                      variant="contained"
+                      disabled={isSent} 
+                      onClick={() => handleEmail(center.id, center.email, center.name)}
+                      sx={{
+                        bgcolor: isSent ? "#9E9E9E" : "#66BB6A", 
+                        color: isSent ? "white" : "black",
+                        borderRadius: 50,
+                        textTransform: "none",
+                        fontWeight: "bold",
+                        px: 3,
+                        border: isSent ? "none" : "1px solid #2E7D32",
+                        "&:hover": { bgcolor: isSent ? "#9E9E9E" : "#4CAF50" },
+                        "&.Mui-disabled": { 
+                          bgcolor: "#BDBDBD",
+                          color: "white"
+                        }
+                      }}
+                    >
+                      {/* UX Button Text in Spanish */}
+                      {isSent ? "CORREO ENVIADO, ESPERANDO RESPUESTA" : "ENVIAR CORREO DE ASOCIACIÓN"}
+                    </Button>
+                  </Box>
+                );
+              })
             ) : (
-              // Mensaje si no hay datos o el filtro no coincide
+              // UX Empty State in Spanish
               <Box sx={{ p: 4, textAlign: "center" }}>
                 <Typography>No se encontraron centros veterinarios.</Typography>
               </Box>
