@@ -12,14 +12,14 @@ import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
 import React, { useState, useEffect } from "react";
 
-// Importamos las validaciones centralizadas
+// Import centralized validations
 import {
   validateEmail,
   validatePhone,
   isNotEmpty,
 } from "../utils/validationUtils";
 
-// Importamos las queries de Supabase para el usuario normal
+// Import Supabase queries for the regular user
 import { getUserProfile, supabase, updateUserProfile } from "../api/query";
 
 export default function AccountSettingsUser() {
@@ -28,12 +28,20 @@ export default function AccountSettingsUser() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // States for error and success messages (changed to string to show specific messages)
+  // States for error and success messages
   const [error, setError] = useState<string | null>(null);
   const [error2, setError2] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Form fields state in English
+  // State to control which fields are currently in edit mode
+  const [isEditing, setIsEditing] = useState({
+    name: false,
+    email: false,
+    phone: false,
+    address: false,
+  });
+
+  // Form fields state
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -46,26 +54,21 @@ export default function AccountSettingsUser() {
     async function loadData() {
       setLoading(true);
       
-      // ⚠️ DEVELOPMENT HACK: Forcing a regular user ID (like Vin) for testing
+      // DEVELOPMENT HACK: Forcing a regular user ID (like Vin) for testing
       // Remember to change this to supabase.auth.getUser() when Auth is ready
       const ID_NORMAL_USER = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb"; 
-      
-      console.log("1. Forcing search for regular user:", ID_NORMAL_USER);
       setUserId(ID_NORMAL_USER);
 
       try {
         const profile = await getUserProfile(ID_NORMAL_USER);
-        console.log("2. Data arriving from DB:", profile);
 
         if (profile) {
           setFormData(prev => ({
             ...prev,
             name: profile.name || "",
             phone: profile.phone || "",
-            email: "vin@fakeemail.com" // Falso temporalmente
+            email: "vin@fakeemail.com" // Temporary mock email
           }));
-        } else {
-          console.error("DB returned null. Check the user ID.");
         }
       } catch (err) { 
         console.error("Error in query:", err); 
@@ -76,8 +79,7 @@ export default function AccountSettingsUser() {
     
     loadData();
 
-    // 🌟 AQUI LEEMOS EL LOCALSTORAGE
-    // Comprobamos si el navegador tiene una nota de solicitud pendiente
+    // Check if the browser has a pending vet clinic request stored
     const pendingRequest = localStorage.getItem("pendingVetRequest");
     if (pendingRequest) {
       setVetRequestStatus(`Esperando confirmación de: ${pendingRequest}`);
@@ -88,21 +90,26 @@ export default function AccountSettingsUser() {
   // Input change handler
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError(null); // Clear error while typing
-    if (error2) setError2(null); // Clear error while typing
-    if (success) setSuccess(false); // Hide success if user types again
+    if (error) setError(null); // Clear empty field error while typing
+    if (error2) setError2(null); // Clear format error while typing
+    if (success) setSuccess(false); // Hide success message if user types again
+  };
+
+  // Toggles the edit mode of a specific field
+  const toggleEdit = (field: keyof typeof isEditing) => {
+    setIsEditing((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
   // Save handler and validations
   const handleSave = async () => {
     const { name, email, phone } = formData;
 
-    // Reset states
+    // Reset alert states
     setError(null);
     setError2(null);
     setSuccess(false);
 
-    // Empty fields validation using utils
+    // Empty fields validation
     const missingFields: string[] = [];
     if (!isNotEmpty(name)) missingFields.push("Nombre");
     if (!isNotEmpty(email)) missingFields.push("Correo electrónico");
@@ -113,7 +120,7 @@ export default function AccountSettingsUser() {
       return;
     }
 
-    // Format validation using utils
+    // Format validation
     const invalidFields: string[] = [];
     if (!validateEmail(email)) invalidFields.push("Correo electrónico");
     if (!validatePhone(phone)) invalidFields.push("Número de teléfono");
@@ -129,12 +136,14 @@ export default function AccountSettingsUser() {
         await updateUserProfile(userId, {
           name: formData.name,
           phone: formData.phone,
-          // Direccion no se guarda en DB por ahora según SQL
         });
 
         setSuccess(true);
-        console.log("Data synchronized with Supabase");
         
+        // Lock all fields again after a successful save
+        setIsEditing({ name: false, email: false, phone: false, address: false });
+        
+        // Hide success message after 3 seconds
         setTimeout(() => setSuccess(false), 3000);
       } else {
         setError("No active user session detected.");
@@ -197,175 +206,126 @@ export default function AccountSettingsUser() {
             </Collapse>
 
             <Stack spacing={3} alignItems="center">
+              
               {/* Name Field */}
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                alignItems="center"
-                sx={{ width: "100%" }}
-              >
-                <Typography
-                  component="label" 
-                  htmlFor="name-input"
-                  sx={{
-                    width: 400,
-                    textAlign: { xs: "center", sm: "left" },
-                    fontWeight: "bold",
-                  }}
-                >
+              <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
+                <Typography component="label" htmlFor="name-input" sx={{ width: 400, textAlign: { xs: "center", sm: "left" }, fontWeight: "bold" }}>
                   Nombre*:
                 </Typography>
-                <TextField
-                  fullWidth
-                  id="name-input"
-                  name="name" // Cuidado: ahora el name es "name"
-                  variant="standard"
-                  value={formData.name}
-                  onChange={handleChange}
-                  error={Boolean(error) && !isNotEmpty(formData.name)}
-                  InputProps={{ disableUnderline: true }}
-                  sx={{
-                    bgcolor: "white",
-                    borderRadius: 50,
-                    px: 2,
-                    py: 0.5,
-                  }}
-                />
+                <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
+                  <TextField
+                    fullWidth
+                    id="name-input"
+                    name="name"
+                    variant="standard"
+                    value={formData.name}
+                    onChange={handleChange}
+                    error={Boolean(error) && !isNotEmpty(formData.name)}
+                    // ReadOnly if not in edit mode. Grey background if locked.
+                    InputProps={{ disableUnderline: true, readOnly: !isEditing.name }}
+                    sx={{ bgcolor: isEditing.name ? "white" : "#e0e0e0", borderRadius: 50, px: 2, py: 0.5 }}
+                  />
+                  <Button 
+                    onClick={() => toggleEdit("name")} 
+                    sx={{ color: "#F9A825", fontWeight: "bold", minWidth: "80px" }}
+                  >
+                    EDITAR
+                  </Button>
+                </Stack>
               </Stack>
 
               {/* Email Field */}
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                alignItems="center"
-                sx={{ width: "100%" }}
-              >
-                <Typography
-                  component="label" 
-                  htmlFor="email-input"
-                  sx={{
-                    width: 400,
-                    textAlign: { xs: "center", sm: "left" },
-                    fontWeight: "bold",
-                  }}
-                >
+              <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
+                <Typography component="label" htmlFor="email-input" sx={{ width: 400, textAlign: { xs: "center", sm: "left" }, fontWeight: "bold" }}>
                   Correo electrónico*:
                 </Typography>
-                <TextField
-                  id="email-input"
-                  fullWidth
-                  variant="standard"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={
-                    (Boolean(error) && !isNotEmpty(formData.email)) ||
-                    (Boolean(error2) && !validateEmail(formData.email))
-                  }
-                  InputProps={{ disableUnderline: true }}
-                  sx={{
-                    bgcolor: "white",
-                    borderRadius: 50,
-                    px: 2,
-                    py: 0.5,
-                  }}
-                />
+                <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
+                  <TextField
+                    id="email-input"
+                    fullWidth
+                    variant="standard"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    error={(Boolean(error) && !isNotEmpty(formData.email)) || (Boolean(error2) && !validateEmail(formData.email))}
+                    InputProps={{ disableUnderline: true, readOnly: !isEditing.email }}
+                    sx={{ bgcolor: isEditing.email ? "white" : "#e0e0e0", borderRadius: 50, px: 2, py: 0.5 }}
+                  />
+                  <Button 
+                    onClick={() => toggleEdit("email")} 
+                    sx={{ color: "#F9A825", fontWeight: "bold", minWidth: "80px" }}
+                  >
+                    EDITAR
+                  </Button>
+                </Stack>
               </Stack>
 
               {/* Phone Field */}
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                alignItems="center"
-                sx={{ width: "100%" }}
-              >
-                <Typography
-                  component="label" 
-                  htmlFor="phone-input" 
-                  sx={{
-                    width: 400,
-                    textAlign: { xs: "center", sm: "left" },
-                    fontWeight: "bold",
-                  }}
-                >
+              <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
+                <Typography component="label" htmlFor="phone-input" sx={{ width: 400, textAlign: { xs: "center", sm: "left" }, fontWeight: "bold" }}>
                   Número de teléfono*:
                 </Typography>
-                <TextField
-                  id="phone-input"
-                  fullWidth
-                  variant="standard"
-                  name="phone" // Cuidado: ahora es "phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  error={
-                    (Boolean(error) && !isNotEmpty(formData.phone)) ||
-                    (Boolean(error2) && !validatePhone(formData.phone))
-                  }
-                  InputProps={{ disableUnderline: true }}
-                  sx={{
-                    bgcolor: "white",
-                    borderRadius: 50,
-                    px: 2,
-                    py: 0.5,
-                  }}
-                />
+                <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
+                  <TextField
+                    id="phone-input"
+                    fullWidth
+                    variant="standard"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    error={(Boolean(error) && !isNotEmpty(formData.phone)) || (Boolean(error2) && !validatePhone(formData.phone))}
+                    InputProps={{ disableUnderline: true, readOnly: !isEditing.phone }}
+                    sx={{ bgcolor: isEditing.phone ? "white" : "#e0e0e0", borderRadius: 50, px: 2, py: 0.5 }}
+                  />
+                  <Button 
+                    onClick={() => toggleEdit("phone")} 
+                    sx={{ color: "#F9A825", fontWeight: "bold", minWidth: "80px" }}
+                  >
+                    EDITAR
+                  </Button>
+                </Stack>
               </Stack>
 
               {/* Address Field */}
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                alignItems="center"
-                sx={{ width: "100%" }}
-              >
-                <Typography
-                  sx={{
-                    width: 400,
-                    textAlign: { xs: "center", sm: "left" },
-                    fontWeight: "bold",
-                  }}
-                >
+              <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
+                <Typography sx={{ width: 400, textAlign: { xs: "center", sm: "left" }, fontWeight: "bold" }}>
                   Dirección:
                 </Typography>
-                <TextField
-                  fullWidth
-                  variant="standard"
-                  name="address" 
-                  value={formData.address}
-                  onChange={handleChange}
-                  InputProps={{ disableUnderline: true }}
-                  sx={{
-                    bgcolor: "white",
-                    borderRadius: 50,
-                    px: 2,
-                    py: 0.5,
-                  }}
-                />
+                <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
+                  <TextField
+                    fullWidth
+                    variant="standard"
+                    name="address" 
+                    value={formData.address}
+                    onChange={handleChange}
+                    InputProps={{ disableUnderline: true, readOnly: !isEditing.address }}
+                    sx={{ bgcolor: isEditing.address ? "white" : "#e0e0e0", borderRadius: 50, px: 2, py: 0.5 }}
+                  />
+                  <Button 
+                    onClick={() => toggleEdit("address")} 
+                    sx={{ color: "#F9A825", fontWeight: "bold", minWidth: "80px" }}
+                  >
+                    EDITAR
+                  </Button>
+                </Stack>
               </Stack>
 
-              {/* Associated Vet Center Field */}
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                alignItems="center"
-                sx={{ width: "100%" }}
-              >
-                <Typography
-                  sx={{
-                    width: 400,
-                    textAlign: { xs: "center", sm: "left" },
-                    fontWeight: "bold",
-                  }}
-                >
+              {/* Associated Vet Center Field (ALWAYS READ ONLY) */}
+              <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
+                <Typography sx={{ width: 400, textAlign: { xs: "center", sm: "left" }, fontWeight: "bold" }}>
                   Centro Veterinario Asociado:
                 </Typography>
-                <TextField
-                  fullWidth
-                  variant="standard"
-                  value={vetRequestStatus}
-                  InputProps={{ disableUnderline: true, readOnly: true }}
-                  sx={{
-                    bgcolor: "#bebebeff",
-                    borderRadius: 50,
-                    px: 2,
-                    py: 0.5,
-                  }}
-                />
+                <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
+                  <TextField
+                    fullWidth
+                    variant="standard"
+                    value={vetRequestStatus}
+                    InputProps={{ disableUnderline: true, readOnly: true }}
+                    sx={{ bgcolor: "#bebebeff", borderRadius: 50, px: 2, py: 0.5 }}
+                  />
+                  {/* Empty box to maintain alignment with the other fields that have buttons */}
+                  <Box sx={{ minWidth: "80px" }} /> 
+                </Stack>
               </Stack>
 
               {/* Action Buttons */}
@@ -382,9 +342,7 @@ export default function AccountSettingsUser() {
               >
                 <Button
                   variant="contained"
-                  onClick={() => {
-                    navigate(SCREEN.listVet);
-                  }}
+                  onClick={() => { navigate(SCREEN.listVet); }}
                   sx={{
                     bgcolor: "#FBC02D",
                     color: "black",

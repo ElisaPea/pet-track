@@ -9,12 +9,16 @@ import {
   Alert,
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
+
+// Import centralized validations
 import {
   validateEmail,
   validatePhone,
   validateColegiado,
   isNotEmpty,
 } from "../utils/validationUtils";
+
+// Import Supabase queries for the vet profile
 import { getVetProfile, supabase, updateVetProfile } from "../api/query";
 
 export default function AccountSettingsVet() {
@@ -25,6 +29,15 @@ export default function AccountSettingsVet() {
   const [error, setError] = useState<string | null>(null);
   const [error2, setError2] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // State to control which fields are currently in edit mode
+  const [isEditing, setIsEditing] = useState({
+    name: false,
+    email: false,
+    phone: false,
+    address: false,
+    licenseNumber: false,
+  });
   
   // Form fields state
   const [formData, setFormData] = useState({
@@ -35,12 +48,13 @@ export default function AccountSettingsVet() {
     licenseNumber: "",
   });
 
+  // Load Initial Data
   useEffect(() => {
     async function loadData() {
       setLoading(true);
       
-      // ⚠️ DEVELOPMENT HACK: Forcing Bilbo's ID for testing
-      // When the app is finished, we will remove this and use supabase.auth.getUser()
+      // DEVELOPMENT HACK: Forcing Bilbo's ID for testing
+      // Remember to change this to supabase.auth.getUser() when Auth is ready
       const ID_BILBO = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb";
       
       console.log("1. Forcing search for user:", ID_BILBO);
@@ -53,11 +67,10 @@ export default function AccountSettingsVet() {
         if (profile) {
           setFormData(prev => ({
             ...prev,
-            // Mapping the Spanish response from query.ts to English state
             name: profile.name || "",
             phone: profile.phone || "",
             licenseNumber: profile.licenseNumber || "",
-            email: "bilbo@fakeemail.com" // Temporary fake email
+            email: "bilbo@fakeemail.com" // Temporary mock email
           }));
         } else {
           console.error("DB returned null. Check Bilbo's ID.");
@@ -77,16 +90,21 @@ export default function AccountSettingsVet() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError(null); // Clear error while typing
-    if (error2) setError2(null); // Clear error while typing
-    if (success) setSuccess(false); // Hide success if user types again
+    if (error) setError(null); // Clear empty field error while typing
+    if (error2) setError2(null); // Clear format error while typing
+    if (success) setSuccess(false); // Hide success message if user types again
+  };
+
+  // Toggles the edit mode of a specific field
+  const toggleEdit = (field: keyof typeof isEditing) => {
+    setIsEditing((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
   // Save handler and validations
   const handleSave = async () => {
     const { name, email, phone, licenseNumber } = formData;
 
-    // Reset states
+    // Reset alert states
     setError(null);
     setError2(null);
     setSuccess(false);
@@ -99,7 +117,7 @@ export default function AccountSettingsVet() {
     if (!isNotEmpty(licenseNumber)) missingFields.push("Nº Colegiado");
 
     if (missingFields.length > 0) {
-      setError(`Faltan el campo obligatorio: ${missingFields.join(", ")}.`);
+      setError(`Falta el campo obligatorio: ${missingFields.join(", ")}.`);
       return;
     }
 
@@ -118,7 +136,6 @@ export default function AccountSettingsVet() {
     try {
       if (userId) {
         await updateVetProfile(userId, {
-          // We map back to Spanish ONLY for the API call to not break query.ts
           name: formData.name,
           phone: formData.phone,
           licenseNumber: formData.licenseNumber
@@ -127,6 +144,9 @@ export default function AccountSettingsVet() {
         setSuccess(true);
         console.log("Data synchronized with Supabase");
         
+        // Lock all fields again after a successful save
+        setIsEditing({ name: false, email: false, phone: false, address: false, licenseNumber: false });
+
         setTimeout(() => setSuccess(false), 3000);
       } else {
         setError("No active user session detected.");
@@ -189,148 +209,132 @@ export default function AccountSettingsVet() {
             </Collapse>
 
             <Stack spacing={3} alignItems="center">
+              
               {/* Name Field */}
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                spacing={{ xs: 1, sm: 0 }}
-                alignItems="center"
-                sx={{ width: "100%" }}
-              >
-                <Typography
-                  sx={{
-                    width: 400,
-                    textAlign: { xs: "center", sm: "left" },
-                    fontWeight: "bold",
-                  }}
-                >
+              <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
+                <Typography component="label" htmlFor="name-input" sx={{ width: 400, textAlign: { xs: "center", sm: "left" }, fontWeight: "bold" }}>
                   Nombre*:
                 </Typography>
-                <TextField
-                  fullWidth
-                  name="name"
-                  variant="standard"
-                  value={formData.name}
-                  onChange={handleChange}
-                  error={Boolean(error) && !isNotEmpty(formData.name)}
-                  InputProps={{ disableUnderline: true }}
-                  sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
-                />
+                <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
+                  <TextField
+                    fullWidth
+                    id="name-input"
+                    name="name"
+                    variant="standard"
+                    value={formData.name}
+                    onChange={handleChange}
+                    error={Boolean(error) && !isNotEmpty(formData.name)}
+                    InputProps={{ disableUnderline: true, readOnly: !isEditing.name }}
+                    sx={{ bgcolor: isEditing.name ? "white" : "#e0e0e0", borderRadius: 50, px: 2, py: 0.5 }}
+                  />
+                  <Button 
+                    onClick={() => toggleEdit("name")} 
+                    sx={{ color: "#F9A825", fontWeight: "bold", minWidth: "80px" }}
+                  >
+                    EDITAR
+                  </Button>
+                </Stack>
               </Stack>
 
               {/* Email Field */}
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                alignItems="center"
-                sx={{ width: "100%" }}
-              >
-                <Typography
-                  sx={{
-                    width: 400,
-                    textAlign: { xs: "center", sm: "left" },
-                    fontWeight: "bold",
-                  }}
-                >
+              <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
+                <Typography component="label" htmlFor="email-input" sx={{ width: 400, textAlign: { xs: "center", sm: "left" }, fontWeight: "bold" }}>
                   Correo electrónico*:
                 </Typography>
-                <TextField
-                  fullWidth
-                  variant="standard"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={
-                    (Boolean(error) && !isNotEmpty(formData.email)) ||
-                    (Boolean(error2) && !validateEmail(formData.email))
-                  }
-                  InputProps={{ disableUnderline: true }}
-                  sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
-                />
+                <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
+                  <TextField
+                    id="email-input"
+                    fullWidth
+                    variant="standard"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    error={(Boolean(error) && !isNotEmpty(formData.email)) || (Boolean(error2) && !validateEmail(formData.email))}
+                    InputProps={{ disableUnderline: true, readOnly: !isEditing.email }}
+                    sx={{ bgcolor: isEditing.email ? "white" : "#e0e0e0", borderRadius: 50, px: 2, py: 0.5 }}
+                  />
+                  <Button 
+                    onClick={() => toggleEdit("email")} 
+                    sx={{ color: "#F9A825", fontWeight: "bold", minWidth: "80px" }}
+                  >
+                    EDITAR
+                  </Button>
+                </Stack>
               </Stack>
 
               {/* Phone Field */}
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                alignItems="center"
-                sx={{ width: "100%" }}
-              >
-                <Typography
-                  sx={{
-                    width: 400,
-                    textAlign: { xs: "center", sm: "left" },
-                    fontWeight: "bold",
-                  }}
-                >
+              <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
+                <Typography component="label" htmlFor="phone-input" sx={{ width: 400, textAlign: { xs: "center", sm: "left" }, fontWeight: "bold" }}>
                   Número de teléfono*:
                 </Typography>
-                <TextField
-                  fullWidth
-                  variant="standard"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  error={
-                    (Boolean(error) && !isNotEmpty(formData.phone)) ||
-                    (Boolean(error2) && !validatePhone(formData.phone))
-                  }
-                  InputProps={{ disableUnderline: true }}
-                  sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
-                />
+                <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
+                  <TextField
+                    id="phone-input"
+                    fullWidth
+                    variant="standard"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    error={(Boolean(error) && !isNotEmpty(formData.phone)) || (Boolean(error2) && !validatePhone(formData.phone))}
+                    InputProps={{ disableUnderline: true, readOnly: !isEditing.phone }}
+                    sx={{ bgcolor: isEditing.phone ? "white" : "#e0e0e0", borderRadius: 50, px: 2, py: 0.5 }}
+                  />
+                  <Button 
+                    onClick={() => toggleEdit("phone")} 
+                    sx={{ color: "#F9A825", fontWeight: "bold", minWidth: "80px" }}
+                  >
+                    EDITAR
+                  </Button>
+                </Stack>
               </Stack>
 
               {/* Address Field */}
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                alignItems="center"
-                sx={{ width: "100%" }}
-              >
-                <Typography
-                  sx={{
-                    width: 400,
-                    textAlign: { xs: "center", sm: "left" },
-                    fontWeight: "bold",
-                  }}
-                >
+              <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
+                <Typography sx={{ width: 400, textAlign: { xs: "center", sm: "left" }, fontWeight: "bold" }}>
                   Dirección:
                 </Typography>
-                <TextField
-                  fullWidth
-                  variant="standard"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  InputProps={{ disableUnderline: true }}
-                  sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
-                />
+                <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
+                  <TextField
+                    fullWidth
+                    variant="standard"
+                    name="address" 
+                    value={formData.address}
+                    onChange={handleChange}
+                    InputProps={{ disableUnderline: true, readOnly: !isEditing.address }}
+                    sx={{ bgcolor: isEditing.address ? "white" : "#e0e0e0", borderRadius: 50, px: 2, py: 0.5 }}
+                  />
+                  <Button 
+                    onClick={() => toggleEdit("address")} 
+                    sx={{ color: "#F9A825", fontWeight: "bold", minWidth: "80px" }}
+                  >
+                    EDITAR
+                  </Button>
+                </Stack>
               </Stack>
 
               {/* License Number Field */}
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                alignItems="center"
-                sx={{ width: "100%" }}
-              >
-                <Typography
-                  sx={{
-                    width: 400,
-                    textAlign: { xs: "center", sm: "left" },
-                    fontWeight: "bold",
-                  }}
-                >
+              <Stack direction={{ xs: "column", sm: "row" }} alignItems="center" sx={{ width: "100%" }}>
+                <Typography sx={{ width: 400, textAlign: { xs: "center", sm: "left" }, fontWeight: "bold" }}>
                   Nº Colegiado*:
                 </Typography>
-                <TextField
-                  fullWidth
-                  variant="standard"
-                  onChange={handleChange}
-                  name="licenseNumber"
-                  value={formData.licenseNumber}
-                  error={
-                    (Boolean(error) && !isNotEmpty(formData.licenseNumber)) ||
-                    (Boolean(error2) && !validateColegiado(formData.licenseNumber))
-                  }
-                  InputProps={{ disableUnderline: true }}
-                  sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
-                />
+                <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
+                  <TextField
+                    fullWidth
+                    variant="standard"
+                    onChange={handleChange}
+                    name="licenseNumber"
+                    value={formData.licenseNumber}
+                    error={(Boolean(error) && !isNotEmpty(formData.licenseNumber)) || (Boolean(error2) && !validateColegiado(formData.licenseNumber))}
+                    InputProps={{ disableUnderline: true, readOnly: !isEditing.licenseNumber }}
+                    sx={{ bgcolor: isEditing.licenseNumber ? "white" : "#e0e0e0", borderRadius: 50, px: 2, py: 0.5 }}
+                  />
+                  <Button 
+                    onClick={() => toggleEdit("licenseNumber")} 
+                    sx={{ color: "#F9A825", fontWeight: "bold", minWidth: "80px" }}
+                  >
+                    EDITAR
+                  </Button>
+                </Stack>
               </Stack>
 
               {/* Save Button */}
