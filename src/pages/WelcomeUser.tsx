@@ -1,23 +1,47 @@
-import { Box, Typography, Button } from "@mui/material";
-import { useState } from "react";
+import { Box, Typography, Button, CircularProgress } from "@mui/material";
+import { useState, useEffect } from "react";
 import BasicScreen from "../components/BasicScreen";
 import { PopupCreatePetUser } from "../components/PopupCreatePetUser";
+import { getPetsByUser } from "../api/query";
+
+const TEST_USER_ID = "2427a02c-b1c9-423e-9aab-4ed448c34b5b";
+
+// Calcula la edad en años a partir de una fecha ISO
+function calcularEdad(birthdate: string): string {
+  if (!birthdate) return "Desconocida";
+  const años = new Date().getFullYear() - new Date(birthdate).getFullYear();
+  return `${años} año${años !== 1 ? "s" : ""}`;
+}
 
 export default function WelcomeUser() {
   const [open, setOpen] = useState(false);
+  const [mascotas, setMascotas] = useState<any[]>([]);
+  const [loadingPets, setLoadingPets] = useState(true);
+  const [mascotaSeleccionada, setMascotaSeleccionada] = useState<any | null>(null);
+
+  const fetchMascotas = async () => {
+    setLoadingPets(true);
+    try {
+      const data = await getPetsByUser(TEST_USER_ID);
+      setMascotas(data);
+    } catch (e) {
+      console.error("Error al cargar mascotas:", e);
+    } finally {
+      setLoadingPets(false);
+    }
+  };
+
+  // Carga inicial
+  useEffect(() => {
+    fetchMascotas();
+  }, []);
 
   return (
     <BasicScreen>
       <section>
-        {/* Welcome User Title & Blue Line */}
+        {/* Title */}
         <Box>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-          >
+          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
             <Typography variant="h4" component="h1" sx={{ fontWeight: "bold" }}>
               Bienvenido ****
             </Typography>
@@ -29,15 +53,14 @@ export default function WelcomeUser() {
               width: 75,
               height: 5,
               boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
-              display: "flex",
-              justifyContent: "center",
-              mt: 1,
               ml: "auto",
               mr: "auto",
+              mt: 1,
             }}
-          ></Box>
+          />
         </Box>
-        {/* Pet & Add Pet Boxes Container */}
+
+        {/* MAIN BOX CONTAINER */}
         <Box
           sx={{
             display: "flex",
@@ -49,7 +72,7 @@ export default function WelcomeUser() {
             rowGap: 3.5,
           }}
         >
-          {/* Add Pet Box */}
+          {/* ADD PET BOX */}
           <Box
             sx={{
               bgcolor: "#00ADBA",
@@ -75,83 +98,135 @@ export default function WelcomeUser() {
               !AÑADE UNA MASCOTA!
             </Button>
           </Box>
-          {/* Pet Box */}
-          <Box
-            sx={{
-              bgcolor: "#00ADBA",
-              borderRadius: 10,
-              width: 350,
-              height: 240,
-              boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
-              display: "flex",
-              justifyContent: "center",
-            }}
-          >
+
+          {/* Loading state */}
+          {loadingPets && (
             <Box
               sx={{
+                width: 350,
+                height: 240,
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                flexWrap: "wrap",
-                mt: 1,
-                mb: 1,
-                columnGap: 1.5,
-                rowGap: -2,
               }}
             >
-              {/* Pet Info Field */}
+              <CircularProgress sx={{ color: "#00ADBA" }} />
+            </Box>
+          )}
+
+          {/* Box for n pets */}
+          {!loadingPets &&
+            mascotas.map((mascota) => (
               <Box
+                key={mascota.id}
                 sx={{
-                  bgcolor: "white",
-                  borderRadius: 5,
-                  width: 200,
-                  height: 100,
-                  boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
-                }}
-              >
-                <Typography variant="h6" textAlign="center">
-                  Vin
-                </Typography>
-                <Typography variant="body1" textAlign="left" sx={{ ml: 2 }}>
-                  - Shitzu
-                </Typography>
-                <Typography variant="body1" textAlign="left" sx={{ ml: 2 }}>
-                  - 4 años
-                </Typography>
-              </Box>
-              {/* Pet Img Field */}
-              <Box
-                component="img"
-                src="https://images.unsplash.com/photo-1667411099198-a87e51e8c7b9?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                sx={{
-                  borderRadius: 5,
-                  width: 100,
-                  height: 100,
-                  boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
-                }}
-              ></Box>
-              {/* Pet Aditional Info Field */}
-              <Box
-                sx={{
-                  bgcolor: "white",
-                  borderRadius: 5,
-                  width: 310,
-                  height: 100,
+                  bgcolor: "#00ADBA",
+                  borderRadius: 10,
+                  width: 350,
+                  height: 240,
                   boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
                 }}
               >
-                <Typography variant="h6">
-                  Inserar informacion adicional
-                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 1.5,
+                    p: 1.5,
+                    width: "100%",
+                  }}
+                >
+                  {/* Main info + image  */}
+                  <Box sx={{ display: "flex", gap: 1.5, width: "100%" }}>
+                    {/* Main info */}
+                    <Box
+                      sx={{
+                        bgcolor: "white",
+                        borderRadius: 5,
+                        flex: 1,
+                        height: 100,
+                        boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
+                        p: 1.5,
+                      }}
+                    >
+                      <Typography variant="h6" textAlign="center">
+                        {mascota.name}
+                      </Typography>
+                      <Typography variant="body1" sx={{ ml: 1 }}>
+                        - {mascota.breed || "Raza desconocida"}
+                      </Typography>
+                      <Typography variant="body1" sx={{ ml: 1 }}>
+                        - {calcularEdad(mascota.birthdate)}
+                      </Typography>
+                    </Box>
+
+                    {/* image */}
+                    <Box
+                      sx={{
+                        bgcolor: "white",
+                        borderRadius: 5,
+                        width: 100,
+                        height: 100,
+                        flexShrink: 0,
+                        boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Typography fontSize={40}>🐾</Typography>
+                    </Box>
+                  </Box>
+                  {/* additional info */}
+                  <Box
+                    onClick={() => {
+                      setMascotaSeleccionada(mascota);
+                      setOpen(true);
+                    }}
+                    sx={{
+                      bgcolor: "white",
+                      borderRadius: 5,
+                      width: "100%",
+                      height: 80,
+                      boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      "&:hover": { bgcolor: "#BEF1F3" },
+                      transition: "background-color 0.2s",
+                    }}
+                  >
+                    <Typography variant="h6">Información adicional</Typography>
+                  </Box>
+                </Box>
               </Box>
-            </Box>
-          </Box>
+            ))}
+
+          {/* No pets mesaage */}
+          {!loadingPets && mascotas.length === 0 && (
+            <Typography sx={{ color: "gray", mt: 2 }}>
+              Parece que todavía no tienes ninguna mascota creada.
+            </Typography>
+          )}
         </Box>
 
-        <PopupCreatePetUser open={open} setOpen={setOpen} />
+        {/* Refresh list on save */}
+        <PopupCreatePetUser
+          open={open}
+          mascota={mascotaSeleccionada}
+          setOpen={(val) => {
+            setOpen(val);
+            if (!val) {
+              setMascotaSeleccionada(null); // limpia al cerrar
+              fetchMascotas();
+            }
+          }}
+        />
       </section>
     </BasicScreen>
   );

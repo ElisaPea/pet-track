@@ -132,7 +132,7 @@ export async function getUserProfile(userId: string) {
 
 // 2. Update User Data (Write)
 export async function updateUserProfile(
-  userId: string, 
+  userId: string,
   updateData: { name: string; phone: string }
 ) {
   const { error } = await supabase
@@ -141,4 +141,27 @@ export async function updateUserProfile(
     .eq("id", userId);
 
   if (error) throw error;
+}
+
+// Obtener mascotas de un usuario concreto
+export async function getPetsByUser(userId: string) {
+  const { data, error } = await supabase
+    .from("PetUser")
+    .select(`
+      Pet (
+        id,
+        name,
+        breed,
+        birthdate
+      )
+    `)
+    .eq("userid", userId);
+
+  if (error) {
+    console.error("Error al obtener mascotas:", error);
+    throw new Error(error.message);
+  }
+
+  // Aplanamos el resultado para tener un array de mascotas directamente
+  return data?.map((row: any) => row.Pet).filter(Boolean) ?? [];
 }
