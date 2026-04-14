@@ -13,38 +13,64 @@ import AddIcon from "@mui/icons-material/Add";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt"; // Alternative arrow icon can be used if preferred
 import ClientDetailsPopup from "../components/ClientDetailsPopup";
 import AddClientPopup from '../components/AddClientPopup';
-import { useState } from "react";
-
-// Pictures import for testing (TO DELETE)
-import beni from "../assets/Beni_perfil.jpeg";
-import test1 from "../assets/test_1.jpg";
-import test2 from "../assets/test_2.jpeg";
-import arya from "../assets/arya.jpeg";
+import { useState, useEffect } from "react";
+import { getClientProfiles, getPetsByClient } from "../api/query";
 
 export default function HomeVet() {
-  // Mock data array
-  const petList = [
-    { id: 1, client: "Malcon", pet: "Beni", image: beni },
-    { id: 2, client: "Aroa", pet: "Luna", image: undefined }, // Null image state for testing fallback UI
-    { id: 3, client: "Ventura", pet: "Thor", image: test2 },
-    { id: 4, client: "Elisa", pet: "Atena", image: arya },
-    { id: 5, client: "Malcon", pet: "Beni", image: undefined }, // Null image state for testing fallback UI
-    { id: 6, client: "Aroa", pet: "Luna", image: test1 },
-    { id: 7, client: "Ventura", pet: "Thor", image: test2 },
-    { id: 8, client: "Elisa", pet: "Atena", image: test1 },
-    // Add as many items as needed...
-  ];
+  // Estado para almacenar la lista de clientes junto con sus mascotas
+  const [clientList, setClientList] = useState<any[]>([]);
+
+  // Estado para rastrear lo que el usuario escribe en el buscador
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Create the 'switch'. It is closed by default (false)
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
 
+  // UseEffect que llama a las APIs al montar el componente
+  useEffect(() => {
+    const fetchClientsAndPets = async () => {
+      try {
+        // 1. Obtenemos los clientes
+        const clientsData = await getClientProfiles();
+
+        if (clientsData) {
+          // 2. Por cada cliente, traemos sus mascotas usando Promise.all para que sea simultáneo
+          const enrichedClients = await Promise.all(
+            clientsData.map(async (client) => {
+              const pets = await getPetsByClient(client.id);
+              // Devolvemos el cliente sumándole un nuevo campo "pets"
+              return { ...client, pets: pets || [] };
+            })
+          );
+          setClientList(enrichedClients);
+        }
+      } catch (error) {
+        console.error("Error al cargar los datos:", error);
+      }
+    };
+    fetchClientsAndPets();
+  }, []);
+
   // Function to open the popup with a specific ID
-  const handleOpenDetails = (id: number) => {
+  const handleOpenDetails = (id: string) => {
     setSelectedClientId(id);
     setIsModalOpen(true);
   };
+
+  // Lógica de filtrado dinámico. Extraemos los que coinciden con el texto.
+  const filteredClients = clientList.filter((client) => {
+    if (!client) return false;
+    const query = searchQuery.toLowerCase();
+    const clientName = client.name || "";
+    const matchClientName = clientName.toLowerCase().includes(query);
+    const matchPetName = client.pets && client.pets.some((pet: any) => {
+      const petName = pet.name || "";
+      return petName.toLowerCase().includes(query);
+    });
+    return matchClientName || matchPetName;
+  });
 
   return (
     <BasicScreen>
@@ -97,8 +123,10 @@ export default function HomeVet() {
           </Typography>
           <TextField
             fullWidth
-            placeholder="Nombre, DNI o nombre de mascota..."
+            placeholder="Nombre o nombre de mascota..."
             variant="outlined"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             sx={{
               bgcolor: "white",
               borderRadius: 50,
@@ -154,10 +182,36 @@ export default function HomeVet() {
           p: 2,
         }}
       >
-        {petList.map((item) => (
+        {filteredClients.length === 0 ? (
+           <Box sx={{ 
+             bgcolor: "#FFF8E1", 
+             borderRadius: "24px", 
+             p: 4, 
+             display: "flex", 
+             flexDirection: "column", 
+             alignItems: "center", 
+             textAlign: "center",
+             gap: 1.5, 
+             boxShadow: "0 4px 15px rgba(255, 202, 40, 0.15)",
+             maxWidth: 400,
+             mx: "auto", 
+             mt: 4
+           }}>
+             <Typography sx={{ fontSize: "3.5rem", lineHeight: 1 }}>🔍</Typography>
+             <Box>
+               <Typography sx={{ fontWeight: "bold", color: "#F57F17", fontSize: "1.15rem", mb: 0.5 }}>
+                 Sin resultados
+               </Typography>
+               <Typography variant="body2" sx={{ color: "#FF8F00" }}>
+                 No hay ningún cliente ni mascota que coincida con tu búsqueda.
+               </Typography>
+             </Box>
+           </Box>
+        ) : (
+        filteredClients.map((client) => (
           /* Clients cards */
           <Box
-            key={item.id}
+            key={client.id}
             sx={{
               width: 300, // Adjust width as necessary for proper scaling
               bgcolor: "#00ADBA",
@@ -191,7 +245,7 @@ export default function HomeVet() {
                     variant="body2"
                     sx={{ fontWeight: "bold", color: "black" }}
                   >
-                    {item.client}
+                    {client.name}
                   </Typography>
                 </Box>
               </Stack>
@@ -209,8 +263,6 @@ export default function HomeVet() {
               }}
             >
               <Avatar
-                src={item.image} // Example image
-                alt={item.pet} // Alt text for accessibility
                 variant="rounded" // Makes the image square with rounded corners
                 sx={{
                   width: 70, // Avatar size
@@ -221,8 +273,10 @@ export default function HomeVet() {
                   color: "black",
                 }}
               >
-                {/* Initial if no image is available */}
-                {item.pet.charAt(0)}
+                {/* Si tiene mascotas, la inicial de la primera, si no, la del cliente */}
+                {client.pets && client.pets.length > 0
+                  ? (client.pets[0].name || "M").charAt(0).toUpperCase()
+                  : (client.name || "C").charAt(0).toUpperCase()}
               </Avatar>
 
               <Box sx={{ flex: 1 }}>
@@ -230,13 +284,15 @@ export default function HomeVet() {
                   variant="body2"
                   sx={{ fontWeight: "bold", color: "black" }}
                 >
-                  Nombre:
+                  Mascota(s):
                 </Typography>
                 <Typography
                   variant="body2"
-                  sx={{ fontWeight: "bold", color: "black" }}
+                  sx={{ fontWeight: "bold", color: "black", fontSize: "0.85rem" }}
                 >
-                  {item.pet}
+                  {client.pets && client.pets.length > 0
+                    ? client.pets.map((p: any) => p.name).join(", ")
+                    : "(Sin mascotas)"}
                 </Typography>
               </Box>
 
@@ -249,7 +305,7 @@ export default function HomeVet() {
                   ml: 2, // Left margin to separate it
                   "&:hover": { bgcolor: "#00838F" }, // Change color on hover
                 }}
-                onClick={() => handleOpenDetails(item.id)} // Pass the item.id (client ID from the pressed card) to the button handler
+                onClick={() => handleOpenDetails(client.id)} // Pass the client.id to the button handler
               >
                 <ArrowRightAltIcon /> {/* Arrow icon */}
               </IconButton>
@@ -257,9 +313,9 @@ export default function HomeVet() {
               {/* POPUPS SECTION */}
               {/* CLIENT DETAILS POPUP: Place the Modal at the bottom. It will be 'listening' to the isModalOpen switch. */}
               <ClientDetailsPopup
-                open={isModalOpen}
+                open={isModalOpen && selectedClientId === client.id}
                 onClose={() => setIsModalOpen(false)}
-                clientId={selectedClientId}
+                clientData={client}
               />
               {/* ADD CLIENT POPUP: Triggered from the top "+" button */}
               <AddClientPopup
@@ -268,7 +324,8 @@ export default function HomeVet() {
               />
             </Box>
           </Box>
-        ))}
+        ))
+        )}
       </Box>
     </BasicScreen>
   );

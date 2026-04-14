@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
+// Esto es para conectar con la base de datos
+// Habrá que quitarlo cuando usemos .env por seguridad
 const supabaseUrl = "https://nxawqcahssgckzwqqskk.supabase.co";
 const supabaseAnonKey = "sb_publishable_4PGaX7rokNzSpzDSLmIDdg_D_9_sQr8";
 const veterinarycenterid = "c41de394-45ad-47b2-9d4d-5d2c0b137cec";
@@ -7,7 +9,11 @@ const veterinarycenterid = "c41de394-45ad-47b2-9d4d-5d2c0b137cec";
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 
-// Función para obtener la lista de centros veterinarios
+
+/**
+ * Obtiene la lista de centros veterinarios de la base de datos.
+ * @returns Una promesa que resuelve a un array de centros veterinarios.
+ */
 export async function getVetCenters() {
   const { data, error } = await supabase
     .from("VeterinaryCenter") // Nombre base de datos
@@ -157,6 +163,27 @@ export async function updateVetProfile(
   userId: string,
   updateData: { name: string; phone: string; licenseNumber: string }
 ) {
+  // --- IMPORTANTE: También debemos actualizar la tabla User ---
+  const { error: errorUser } = await supabase
+    .from("User")
+    .update({ name: updateData.name, phone: updateData.phone })
+    .eq("id", userId);
+
+  if (errorUser) throw errorUser;
+
+  // Update Professional table (license number)
+  const { error: errorPro } = await supabase
+    .from("Professional")
+    .update({ licensenumber: updateData.licenseNumber })
+    .eq("userid", userId);
+
+  if (errorPro) throw errorPro;
+}
+/*
+export async function updateVetProfile(
+  userId: string,
+  updateData: { name: string; phone: string; licenseNumber: string }
+) {
   // Update Professional table (license number)
   const { error: errorPro } = await supabase
     .from("Professional")
@@ -165,6 +192,7 @@ export async function updateVetProfile(
 
   if (errorPro) throw errorPro;
 };
+*/
 
 // 2. Update User Data (Write)
 export async function updateUserProfile(
@@ -180,3 +208,79 @@ export async function updateUserProfile(
   if (errorUser) throw errorUser;
 }
 
+//-------------------------------------------Malcon------------------------------------------
+/**
+ * Obtiene los perfiles de los clientes de un centro veterinario.
+ * Estos clientes no son necesariamente usuarios de la aplicación.
+ * @param vetCenterId - ID del centro veterinario (por defecto usa el global mockeado).
+ * @returns Array de clientes del centro veterinario.
+ */
+export async function getClientProfiles(vetCenterId: string = veterinarycenterid) {
+  const { data, error } = await supabase
+    .from("Client")
+    .select("*")
+    .eq("veterinarycenterid", vetCenterId);
+
+  if (error) {
+    console.error("Error al obtener los clientes del centro veterinario:", error);
+    throw error;
+  }
+
+  return data;
+}
+//-------------------------------------------Malcon------------------------------------------
+
+//-------------------------------------------Malcon------------------------------------------
+
+/**
+ * Obtiene las mascotas asociadas a un cliente específico.
+ * Utiliza una consulta a PetClient con un JOIN hacia la tabla Pet.
+ * @param clientId - ID del cliente
+ * @returns Array de mascotas
+ */
+export async function getPetsByClient(clientId: string) {
+  const { data, error } = await supabase
+    .from("PetClient")
+    .select(`
+      Pet (
+        id,
+        name,
+        species,
+        breed,
+        birthdate,
+        isverified
+      )
+    `)
+    .eq("clientid", clientId);
+  if (error) {
+    console.error("Error al obtener las mascotas del cliente:", error);
+    throw error;
+  }
+  // Supabase devuelve el objeto Pet anidado [{ Pet: { id: ... } }]. 
+  // Lo mapeamos para devolver un array más limpio de las mascotas y filtramos nulos si los hay.
+  return data.map(item => item.Pet).filter(Boolean);
+}
+//-------------------------------------------Malcon------------------------------------------
+
+//-------------------------------------------Malcon------------------------------------------
+/**
+ * Actualiza los datos de un cliente específico en la tabla Client.
+ * @param clientId - ID del cliente que se quiere actualizar.
+ * @param updateData - Objeto con los datos a actualizar (name, email, phone, userid)
+ */
+export async function updateClientProfile(
+  clientId: string,
+  updateData: { name?: string; email?: string; phone?: string; userid?: string | null }
+) {
+  const { error } = await supabase
+    .from("Client")
+    .update(updateData)
+    .eq("id", clientId);
+
+  if (error) {
+    console.error("Error al actualizar los datos del cliente:", error);
+    throw error;
+  }
+}
+
+//-------------------------------------------Malcon------------------------------------------
