@@ -28,12 +28,20 @@ export default function AccountSettingsUser() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // States for error and success messages (changed to string to show specific messages)
+  // States for error and success messages
   const [error, setError] = useState<string | null>(null);
   const [error2, setError2] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Form fields state in English
+  // 🌟 NUEVO: Estado para guardar la copia original de los datos
+  const [initialData, setInitialData] = useState({
+    name: "",
+    email: "",
+    phone: "+34 ",
+    address: "",
+  });
+
+  // Form fields state in English (lo que el usuario modifica)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -58,12 +66,16 @@ export default function AccountSettingsUser() {
         console.log("2. Data arriving from DB:", profile);
 
         if (profile) {
-          setFormData(prev => ({
-            ...prev,
+          const fetchedData = {
             name: profile.name || "",
             phone: profile.phone || "",
-            email: "vin@fakeemail.com" // Falso temporalmente
-          }));
+            email: "vin@fakeemail.com", // Falso temporalmente
+            address: "", // Dirección no viene de BD de momento
+          };
+
+          // 🌟 NUEVO: Guardamos los datos en la vista y en la copia de seguridad
+          setFormData(fetchedData);
+          setInitialData(fetchedData);
         } else {
           console.error("DB returned null. Check the user ID.");
         }
@@ -93,8 +105,18 @@ export default function AccountSettingsUser() {
     if (success) setSuccess(false); // Hide success if user types again
   };
 
+  // 🌟 NUEVO: Variable que calcula en tiempo real si hay cambios
+  const isFormModified = 
+    formData.name !== initialData.name ||
+    formData.email !== initialData.email ||
+    formData.phone !== initialData.phone ||
+    formData.address !== initialData.address;
+
   // Save handler and validations
   const handleSave = async () => {
+    // Si no hay cambios, cortamos la ejecución por seguridad
+    if (!isFormModified) return;
+
     const { name, email, phone } = formData;
 
     // Reset states
@@ -135,6 +157,9 @@ export default function AccountSettingsUser() {
         setSuccess(true);
         console.log("Data synchronized with Supabase");
         
+        // 🌟 NUEVO: Actualizamos nuestra "copia de seguridad" para que el botón vuelva a apagarse
+        setInitialData(formData);
+
         setTimeout(() => setSuccess(false), 3000);
       } else {
         setError("No active user session detected.");
@@ -217,7 +242,7 @@ export default function AccountSettingsUser() {
                 <TextField
                   fullWidth
                   id="name-input"
-                  name="name" // Cuidado: ahora el name es "name"
+                  name="name"
                   variant="standard"
                   value={formData.name}
                   onChange={handleChange}
@@ -291,7 +316,7 @@ export default function AccountSettingsUser() {
                   id="phone-input"
                   fullWidth
                   variant="standard"
-                  name="phone" // Cuidado: ahora es "phone"
+                  name="phone"
                   value={formData.phone}
                   onChange={handleChange}
                   error={
@@ -360,7 +385,7 @@ export default function AccountSettingsUser() {
                   value={vetRequestStatus}
                   InputProps={{ disableUnderline: true, readOnly: true }}
                   sx={{
-                    bgcolor: "#bebebeff",
+                    bgcolor: "#bebebeff", // Ligeramente gris para denotar que no es editable aquí
                     borderRadius: 50,
                     px: 2,
                     py: 0.5,
@@ -398,17 +423,25 @@ export default function AccountSettingsUser() {
                   BUSCAR CENTRO VETERINARIO
                 </Button>
                 
+                {/* 🌟 NUEVO: Botón condicionalmente estilizado y desactivado */}
                 <Button
                   variant="contained"
+                  disabled={!isFormModified}
                   onClick={handleSave}
                   sx={{
-                    bgcolor: "#FBC02D",
-                    color: "black",
+                    bgcolor: isFormModified ? "#FBC02D" : "#e0e0e0",
+                    color: isFormModified ? "black" : "#9e9e9e",
                     fontWeight: "bold",
                     borderRadius: 2,
                     width: "100%",
-                    border: "2px solid #64B5F6",
-                    "&:hover": { bgcolor: "#f9a825" },
+                    border: isFormModified ? "2px solid #64B5F6" : "2px solid transparent",
+                    "&:hover": { 
+                      bgcolor: isFormModified ? "#f9a825" : "#e0e0e0" 
+                    },
+                    "&.Mui-disabled": {
+                      bgcolor: "#e0e0e0",
+                      color: "#9e9e9e",
+                    }
                   }}
                 >
                   GUARDAR

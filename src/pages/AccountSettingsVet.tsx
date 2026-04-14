@@ -26,7 +26,16 @@ export default function AccountSettingsVet() {
   const [error2, setError2] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   
-  // Form fields state
+  // 🌟 NUEVO: Estado para guardar la copia original de los datos
+  const [initialData, setInitialData] = useState({
+    name: "",
+    email: "",
+    phone: "+34 ",
+    address: "",
+    licenseNumber: "",
+  });
+
+  // Form fields state (What the user modifies)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -51,14 +60,17 @@ export default function AccountSettingsVet() {
         console.log("2. Data arriving from DB:", profile);
 
         if (profile) {
-          setFormData(prev => ({
-            ...prev,
-            // Mapping the Spanish response from query.ts to English state
+          const fetchedData = {
             name: profile.name || "",
             phone: profile.phone || "",
             licenseNumber: profile.licenseNumber || "",
-            email: "bilbo@fakeemail.com" // Temporary fake email
-          }));
+            email: "bilbo@fakeemail.com", // Temporary fake email
+            address: "", // Address no viene de la DB en tu configuración actual
+          };
+
+          // Guardamos los datos en la vista y en la copia de seguridad oculta
+          setFormData(fetchedData);
+          setInitialData(fetchedData);
         } else {
           console.error("DB returned null. Check Bilbo's ID.");
         }
@@ -82,8 +94,19 @@ export default function AccountSettingsVet() {
     if (success) setSuccess(false); // Hide success if user types again
   };
 
+  // 🌟 NUEVO: Variable que calcula en tiempo real si hay cambios
+  const isFormModified = 
+    formData.name !== initialData.name ||
+    formData.email !== initialData.email ||
+    formData.phone !== initialData.phone ||
+    formData.address !== initialData.address ||
+    formData.licenseNumber !== initialData.licenseNumber;
+
   // Save handler and validations
   const handleSave = async () => {
+    // Si no hay cambios, cortamos la ejecución por seguridad
+    if (!isFormModified) return;
+
     const { name, email, phone, licenseNumber } = formData;
 
     // Reset states
@@ -127,6 +150,9 @@ export default function AccountSettingsVet() {
         setSuccess(true);
         console.log("Data synchronized with Supabase");
         
+        // 🌟 NUEVO: Actualizamos nuestra "copia de seguridad" para que el botón vuelva a apagarse
+        setInitialData(formData);
+
         setTimeout(() => setSuccess(false), 3000);
       } else {
         setError("No active user session detected.");
@@ -343,17 +369,25 @@ export default function AccountSettingsVet() {
                   pt: 2,
                 }}
               >
+                {/* 🌟 NUEVO: Botón condicionalmente estilizado y desactivado */}
                 <Button
                   variant="contained"
+                  disabled={!isFormModified}
                   onClick={handleSave}
                   sx={{
-                    bgcolor: "#FBC02D",
-                    color: "black",
+                    bgcolor: isFormModified ? "#FBC02D" : "#e0e0e0",
+                    color: isFormModified ? "black" : "#9e9e9e",
                     fontWeight: "bold",
                     borderRadius: 2,
                     width: { xs: "100%", sm: "50%" },
-                    border: "2px solid #64B5F6",
-                    "&:hover": { bgcolor: "#f9a825" },
+                    border: isFormModified ? "2px solid #64B5F6" : "2px solid transparent",
+                    "&:hover": { 
+                      bgcolor: isFormModified ? "#f9a825" : "#e0e0e0" 
+                    },
+                    "&.Mui-disabled": {
+                      bgcolor: "#e0e0e0",
+                      color: "#9e9e9e",
+                    }
                   }}
                 >
                   GUARDAR
