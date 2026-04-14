@@ -7,10 +7,12 @@ import {
   Stack,
   Collapse,
   Alert,
+  IconButton,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
 import React, { useState, useEffect } from "react";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 // Import centralized validations
 import {
@@ -54,7 +56,7 @@ export default function AccountSettingsUser() {
     async function loadData() {
       setLoading(true);
       
-      // ⚠️ DEVELOPMENT HACK: Forcing a regular user ID (like Vin) for testing
+      //DEVELOPMENT HACK: Forcing a regular user ID (like Vin) for testing
       // Remember to change this to supabase.auth.getUser() when Auth is ready
       const ID_NORMAL_USER = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb"; 
       
@@ -73,7 +75,7 @@ export default function AccountSettingsUser() {
             address: "", // Address doesn't come from DB at the moment
           };
 
-          // 🌟 NEW: Save data to the view and the backup copy
+          //Save data to the view and the backup copy
           setFormData(fetchedData);
           setInitialData(fetchedData);
         } else {
@@ -180,6 +182,23 @@ export default function AccountSettingsUser() {
           mt: 8,
         }}
       >
+        {/* Back Button */}
+          <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-start", mb: 2 }}>
+          <IconButton
+            onClick={() => navigate(SCREEN.WELCOME_USER)}
+            sx={{
+              bgcolor: "#FBC02D",
+              color: "black",
+              "&:hover": { bgcolor: "#f9a825" },
+              boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
+            }}
+          >
+          <ArrowBackIcon fontSize="medium" />
+          </IconButton>
+        </Box>
+
+
+
         <Typography
           variant="h4"
           sx={{ fontWeight: "600", color: "#4A3B3B", mb: 0.5 }}

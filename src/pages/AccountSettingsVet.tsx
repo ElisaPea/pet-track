@@ -7,6 +7,7 @@ import {
   Stack,
   Collapse,
   Alert,
+  IconButton,
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import {
@@ -16,10 +17,15 @@ import {
   isNotEmpty,
 } from "../utils/validationUtils";
 import { getVetProfile, supabase, updateVetProfile } from "../api/query";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { SCREEN } from "../constants/constants";
+import { useNavigate } from "react-router-dom";
+
 
 export default function AccountSettingsVet() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const navigate = useNavigate();
   
   // States for error and success messages
   const [error, setError] = useState<string | null>(null);
@@ -173,6 +179,20 @@ export default function AccountSettingsVet() {
           mt: 8,
         }}
       >
+         {/* Back Button */}
+          <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-start", mb: 2 }}>
+          <IconButton
+            onClick={() => navigate(SCREEN.HOME_VET)}
+            sx={{
+              bgcolor: "#FBC02D",
+              color: "black",
+              "&:hover": { bgcolor: "#f9a825" },
+              boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
+            }}
+          >
+          <ArrowBackIcon fontSize="medium" />
+          </IconButton>
+        </Box>
         <Typography
           variant="h4"
           sx={{ fontWeight: "600", color: "#4A3B3B", mb: 0.5 }}
