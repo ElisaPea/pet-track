@@ -26,7 +26,7 @@ export default function AccountSettingsVet() {
   const [error2, setError2] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   
-  // 🌟 NUEVO: Estado para guardar la copia original de los datos
+  //State to store the original copy of the data for comparison
   const [initialData, setInitialData] = useState({
     name: "",
     email: "",
@@ -35,7 +35,7 @@ export default function AccountSettingsVet() {
     licenseNumber: "",
   });
 
-  // Form fields state (What the user modifies)
+  // Form fields state (Current values the user is modifying)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -48,7 +48,7 @@ export default function AccountSettingsVet() {
     async function loadData() {
       setLoading(true);
       
-      // ⚠️ DEVELOPMENT HACK: Forcing Bilbo's ID for testing
+      // DEVELOPMENT HACK: Forcing Bilbo's ID for testing
       // When the app is finished, we will remove this and use supabase.auth.getUser()
       const ID_BILBO = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb";
       
@@ -65,10 +65,10 @@ export default function AccountSettingsVet() {
             phone: profile.phone || "",
             licenseNumber: profile.licenseNumber || "",
             email: "bilbo@fakeemail.com", // Temporary fake email
-            address: "", // Address no viene de la DB en tu configuración actual
+            address: "", // Address is not currently retrieved from the DB in this setup
           };
 
-          // Guardamos los datos en la vista y en la copia de seguridad oculta
+          // Save the data both in the view state and the hidden backup copy
           setFormData(fetchedData);
           setInitialData(fetchedData);
         } else {
@@ -90,11 +90,11 @@ export default function AccountSettingsVet() {
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError(null); // Clear error while typing
-    if (error2) setError2(null); // Clear error while typing
-    if (success) setSuccess(false); // Hide success if user types again
+    if (error2) setError2(null); // Clear format error while typing
+    if (success) setSuccess(false); // Hide success message if user types again
   };
 
-  // 🌟 NUEVO: Variable que calcula en tiempo real si hay cambios
+  //Logical variable that calculates in real-time if changes exist
   const isFormModified = 
     formData.name !== initialData.name ||
     formData.email !== initialData.email ||
@@ -104,12 +104,12 @@ export default function AccountSettingsVet() {
 
   // Save handler and validations
   const handleSave = async () => {
-    // Si no hay cambios, cortamos la ejecución por seguridad
+    // If no changes were made, stop execution for safety
     if (!isFormModified) return;
 
     const { name, email, phone, licenseNumber } = formData;
 
-    // Reset states
+    // Reset alert states
     setError(null);
     setError2(null);
     setSuccess(false);
@@ -122,7 +122,7 @@ export default function AccountSettingsVet() {
     if (!isNotEmpty(licenseNumber)) missingFields.push("Nº Colegiado");
 
     if (missingFields.length > 0) {
-      setError(`Faltan el campo obligatorio: ${missingFields.join(", ")}.`);
+      setError(`Missing required fields: ${missingFields.join(", ")}.`);
       return;
     }
 
@@ -133,7 +133,7 @@ export default function AccountSettingsVet() {
     if (!validateColegiado(licenseNumber)) invalidFields.push("Nº Colegiado");
 
     if (invalidFields.length > 0) {
-      setError2(`Formato incorrecto en: ${invalidFields.join(", ")}.`);
+      setError2(`Incorrect format in: ${invalidFields.join(", ")}.`);
       return;
     }
 
@@ -141,7 +141,6 @@ export default function AccountSettingsVet() {
     try {
       if (userId) {
         await updateVetProfile(userId, {
-          // We map back to Spanish ONLY for the API call to not break query.ts
           name: formData.name,
           phone: formData.phone,
           licenseNumber: formData.licenseNumber
@@ -150,7 +149,7 @@ export default function AccountSettingsVet() {
         setSuccess(true);
         console.log("Data synchronized with Supabase");
         
-        // 🌟 NUEVO: Actualizamos nuestra "copia de seguridad" para que el botón vuelva a apagarse
+        //Update our "backup copy" so the button disables again
         setInitialData(formData);
 
         setTimeout(() => setSuccess(false), 3000);
@@ -359,7 +358,7 @@ export default function AccountSettingsVet() {
                 />
               </Stack>
 
-              {/* Save Button */}
+              {/* Save Button Container */}
               <Box
                 sx={{
                   width: "100%",
@@ -369,7 +368,7 @@ export default function AccountSettingsVet() {
                   pt: 2,
                 }}
               >
-                {/* 🌟 NUEVO: Botón condicionalmente estilizado y desactivado */}
+                {/*Conditionally styled and disabled button */}
                 <Button
                   variant="contained"
                   disabled={!isFormModified}

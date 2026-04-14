@@ -12,14 +12,14 @@ import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
 import React, { useState, useEffect } from "react";
 
-// Importamos las validaciones centralizadas
+// Import centralized validations
 import {
   validateEmail,
   validatePhone,
   isNotEmpty,
 } from "../utils/validationUtils";
 
-// Importamos las queries de Supabase para el usuario normal
+// Import Supabase queries for the regular user
 import { getUserProfile, supabase, updateUserProfile } from "../api/query";
 
 export default function AccountSettingsUser() {
@@ -33,7 +33,7 @@ export default function AccountSettingsUser() {
   const [error2, setError2] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // 🌟 NUEVO: Estado para guardar la copia original de los datos
+  //State to store the original copy of the data
   const [initialData, setInitialData] = useState({
     name: "",
     email: "",
@@ -41,7 +41,7 @@ export default function AccountSettingsUser() {
     address: "",
   });
 
-  // Form fields state in English (lo que el usuario modifica)
+  // Form fields state in English (what the user modifies)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -69,11 +69,11 @@ export default function AccountSettingsUser() {
           const fetchedData = {
             name: profile.name || "",
             phone: profile.phone || "",
-            email: "vin@fakeemail.com", // Falso temporalmente
-            address: "", // Dirección no viene de BD de momento
+            email: "vin@fakeemail.com", // Temporary fake email
+            address: "", // Address doesn't come from DB at the moment
           };
 
-          // 🌟 NUEVO: Guardamos los datos en la vista y en la copia de seguridad
+          // 🌟 NEW: Save data to the view and the backup copy
           setFormData(fetchedData);
           setInitialData(fetchedData);
         } else {
@@ -88,8 +88,7 @@ export default function AccountSettingsUser() {
     
     loadData();
 
-    // 🌟 AQUI LEEMOS EL LOCALSTORAGE
-    // Comprobamos si el navegador tiene una nota de solicitud pendiente
+    // Check if the browser has a pending request note
     const pendingRequest = localStorage.getItem("pendingVetRequest");
     if (pendingRequest) {
       setVetRequestStatus(`Esperando confirmación de: ${pendingRequest}`);
@@ -105,7 +104,7 @@ export default function AccountSettingsUser() {
     if (success) setSuccess(false); // Hide success if user types again
   };
 
-  // 🌟 NUEVO: Variable que calcula en tiempo real si hay cambios
+  //Variable that calculates in real-time if there are changes
   const isFormModified = 
     formData.name !== initialData.name ||
     formData.email !== initialData.email ||
@@ -114,7 +113,7 @@ export default function AccountSettingsUser() {
 
   // Save handler and validations
   const handleSave = async () => {
-    // Si no hay cambios, cortamos la ejecución por seguridad
+    // If there are no changes, stop execution for safety
     if (!isFormModified) return;
 
     const { name, email, phone } = formData;
@@ -151,13 +150,13 @@ export default function AccountSettingsUser() {
         await updateUserProfile(userId, {
           name: formData.name,
           phone: formData.phone,
-          // Direccion no se guarda en DB por ahora según SQL
+          // Address is not saved in DB for now according to SQL
         });
 
         setSuccess(true);
         console.log("Data synchronized with Supabase");
         
-        // 🌟 NUEVO: Actualizamos nuestra "copia de seguridad" para que el botón vuelva a apagarse
+        //Update our "backup copy" so the button turns off again
         setInitialData(formData);
 
         setTimeout(() => setSuccess(false), 3000);
@@ -385,7 +384,7 @@ export default function AccountSettingsUser() {
                   value={vetRequestStatus}
                   InputProps={{ disableUnderline: true, readOnly: true }}
                   sx={{
-                    bgcolor: "#bebebeff", // Ligeramente gris para denotar que no es editable aquí
+                    bgcolor: "#bebebeff", // Slightly gray to denote it's not editable here
                     borderRadius: 50,
                     px: 2,
                     py: 0.5,
@@ -423,7 +422,7 @@ export default function AccountSettingsUser() {
                   BUSCAR CENTRO VETERINARIO
                 </Button>
                 
-                {/* 🌟 NUEVO: Botón condicionalmente estilizado y desactivado */}
+                {/*Conditionally styled and disabled button */}
                 <Button
                   variant="contained"
                   disabled={!isFormModified}
