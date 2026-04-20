@@ -180,7 +180,6 @@ export async function updateUserProfile(
   if (errorUser) throw errorUser;
 }
 
-<<<<<<< HEAD
 // Obtener mascotas de un usuario concreto
 export async function getPetsByUser(userId: string) {
   const { data, error } = await supabase
@@ -203,5 +202,3 @@ export async function getPetsByUser(userId: string) {
   // Aplanamos el resultado para tener un array de mascotas directamente
   return data?.map((row: any) => row.Pet).filter(Boolean) ?? [];
 }
-=======
->>>>>>> test
