@@ -2,9 +2,9 @@ import {
   Box, Typography, Button, Stack, Dialog, Tabs, Tab,
   TextField, Select, MenuItem, Snackbar, Alert, CircularProgress,
 } from "@mui/material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getEtapaVida } from "../utils/getEtapaVida";
-import { createPet } from "../api/query";
+import { createPet, updatePet, updatePetUserNotas, getPetUserNotas } from "../api/query";
 
 const TEST_USER_ID = "2427a02c-b1c9-423e-9aab-4ed448c34b5b";
 
@@ -34,13 +34,15 @@ export function PopupCreatePetUser({
 
   const [tabActual, setTabActual] = useState(0);
   const [vacunas, setVacunas] = useState("");
-  const [edad, setEdad] = useState(modoLectura ? edadDesde(mascota?.birthdate) : "");
-  const [raza, setRaza] = useState(modoLectura ? (mascota?.breed ?? "") : "");
+  const [edad, setEdad] = useState("");
+  const [raza, setRaza] = useState("");
   const [peso, setPeso] = useState("");
   const [notasUser, setNotasUser] = useState("");
-  const [name, setName] = useState(modoLectura ? mascota?.name : "");
+  const [name, setName] = useState("");
+
   const [nameError, setNameError] = useState("");
-  const [sumbitted, setSumbitted] = useState(false);
+  const [razaError, setRazaError] = useState("");
+
   const [loading, setLoading] = useState(false);
 
   const [toast, setToast] = useState({
@@ -48,6 +50,51 @@ export function PopupCreatePetUser({
     message: "",
     severity: "success" as "success" | "error",
   });
+
+  const [originalData, setOriginalData] = useState({
+    name: "",
+    raza: "",
+    edad: "",
+    notasUser: "",
+  });
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (mascota) {
+        const edadCalc = edadDesde(mascota.birthdate);
+
+        setName(mascota.name || "");
+        setRaza(mascota.breed || "");
+        setEdad(edadCalc);
+
+        const extras = await getPetUserNotas(mascota.id, TEST_USER_ID);
+        setNotasUser(extras.notasUser || "");
+
+        setOriginalData({
+          name: mascota.name || "",
+          raza: mascota.breed || "",
+          edad: edadCalc,
+          notasUser: extras.notasUser || "",
+        });
+      } else {
+        setName("");
+        setRaza("");
+        setEdad("");
+        setPeso("");
+        setVacunas("");
+        setNotasUser("");
+
+        setOriginalData({
+          name: "",
+          raza: "",
+          edad: "",
+          notasUser: "",
+        });
+      }
+    };
+
+    loadData();
+  }, [mascota]);
 
   const nameValidation = (value: string) => {
     if (/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/.test(value)) {
@@ -58,21 +105,82 @@ export function PopupCreatePetUser({
     setName(value);
   };
 
+  const razaValidation = (value: string) => {
+    if (/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/.test(value)) {
+      setRazaError("❗ Solo letras ❗");
+    } else {
+      setRazaError("");
+    }
+    setRaza(value);
+  };
+
+  const handleNumberInput = (value: string, setter: (v: string) => void) => {
+    if (/^\d{0,2}$/.test(value)) {
+      setter(value);
+    }
+  };
+
+  const isFormValid =
+    name &&
+    !nameError &&
+    edad &&
+    peso &&
+    raza &&
+    !razaError &&
+    vacunas;
+
+  const hasChanges =
+    name !== originalData.name ||
+    raza !== originalData.raza ||
+    edad !== originalData.edad ||
+    notasUser !== originalData.notasUser;
+
   const handleGuardar = async () => {
-    setSumbitted(true);
-    if (!name || nameError) return;
+    if (!isFormValid) return;
 
     setLoading(true);
     try {
       const currentYear = new Date().getFullYear();
       const birthYear = currentYear - (parseInt(edad) || 0);
       const birthDate = `${birthYear}-01-01`;
-      await createPet({ name: name!, breed: raza, birthDate }, TEST_USER_ID);
+
+      const pet = await createPet(
+        { name, breed: raza, birthDate },
+        TEST_USER_ID
+      );
+
+      await updatePetUserNotas(pet.id, TEST_USER_ID, notasUser);
 
       setToast({ open: true, message: "¡Mascota creada!", severity: "success" });
       setTimeout(() => setOpen(false), 1500);
-    } catch (error: any) {
+    } catch {
       setToast({ open: true, message: "Error al guardar", severity: "error" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!mascota || !hasChanges) return;
+
+    setLoading(true);
+    try {
+      const currentYear = new Date().getFullYear();
+      const birthYear = currentYear - (parseInt(edad) || 0);
+      const birthDate = `${birthYear}-01-01`;
+
+      await updatePet(mascota.id, {
+        name,
+        breed: raza,
+        birthDate,
+      });
+
+      await updatePetUserNotas(mascota.id, TEST_USER_ID, notasUser);
+
+      setToast({ open: true, message: "¡Mascota actualizada!", severity: "success" });
+      setTimeout(() => setOpen(false), 1500);
+    } catch {
+      setToast({ open: true, message: "Error al actualizar", severity: "error" });
     } finally {
       setLoading(false);
     }
@@ -85,7 +193,13 @@ export function PopupCreatePetUser({
         fullWidth
         maxWidth="md"
         PaperProps={{
-          sx: { bgcolor: "#E4F7FB", borderRadius: 5, height: "85vh", overflow: "hidden" }
+          sx: {
+            bgcolor: "#E4F7FB",
+            borderRadius: 5,
+            height: "85vh",
+            display: "flex",
+            flexDirection: "column",
+          }
         }}
       >
         <Box sx={{ borderBottom: "2px solid black" }}>
@@ -95,10 +209,9 @@ export function PopupCreatePetUser({
           </Tabs>
         </Box>
 
-        <Box sx={{ p: 4, overflowY: "auto", display: "flex", flexDirection: "column", gap: 3 }}>
+        <Box sx={{ p: 4, overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
           {tabActual === 0 && (
             <>
-              {/* TARJETA 1: IDENTIDAD */}
               <Box sx={{ bgcolor: "white", borderRadius: 5, p: 4, display: "flex", gap: 4, alignItems: "center", boxShadow: 1 }}>
                 <Box sx={{ textAlign: "center" }}>
                   <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold', color: 'gray' }}>Foto</Typography>
@@ -110,69 +223,70 @@ export function PopupCreatePetUser({
                   <TextField
                     fullWidth
                     value={name}
-                    disabled={modoLectura}
                     onChange={(e) => nameValidation(e.target.value)}
                     error={!!nameError}
                     helperText={nameError}
-                    placeholder="Ej: Max"
                     sx={{ "& .MuiOutlinedInput-root": { borderRadius: 10, bgcolor: "#F7F9FA" } }}
                   />
                 </Box>
               </Box>
 
-              {/* TARJETA 2: DETALLES TÉCNICOS */}
               <Box sx={{ bgcolor: "white", borderRadius: 5, p: 4, boxShadow: 1 }}>
                 <Typography variant="h6" sx={{ color: "#00ADBA", fontWeight: "bold", mb: 3 }}>
                   Información adicional:
                 </Typography>
 
                 <Stack direction="row" spacing={3} flexWrap="wrap">
-                  {/* Edad */}
-                  <Box sx={{ minWidth: 120 }}>
+                  <Box sx={{ width: 80 }}>
                     <Typography variant="caption" sx={{ fontWeight: "bold" }}>Edad (años)</Typography>
                     <TextField
-                      fullWidth
                       value={edad}
-                      disabled={modoLectura}
-                      onChange={(e) => setEdad(e.target.value)}
-                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 10, bgcolor: "#F7F9FA" } }}
+                      onChange={(e) => handleNumberInput(e.target.value, setEdad)}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 10,
+                          bgcolor: "#F7F9FA",
+                        },
+                      }}
+                      inputProps={{ maxLength: 2 }}
                     />
-                    <Typography variant="caption" sx={{ color: "#00ADBA", display: "block", mt: 0.5 }}>
+                    <Typography variant="caption" sx={{ color: "#00ADBA" }}>
                       {getEtapaVida(edad)}
                     </Typography>
                   </Box>
 
-                  {/* Peso */}
-                  <Box sx={{ minWidth: 120 }}>
+                  <Box sx={{ width: 80 }}>
                     <Typography variant="caption" sx={{ fontWeight: "bold" }}>Peso (kg)</Typography>
                     <TextField
-                      fullWidth
                       value={peso}
-                      disabled={modoLectura}
-                      onChange={(e) => setPeso(e.target.value)}
-                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 10, bgcolor: "#F7F9FA" } }}
+                      onChange={(e) => handleNumberInput(e.target.value, setPeso)}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 10,
+                          bgcolor: "#F7F9FA",
+                        },
+                      }}
+                      inputProps={{ maxLength: 2 }}
                     />
                   </Box>
 
-                  {/* Raza */}
-                  <Box sx={{ flex: 1, minWidth: 200 }}>
+                  <Box sx={{ flex: 1 }}>
                     <Typography variant="caption" sx={{ fontWeight: "bold" }}>Raza</Typography>
                     <TextField
                       fullWidth
                       value={raza}
-                      disabled={modoLectura}
-                      onChange={(e) => setRaza(e.target.value)}
+                      onChange={(e) => razaValidation(e.target.value)}
+                      error={!!razaError}
+                      helperText={razaError}
                       sx={{ "& .MuiOutlinedInput-root": { borderRadius: 10, bgcolor: "#F7F9FA" } }}
                     />
                   </Box>
 
-                  {/* Vacunas */}
                   <Box sx={{ minWidth: 120 }}>
                     <Typography variant="caption" sx={{ fontWeight: "bold" }}>¿Vacunas?</Typography>
                     <Select
                       fullWidth
                       value={vacunas}
-                      disabled={modoLectura}
                       onChange={(e) => setVacunas(e.target.value)}
                       sx={{ borderRadius: 10, bgcolor: "#F7F9FA" }}
                     >
@@ -186,7 +300,7 @@ export function PopupCreatePetUser({
           )}
 
           {tabActual === 1 && (
-            <Box sx={{ bgcolor: "white", borderRadius: 5, p: 4, flex: 1 }}>
+            <Box sx={{ bgcolor: "white", borderRadius: 5, p: 4 }}>
               <Typography sx={{ fontWeight: "bold", mb: 2 }}>Notas del propietario</Typography>
               <TextField
                 fullWidth
@@ -194,29 +308,32 @@ export function PopupCreatePetUser({
                 rows={10}
                 value={notasUser}
                 onChange={(e) => setNotasUser(e.target.value)}
-                placeholder="Alergias, comportamiento, etc."
               />
             </Box>
           )}
         </Box>
 
-        {/* Acciones */}
         <Box sx={{ p: 3, display: "flex", justifyContent: "flex-end", gap: 2, bgcolor: "white" }}>
-          <Button onClick={() => setOpen(false)} color="inherit">Cancelar</Button>
+          <Button onClick={() => setOpen(false)}>Cancelar</Button>
+
           {!modoLectura && (
-            <Button
-              variant="contained"
-              onClick={handleGuardar}
-              disabled={loading}
-              sx={{ bgcolor: "#00ADBA", borderRadius: 10, px: 4 }}
-            >
+            <Button onClick={handleGuardar} disabled={loading || !isFormValid}>
               {loading ? <CircularProgress size={24} /> : "Guardar Mascota"}
+            </Button>
+          )}
+
+          {modoLectura && (
+            <Button
+              onClick={handleUpdate}
+              disabled={loading || !hasChanges || !!nameError || !!razaError}
+            >
+              {loading ? <CircularProgress size={24} /> : "Guardar cambios"}
             </Button>
           )}
         </Box>
       </Dialog>
 
-      <Snackbar open={toast.open} autoHideDuration={4000} onClose={() => setToast({ ...toast, open: false })}>
+      <Snackbar open={toast.open}>
         <Alert severity={toast.severity}>{toast.message}</Alert>
       </Snackbar>
     </>

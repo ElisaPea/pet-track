@@ -2,7 +2,8 @@ import { Box, Typography, Button, CircularProgress } from "@mui/material";
 import { useState, useEffect } from "react";
 import BasicScreen from "../components/BasicScreen";
 import { PopupCreatePetUser } from "../components/PopupCreatePetUser";
-import { getPetsByUser } from "../api/query";
+import { getPetsByUser, getPetById } from "../api/query";
+import { supabase } from "../api/query";
 
 const TEST_USER_ID = "2427a02c-b1c9-423e-9aab-4ed448c34b5b";
 
@@ -19,6 +20,8 @@ export default function WelcomeUser() {
   const [loadingPets, setLoadingPets] = useState(true);
   const [mascotaSeleccionada, setMascotaSeleccionada] = useState<any | null>(null);
 
+  const [userName, setUserName] = useState(""); // ✅ añadido
+
   const fetchMascotas = async () => {
     setLoadingPets(true);
     try {
@@ -31,9 +34,28 @@ export default function WelcomeUser() {
     }
   };
 
-  // Carga inicial
+  // Carga inicial mascotas
   useEffect(() => {
     fetchMascotas();
+  }, []);
+
+  // ✅ cargar nombre desde tabla User
+  useEffect(() => {
+    const loadUser = async () => {
+      const { data, error } = await supabase
+        .from("User")
+        .select("name")
+        .eq("id", TEST_USER_ID)
+        .single();
+
+      if (!error && data) {
+        setUserName(data.name || "");
+      } else {
+        console.error("Error cargando usuario:", error);
+      }
+    };
+
+    loadUser();
   }, []);
 
   return (
@@ -43,7 +65,7 @@ export default function WelcomeUser() {
         <Box>
           <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
             <Typography variant="h4" component="h1" sx={{ fontWeight: "bold" }}>
-              Bienvenido ****
+              Bienvenido {userName}
             </Typography>
           </Box>
           <Box
@@ -142,7 +164,6 @@ export default function WelcomeUser() {
                 >
                   {/* Main info + image  */}
                   <Box sx={{ display: "flex", gap: 1.5, width: "100%" }}>
-                    {/* Main info */}
                     <Box
                       sx={{
                         bgcolor: "white",
@@ -164,7 +185,6 @@ export default function WelcomeUser() {
                       </Typography>
                     </Box>
 
-                    {/* image */}
                     <Box
                       sx={{
                         bgcolor: "white",
@@ -181,11 +201,16 @@ export default function WelcomeUser() {
                       <Typography fontSize={40}>🐾</Typography>
                     </Box>
                   </Box>
-                  {/* additional info */}
+
                   <Box
-                    onClick={() => {
-                      setMascotaSeleccionada(mascota);
-                      setOpen(true);
+                    onClick={async () => {
+                      try {
+                        const petData = await getPetById(mascota.id);
+                        setMascotaSeleccionada(petData);
+                        setOpen(true);
+                      } catch (e) {
+                        console.error("Error cargando mascota:", e);
+                      }
                     }}
                     sx={{
                       bgcolor: "white",
@@ -198,7 +223,6 @@ export default function WelcomeUser() {
                       alignItems: "center",
                       cursor: "pointer",
                       "&:hover": { bgcolor: "#BEF1F3" },
-                      transition: "background-color 0.2s",
                     }}
                   >
                     <Typography variant="h6">Información adicional</Typography>
@@ -207,7 +231,6 @@ export default function WelcomeUser() {
               </Box>
             ))}
 
-          {/* No pets mesaage */}
           {!loadingPets && mascotas.length === 0 && (
             <Typography sx={{ color: "gray", mt: 2 }}>
               Parece que todavía no tienes ninguna mascota creada.
@@ -215,14 +238,13 @@ export default function WelcomeUser() {
           )}
         </Box>
 
-        {/* Refresh list on save */}
         <PopupCreatePetUser
           open={open}
           mascota={mascotaSeleccionada}
           setOpen={(val) => {
             setOpen(val);
             if (!val) {
-              setMascotaSeleccionada(null); // limpia al cerrar
+              setMascotaSeleccionada(null);
               fetchMascotas();
             }
           }}
