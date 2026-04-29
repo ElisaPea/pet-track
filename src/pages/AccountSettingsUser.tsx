@@ -7,19 +7,21 @@ import {
   Stack,
   Collapse,
   Alert,
+  IconButton,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
 import React, { useState, useEffect } from "react";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
-// Importamos las validaciones centralizadas
+// Import centralized validations
 import {
   validateEmail,
   validatePhone,
   isNotEmpty,
 } from "../utils/validationUtils";
 
-// Importamos las queries de Supabase para el usuario normal
+// Import Supabase queries for the regular user
 import { getUserProfile, supabase, updateUserProfile } from "../api/query";
 
 export default function AccountSettingsUser() {
@@ -28,12 +30,20 @@ export default function AccountSettingsUser() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // States for error and success messages (changed to string to show specific messages)
+  // States for error and success messages
   const [error, setError] = useState<string | null>(null);
   const [error2, setError2] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Form fields state in English
+  //State to store the original copy of the data
+  const [initialData, setInitialData] = useState({
+    name: "",
+    email: "",
+    phone: "+34 ",
+    address: "",
+  });
+
+  // Form fields state in English (what the user modifies)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -46,7 +56,7 @@ export default function AccountSettingsUser() {
     async function loadData() {
       setLoading(true);
       
-      // ⚠️ DEVELOPMENT HACK: Forcing a regular user ID (like Vin) for testing
+      //DEVELOPMENT HACK: Forcing a regular user ID (like Vin) for testing
       // Remember to change this to supabase.auth.getUser() when Auth is ready
       const ID_NORMAL_USER = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb"; 
       
@@ -58,12 +68,16 @@ export default function AccountSettingsUser() {
         console.log("2. Data arriving from DB:", profile);
 
         if (profile) {
-          setFormData(prev => ({
-            ...prev,
+          const fetchedData = {
             name: profile.name || "",
             phone: profile.phone || "",
-            email: "vin@fakeemail.com" // Falso temporalmente
-          }));
+            email: "vin@fakeemail.com", // Temporary fake email
+            address: "", // Address doesn't come from DB at the moment
+          };
+
+          //Save data to the view and the backup copy
+          setFormData(fetchedData);
+          setInitialData(fetchedData);
         } else {
           console.error("DB returned null. Check the user ID.");
         }
@@ -76,8 +90,7 @@ export default function AccountSettingsUser() {
     
     loadData();
 
-    // 🌟 AQUI LEEMOS EL LOCALSTORAGE
-    // Comprobamos si el navegador tiene una nota de solicitud pendiente
+    // Check if the browser has a pending request note
     const pendingRequest = localStorage.getItem("pendingVetRequest");
     if (pendingRequest) {
       setVetRequestStatus(`Esperando confirmación de: ${pendingRequest}`);
@@ -93,8 +106,18 @@ export default function AccountSettingsUser() {
     if (success) setSuccess(false); // Hide success if user types again
   };
 
+  //Variable that calculates in real-time if there are changes
+  const isFormModified = 
+    formData.name !== initialData.name ||
+    formData.email !== initialData.email ||
+    formData.phone !== initialData.phone ||
+    formData.address !== initialData.address;
+
   // Save handler and validations
   const handleSave = async () => {
+    // If there are no changes, stop execution for safety
+    if (!isFormModified) return;
+
     const { name, email, phone } = formData;
 
     // Reset states
@@ -129,12 +152,15 @@ export default function AccountSettingsUser() {
         await updateUserProfile(userId, {
           name: formData.name,
           phone: formData.phone,
-          // Direccion no se guarda en DB por ahora según SQL
+          // Address is not saved in DB for now according to SQL
         });
 
         setSuccess(true);
         console.log("Data synchronized with Supabase");
         
+        //Update our "backup copy" so the button turns off again
+        setInitialData(formData);
+
         setTimeout(() => setSuccess(false), 3000);
       } else {
         setError("No active user session detected.");
@@ -156,6 +182,23 @@ export default function AccountSettingsUser() {
           mt: 8,
         }}
       >
+        {/* Back Button */}
+          <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-start", mb: 2 }}>
+          <IconButton
+            onClick={() => navigate(SCREEN.WELCOME_USER)}
+            sx={{
+              bgcolor: "#FBC02D",
+              color: "black",
+              "&:hover": { bgcolor: "#f9a825" },
+              boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
+            }}
+          >
+          <ArrowBackIcon fontSize="medium" />
+          </IconButton>
+        </Box>
+
+
+
         <Typography
           variant="h4"
           sx={{ fontWeight: "600", color: "#4A3B3B", mb: 0.5 }}
@@ -217,7 +260,7 @@ export default function AccountSettingsUser() {
                 <TextField
                   fullWidth
                   id="name-input"
-                  name="name" // Cuidado: ahora el name es "name"
+                  name="name"
                   variant="standard"
                   value={formData.name}
                   onChange={handleChange}
@@ -291,7 +334,7 @@ export default function AccountSettingsUser() {
                   id="phone-input"
                   fullWidth
                   variant="standard"
-                  name="phone" // Cuidado: ahora es "phone"
+                  name="phone"
                   value={formData.phone}
                   onChange={handleChange}
                   error={
@@ -360,7 +403,7 @@ export default function AccountSettingsUser() {
                   value={vetRequestStatus}
                   InputProps={{ disableUnderline: true, readOnly: true }}
                   sx={{
-                    bgcolor: "#bebebeff",
+                    bgcolor: "#bebebeff", // Slightly gray to denote it's not editable here
                     borderRadius: 50,
                     px: 2,
                     py: 0.5,
@@ -398,17 +441,25 @@ export default function AccountSettingsUser() {
                   BUSCAR CENTRO VETERINARIO
                 </Button>
                 
+                {/*Conditionally styled and disabled button */}
                 <Button
                   variant="contained"
+                  disabled={!isFormModified}
                   onClick={handleSave}
                   sx={{
-                    bgcolor: "#FBC02D",
-                    color: "black",
+                    bgcolor: isFormModified ? "#FBC02D" : "#e0e0e0",
+                    color: isFormModified ? "black" : "#9e9e9e",
                     fontWeight: "bold",
                     borderRadius: 2,
                     width: "100%",
-                    border: "2px solid #64B5F6",
-                    "&:hover": { bgcolor: "#f9a825" },
+                    border: isFormModified ? "2px solid #64B5F6" : "2px solid transparent",
+                    "&:hover": { 
+                      bgcolor: isFormModified ? "#f9a825" : "#e0e0e0" 
+                    },
+                    "&.Mui-disabled": {
+                      bgcolor: "#e0e0e0",
+                      color: "#9e9e9e",
+                    }
                   }}
                 >
                   GUARDAR
