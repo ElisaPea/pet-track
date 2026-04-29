@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = "https://nxawqcahssgckzwqqskk.supabase.co";
-const supabaseAnonKey = "sb_publishable_4PGaX7rokNzSpzDSLmIDdg_D_9_sQr8";
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const veterinarycenterid = "c41de394-45ad-47b2-9d4d-5d2c0b137cec";
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
