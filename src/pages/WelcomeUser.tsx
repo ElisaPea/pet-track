@@ -39,7 +39,7 @@ export default function WelcomeUser() {
     fetchMascotas();
   }, []);
 
-  // ✅ cargar nombre desde tabla User
+  //  cargar nombre desde tabla User
   useEffect(() => {
     const loadUser = async () => {
       const { data, error } = await supabase

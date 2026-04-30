@@ -179,7 +179,7 @@ export async function updateUserProfile(
 
   if (errorUser) throw errorUser;
 }
-// --------------------------- WELCOME USER ---------------------
+// --------------------------- WELCOME USER PAGE  ---------------------
 // SELECT PET BY USER
 export async function getPetsByUser(userId: string) {
   const { data, error } = await supabase

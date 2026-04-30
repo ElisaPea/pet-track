@@ -300,16 +300,26 @@ export function PopupCreatePetUser({
           )}
 
           {tabActual === 1 && (
-            <Box sx={{ bgcolor: "white", borderRadius: 5, p: 4 }}>
-              <Typography sx={{ fontWeight: "bold", mb: 2 }}>Notas del propietario</Typography>
-              <TextField
-                fullWidth
-                multiline
-                rows={10}
-                value={notasUser}
-                onChange={(e) => setNotasUser(e.target.value)}
-              />
-            </Box>
+            <div>
+              <Box sx={{ bgcolor: "white", borderRadius: 5, p: 4, mb: 4 }}>
+                <Typography sx={{ fontWeight: "bold", mb: 2 }}>Notas del propietario</Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={10}
+                  value={notasUser}
+                  onChange={(e) => setNotasUser(e.target.value)}
+                />
+              </Box>
+              <Box sx={{ bgcolor: "white", borderRadius: 5, p: 4 }}>
+                <Typography sx={{ fontWeight: "bold", mb: 2 }}>Notas del centro veterinario</Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={10}
+                />
+              </Box>
+            </div>
           )}
         </Box>
 
