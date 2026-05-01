@@ -317,6 +317,9 @@ export function PopupCreatePetUser({
                   fullWidth
                   multiline
                   rows={10}
+                  inputProps={{
+                    readOnly: true,
+                  }}
                 />
               </Box>
             </div>
