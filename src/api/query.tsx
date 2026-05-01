@@ -110,6 +110,49 @@ export async function createPet(
 
   return pet;
 }
+
+// Función para crear una mascota y vincularla a un cliente (veterinaria)
+export async function createPetForClient(
+  petData: { name: string; species?: string; breed?: string; birthdate?: string },
+  clientId: string,
+) {
+  if (!clientId) throw new Error("No se ha detectado un cliente válido.");
+
+  // 1. Insertamos la mascota en la tabla "Pet"
+  const { data: pet, error: petError } = await supabase
+    .from("Pet")
+    .insert([
+      {
+        name: petData.name,
+        species: petData.species,
+        breed: petData.breed,
+        birthdate: petData.birthdate,
+        isverified: false,
+      },
+    ])
+    .select()
+    .single();
+
+  if (petError) {
+    console.error("Error al crear mascota:", petError);
+    throw new Error("Error en la base de datos al crear la mascota.");
+  }
+
+  // 2. Creamos la relación en "PetClient"
+  const { error: relationError } = await supabase.from("PetClient").insert([
+    {
+      petid: pet.id,
+      clientid: clientId,
+    },
+  ]);
+
+  if (relationError) {
+    console.error("Error al vincular mascota con cliente:", relationError);
+    throw new Error("La mascota se creó pero no pudo vincularse al cliente.");
+  }
+
+  return pet;
+}
 //-------------------------------------------aroa---AccountSettingsVet------------------------------------------
 // 1. Get Vet Data (Read)
 export async function getVetProfile(userId: string) {

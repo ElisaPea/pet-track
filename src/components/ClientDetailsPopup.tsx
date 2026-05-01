@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogActions,
   Box,
   Tabs,
   Tab,
@@ -15,8 +17,12 @@ import {
   Radio,
   Avatar,
   FormControl,
+  Collapse,
+  Alert,
 } from "@mui/material";
-import { updateClientProfile } from "../api/query";
+import { updateClientProfile, createPetForClient } from "../api/query";
+import { validateEmail, validatePhone } from "../utils/validationUtils";
+import { validateName } from "../utils/validatorName";
 
 // Pictures import for testing (TO DELETE)
 // import beni from "../assets/Beni_perfil.jpeg";
@@ -65,6 +71,24 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
   // Controls the "Associated to user" radio selection. Default is "no".
   const [associated, setAssociated] = useState<string>("no");
 
+  // State for empty required fields
+  const [error, setError] = useState(false);
+
+  // 3 distinct states to control format errors
+  const [errorName, setErrorName] = useState(false);
+  const [errorEmail, setErrorEmail] = useState(false);
+  const [errorPhone, setErrorPhone] = useState(false);
+
+  // States for Add Pet Popup
+  const [isAddPetOpen, setIsAddPetOpen] = useState(false);
+  const [newPetData, setNewPetData] = useState({
+    name: "",
+    species: "",
+    breed: "",
+    birthdate: ""
+  });
+  const [addPetError, setAddPetError] = useState(false);
+
   // Form inputs state para detectar cambios
   const [formData, setFormData] = useState({
     name: "",
@@ -75,6 +99,12 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
   // Handler for text inputs
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError(false); // Clear empty error
+
+    // Clear individual errors while typing
+    if (e.target.name === 'name' && errorName) setErrorName(false);
+    if (e.target.name === 'email' && errorEmail) setErrorEmail(false);
+    if (e.target.name === 'phone' && errorPhone) setErrorPhone(false);
   };
 
   // EVENT HANDLER: Updates the active tab state upon selection
@@ -92,6 +122,10 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
         phone: clientData.phone || "",
       });
     }
+    setError(false);
+    setErrorName(false);
+    setErrorEmail(false);
+    setErrorPhone(false);
     setTabValue(0); // Opcional, devolver el Focus a la primera pestaña
     onClose();
   };
@@ -99,6 +133,27 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
   // EVENT HANDLER: Guarda los cambios en la base de datos
   const handleSave = async () => {
     if (!clientData || !clientData.id) return;
+
+    setError(false);
+    setErrorName(false);
+    setErrorEmail(false);
+    setErrorPhone(false);
+
+    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim()) {
+        setError(true);
+        return;
+    }
+
+    const isNameValid = validateName(formData.name);
+    const isEmailValid = validateEmail(formData.email);
+    const isPhoneValid = validatePhone(formData.phone);
+
+    if (!isNameValid || !isEmailValid || !isPhoneValid) {
+        if (!isNameValid) setErrorName(true);
+        if (!isEmailValid) setErrorEmail(true);
+        if (!isPhoneValid) setErrorPhone(true);
+        return;
+    }
 
     try {
       // Preparamos el payload a enviar basado en el formData actual
@@ -116,6 +171,31 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
     } catch (error) {
       console.error("No se ha podido actualizar el cliente:", error);
       alert("Hubo un error al intentar actualizar el cliente.");
+    }
+  };
+
+  // EVENT HANDLER: Añade una nueva mascota y la vincula al cliente
+  const handleAddPet = async () => {
+    if (!newPetData.name.trim()) {
+      setAddPetError(true);
+      return;
+    }
+
+    try {
+      // Usamos única y exclusivamente el ID del cliente
+      const clientId = clientData.id;
+      
+      await createPetForClient(newPetData, clientId);
+      
+      setIsAddPetOpen(false);
+      setNewPetData({ name: "", species: "", breed: "", birthdate: "" });
+      setAddPetError(false);
+      
+      // Forzamos la recarga igual que en handleSave para actualizar la lista de mascotas
+      window.location.reload();
+    } catch (error) {
+      console.error("Error al crear la mascota:", error);
+      alert("Hubo un error al intentar crear la mascota.");
     }
   };
 
@@ -210,6 +290,25 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
       >
         {/* TAB 1: CLIENT DATA FORM */}
         <TabPanel value={tabValue} index={0}>
+          {/* Visual Error Message Fill in required fields */}
+          <Collapse in={error}>
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+                  Por favor, rellena todos los campos obligatorios (Nombre, Email
+                  y Teléfono).
+              </Alert>
+          </Collapse>
+
+          {/* Visual Error Message Specific format */}
+          <Collapse in={errorName || errorEmail || errorPhone}>
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+                  Por favor, corrige el formato de los siguientes campos: {[
+                      errorName && 'Nombre',
+                      errorEmail && 'Email',
+                      errorPhone && 'Teléfono'
+                  ].filter(Boolean).join(', ')}.
+              </Alert>
+          </Collapse>
+
           <Stack spacing={2.5} sx={{ maxWidth: 600, mx: "auto" }}>
 
             {/* Name field */}
@@ -353,6 +452,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
           <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
             <Button
               variant="contained"
+              onClick={() => setIsAddPetOpen(true)}
               sx={{
                 bgcolor: "#66BB6A",
                 color: "black",
@@ -548,6 +648,103 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
           GUARDAR
         </Button>
       </Box>
+
+      {/* ADD PET POPUP */}
+      <Dialog
+        open={isAddPetOpen}
+        onClose={() => {
+          setIsAddPetOpen(false);
+          setNewPetData({ name: "", species: "", breed: "", birthdate: "" });
+          setAddPetError(false);
+        }}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: { borderRadius: 5, bgcolor: '#E1F5FE', p: 1 }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', fontSize: '1.25rem' }}>
+          Añadir nueva mascota
+        </DialogTitle>
+        <DialogContent>
+          <Collapse in={addPetError}>
+            <Alert severity="error" sx={{ mb: 2, borderRadius: 5 }}>
+              El nombre de la mascota es obligatorio.
+            </Alert>
+          </Collapse>
+          <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Typography sx={{ fontWeight: 'bold' }}>Nombre</Typography>
+            <TextField
+              size="small"
+              variant="standard"
+              placeholder="Nombre de la mascota..."
+              value={newPetData.name}
+              onChange={(e) => {
+                setNewPetData({ ...newPetData, name: e.target.value });
+                if (addPetError) setAddPetError(false);
+              }}
+              InputProps={{ disableUnderline: true }}
+              sx={{ bgcolor: 'white', borderRadius: 4, px: 2, py: 0.5 }}
+            />
+
+            <Typography sx={{ fontWeight: 'bold', mt: 1 }}>Especie</Typography>
+            <TextField
+              size="small"
+              variant="standard"
+              placeholder="Ej: Perro, Gato..."
+              value={newPetData.species}
+              onChange={(e) => setNewPetData({ ...newPetData, species: e.target.value })}
+              InputProps={{ disableUnderline: true }}
+              sx={{ bgcolor: 'white', borderRadius: 4, px: 2, py: 0.5 }}
+            />
+
+            <Typography sx={{ fontWeight: 'bold', mt: 1 }}>Raza</Typography>
+            <TextField
+              size="small"
+              variant="standard"
+              placeholder="Raza..."
+              value={newPetData.breed}
+              onChange={(e) => setNewPetData({ ...newPetData, breed: e.target.value })}
+              InputProps={{ disableUnderline: true }}
+              sx={{ bgcolor: 'white', borderRadius: 4, px: 2, py: 0.5 }}
+            />
+
+            <Typography sx={{ fontWeight: 'bold', mt: 1 }}>Fecha de nacimiento</Typography>
+            <TextField
+              type="date"
+              size="small"
+              variant="standard"
+              value={newPetData.birthdate}
+              onChange={(e) => setNewPetData({ ...newPetData, birthdate: e.target.value })}
+              InputProps={{ disableUnderline: true }}
+              sx={{ bgcolor: 'white', borderRadius: 4, px: 2, py: 0.5 }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, justifyContent: 'center', gap: 2 }}>
+          <Button
+            onClick={() => {
+              setIsAddPetOpen(false);
+              setNewPetData({ name: "", species: "", breed: "", birthdate: "" });
+              setAddPetError(false);
+            }}
+            sx={{
+              bgcolor: '#F02F0A', color: 'black', fontWeight: 'bold', borderRadius: 10, px: 4, textTransform: 'none', '&:hover': { bgcolor: '#D82E0C' }
+            }}
+          >
+            CANCELAR
+          </Button>
+          <Button
+            onClick={handleAddPet}
+            variant="contained"
+            sx={{
+              bgcolor: '#FFCA28', color: 'black', fontWeight: 'bold', borderRadius: 10, px: 4, textTransform: 'none', '&:hover': { bgcolor: '#f9a825' }
+            }}
+          >
+            GUARDAR
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Dialog>
   );
 };
