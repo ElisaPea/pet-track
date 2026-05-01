@@ -179,4 +179,112 @@ export async function updateUserProfile(
 
   if (errorUser) throw errorUser;
 }
+// --------------------------- WELCOME USER PAGE  ---------------------
+// SELECT PET BY USER
+export async function getPetsByUser(userId: string) {
+  const { data, error } = await supabase
+    .from("PetUser")
+    .select(`
+      Pet (
+        id,
+        name,
+        breed,
+        birthdate
+      )
+    `)
+    .eq("userid", userId);
+
+  if (error) {
+    console.error("Error al obtener mascotas:", error);
+    throw new Error(error.message);
+  }
+
+  // Aplanamos el resultado para tener un array de mascotas directamente
+  return data?.map((row: any) => row.Pet).filter(Boolean) ?? [];
+}
+// SELECT PET BY ID
+export async function getPetById(petId: string) {
+  const { data, error } = await supabase
+    .from("Pet")
+    .select("id, name, breed, birthdate")
+    .eq("id", petId)
+    .single();
+
+  if (error) {
+    console.error("Error al obtener mascota:", error);
+    throw error;
+  }
+
+  return data;
+}
+// UPDATE PET
+export async function updatePet(
+  petId: string,
+  petData: { name: string; breed?: string; birthDate?: string }
+) {
+  const { data, error } = await supabase
+    .from("Pet")
+    .update({
+      name: petData.name,
+      breed: petData.breed,
+      birthdate: petData.birthDate,
+    })
+    .eq("id", petId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error al actualizar mascota:", error);
+    throw new Error("No se pudo actualizar la mascota.");
+  }
+
+  return data;
+}
+// SELECT NOTAS 
+export async function getPetUserNotas(petId: string, userId: string) {
+  const { data, error } = await supabase
+    .from("PetUser")
+    .select("extrafields")
+    .eq("petid", petId)
+    .eq("userid", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error al obtener notas:", error);
+    throw error;
+  }
+
+  return {
+    notasUser: data?.extrafields ?? "",
+  };
+}
+// UPDATE NOTAS 
+export async function updatePetUserNotas(
+  petId: string,
+  userId: string,
+  notasUser: string
+) {
+  const { error } = await supabase
+    .from("PetUser")
+    .update({ extrafields: notasUser })
+    .eq("petid", petId)
+    .eq("userid", userId);
+
+  if (error) {
+    console.error("Error al actualizar notas:", error);
+    throw error;
+  }
+}
+
+// USER
+
+export async function getCurrentUserId() {
+  return "2427a02c-b1c9-423e-9aab-4ed448c34b5b";
+}
+
+export async function getCurrentUserName() {
+  const userId = await getCurrentUserId();
+  const user = await getUserProfile(userId);
+  return user.name;
+}
 
