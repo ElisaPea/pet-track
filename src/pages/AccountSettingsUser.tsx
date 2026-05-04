@@ -22,10 +22,12 @@ import {
 } from "../utils/validationUtils";
 
 // Import Supabase queries for the regular user
-import { getUserProfile, supabase, updateUserProfile } from "../api/query";
+import { getUserProfile, updateUserProfile } from "../api/query";
 
 export default function AccountSettingsUser() {
-  const [vetRequestStatus, setVetRequestStatus] = useState("Ninguno seleccionado");
+  const [vetRequestStatus, setVetRequestStatus] = useState(
+    "Ninguno seleccionado",
+  );
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -55,11 +57,11 @@ export default function AccountSettingsUser() {
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      
+
       //DEVELOPMENT HACK: Forcing a regular user ID (like Vin) for testing
       // Remember to change this to supabase.auth.getUser() when Auth is ready
-      const ID_NORMAL_USER = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb"; 
-      
+      const ID_NORMAL_USER = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb";
+
       console.log("1. Forcing search for regular user:", ID_NORMAL_USER);
       setUserId(ID_NORMAL_USER);
 
@@ -81,13 +83,13 @@ export default function AccountSettingsUser() {
         } else {
           console.error("DB returned null. Check the user ID.");
         }
-      } catch (err) { 
-        console.error("Error in query:", err); 
+      } catch (err) {
+        console.error("Error in query:", err);
       }
-      
+
       setLoading(false);
     }
-    
+
     loadData();
 
     // Check if the browser has a pending request note
@@ -95,7 +97,6 @@ export default function AccountSettingsUser() {
     if (pendingRequest) {
       setVetRequestStatus(`Esperando confirmación de: ${pendingRequest}`);
     }
-
   }, []);
 
   // Input change handler
@@ -107,7 +108,7 @@ export default function AccountSettingsUser() {
   };
 
   //Variable that calculates in real-time if there are changes
-  const isFormModified = 
+  const isFormModified =
     formData.name !== initialData.name ||
     formData.email !== initialData.email ||
     formData.phone !== initialData.phone ||
@@ -157,7 +158,7 @@ export default function AccountSettingsUser() {
 
         setSuccess(true);
         console.log("Data synchronized with Supabase");
-        
+
         //Update our "backup copy" so the button turns off again
         setInitialData(formData);
 
@@ -183,7 +184,14 @@ export default function AccountSettingsUser() {
         }}
       >
         {/* Back Button */}
-          <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-start", mb: 2 }}>
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            mb: 2,
+          }}
+        >
           <IconButton
             onClick={() => navigate(SCREEN.WELCOME_USER)}
             sx={{
@@ -193,34 +201,31 @@ export default function AccountSettingsUser() {
               boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
             }}
           >
-          <ArrowBackIcon fontSize="medium" />
+            <ArrowBackIcon fontSize="medium" />
           </IconButton>
         </Box>
-
-
 
         <Typography
           variant="h4"
           sx={{ fontWeight: "600", color: "#4A3B3B", mb: 0.5 }}
         >
-          Actualiza tu perfil 
+          Actualiza tu perfil
         </Typography>
 
         <Box sx={{ width: 60, height: 4, bgcolor: "#00BCD4", mb: 4 }} />
 
         <Box
           sx={{
-            bgcolor: "#D1F2F5", 
+            bgcolor: "#D1F2F5",
             width: "100%",
             maxWidth: 650,
-            borderRadius: 10, 
+            borderRadius: 10,
             p: 4,
             boxShadow: "0px 4px 10px rgba(0,0,0,0.05)",
             textAlign: "center",
           }}
         >
           <Box component="form" noValidate sx={{ mt: 1 }}>
-            
             <Collapse in={Boolean(error)}>
               <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
                 {error}
@@ -247,7 +252,7 @@ export default function AccountSettingsUser() {
                 sx={{ width: "100%" }}
               >
                 <Typography
-                  component="label" 
+                  component="label"
                   htmlFor="name-input"
                   sx={{
                     width: 400,
@@ -282,7 +287,7 @@ export default function AccountSettingsUser() {
                 sx={{ width: "100%" }}
               >
                 <Typography
-                  component="label" 
+                  component="label"
                   htmlFor="email-input"
                   sx={{
                     width: 400,
@@ -320,8 +325,8 @@ export default function AccountSettingsUser() {
                 sx={{ width: "100%" }}
               >
                 <Typography
-                  component="label" 
-                  htmlFor="phone-input" 
+                  component="label"
+                  htmlFor="phone-input"
                   sx={{
                     width: 400,
                     textAlign: { xs: "center", sm: "left" },
@@ -369,7 +374,7 @@ export default function AccountSettingsUser() {
                 <TextField
                   fullWidth
                   variant="standard"
-                  name="address" 
+                  name="address"
                   value={formData.address}
                   onChange={handleChange}
                   InputProps={{ disableUnderline: true }}
@@ -440,7 +445,7 @@ export default function AccountSettingsUser() {
                 >
                   BUSCAR CENTRO VETERINARIO
                 </Button>
-                
+
                 {/*Conditionally styled and disabled button */}
                 <Button
                   variant="contained"
@@ -452,14 +457,16 @@ export default function AccountSettingsUser() {
                     fontWeight: "bold",
                     borderRadius: 2,
                     width: "100%",
-                    border: isFormModified ? "2px solid #64B5F6" : "2px solid transparent",
-                    "&:hover": { 
-                      bgcolor: isFormModified ? "#f9a825" : "#e0e0e0" 
+                    border: isFormModified
+                      ? "2px solid #64B5F6"
+                      : "2px solid transparent",
+                    "&:hover": {
+                      bgcolor: isFormModified ? "#f9a825" : "#e0e0e0",
                     },
                     "&.Mui-disabled": {
                       bgcolor: "#e0e0e0",
                       color: "#9e9e9e",
-                    }
+                    },
                   }}
                 >
                   GUARDAR

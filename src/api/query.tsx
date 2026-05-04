@@ -1,11 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "./supabaseClient";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const veterinarycenterid = "c41de394-45ad-47b2-9d4d-5d2c0b137cec";
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 
 // Función para obtener la lista de centros veterinarios
 export async function getVetCenters() {
@@ -27,9 +22,12 @@ export async function getVetCenters() {
  * - name, email, phone are the ones we ask for when adding the client manually.
  * - userid: We allow null if it is not a registered user in the app.
  */
-export async function createVetClient(
-  clientData: { name: string; email: string; phone: string; userid?: string | null }
-) {
+export async function createVetClient(clientData: {
+  name: string;
+  email: string;
+  phone: string;
+  userid?: string | null;
+}) {
   // We perform the insertion using the Supabase API
   const { data: vetClient, error: vetClientError } = await supabase
     .from("Client") // This must be the exact name of your table in Supabase
@@ -44,7 +42,7 @@ export async function createVetClient(
 
         // Mockeado temporalmente para permitir crear registros (obligatorio por base de datos)
         veterinarycenterid: veterinarycenterid,
-      }
+      },
     ])
     // .select() asks Supabase to return the newly created record
     .select()
@@ -53,13 +51,15 @@ export async function createVetClient(
 
   // Error handling: if for any reason it fails, Supabase will send us a vetClientError
   if (vetClientError) {
-    console.error("Error detallado al crear cliente en Supabase:", vetClientError);
+    console.error(
+      "Error detallado al crear cliente en Supabase:",
+      vetClientError,
+    );
     throw new Error("No se pudo insertar el cliente en la base de datos.");
   }
 
   // If everything goes well, we return the newly created information
   return vetClient;
-
 }
 
 // Función para crear una mascota y vincularla a un usuario
@@ -109,13 +109,15 @@ export async function createPet(
 export async function getVetProfile(userId: string) {
   const { data, error } = await supabase
     .from("User")
-    .select(`
+    .select(
+      `
       name,
       phone,
       Professional (
         licensenumber
       )
-    `)
+    `,
+    )
     .eq("id", userId)
     .maybeSingle();
 
@@ -127,7 +129,7 @@ export async function getVetProfile(userId: string) {
     name: result?.name || "",
     phone: result?.phone || "",
     // We access the first element of the Professional array
-    licenseNumber: result?.Professional?.[0]?.licensenumber || ""
+    licenseNumber: result?.Professional?.[0]?.licensenumber || "",
   };
 }
 //--------------aroa--------------GET Account User-----------------
@@ -135,10 +137,12 @@ export async function getVetProfile(userId: string) {
 export async function getUserProfile(userId: string) {
   const { data, error } = await supabase
     .from("User")
-    .select(`
+    .select(
+      `
       name,
       phone
-    `)
+    `,
+    )
     .eq("id", userId)
     .maybeSingle();
 
@@ -148,14 +152,14 @@ export async function getUserProfile(userId: string) {
 
   return {
     name: result?.name || "",
-    phone: result?.phone || ""
+    phone: result?.phone || "",
   };
 }
 
 // 2. Update Vet Data (Write)
 export async function updateVetProfile(
   userId: string,
-  updateData: { name: string; phone: string; licenseNumber: string }
+  updateData: { name: string; phone: string; licenseNumber: string },
 ) {
   // Update Professional table (license number)
   const { error: errorPro } = await supabase
@@ -164,12 +168,12 @@ export async function updateVetProfile(
     .eq("userid", userId);
 
   if (errorPro) throw errorPro;
-};
+}
 
 // 2. Update User Data (Write)
 export async function updateUserProfile(
   userId: string,
-  updateData: { name: string; phone: string }
+  updateData: { name: string; phone: string },
 ) {
   // Update User table (name and phone)
   const { error: errorUser } = await supabase
@@ -184,14 +188,16 @@ export async function updateUserProfile(
 export async function getPetsByUser(userId: string) {
   const { data, error } = await supabase
     .from("PetUser")
-    .select(`
+    .select(
+      `
       Pet (
         id,
         name,
         breed,
         birthdate
       )
-    `)
+    `,
+    )
     .eq("userid", userId);
 
   if (error) {
@@ -220,7 +226,7 @@ export async function getPetById(petId: string) {
 // UPDATE PET
 export async function updatePet(
   petId: string,
-  petData: { name: string; breed?: string; birthDate?: string }
+  petData: { name: string; breed?: string; birthDate?: string },
 ) {
   const { data, error } = await supabase
     .from("Pet")
@@ -240,7 +246,7 @@ export async function updatePet(
 
   return data;
 }
-// SELECT NOTAS 
+// SELECT NOTAS
 export async function getPetUserNotas(petId: string, userId: string) {
   const { data, error } = await supabase
     .from("PetUser")
@@ -258,11 +264,11 @@ export async function getPetUserNotas(petId: string, userId: string) {
     notasUser: data?.extrafields ?? "",
   };
 }
-// UPDATE NOTAS 
+// UPDATE NOTAS
 export async function updatePetUserNotas(
   petId: string,
   userId: string,
-  notasUser: string
+  notasUser: string,
 ) {
   const { error } = await supabase
     .from("PetUser")
@@ -287,4 +293,3 @@ export async function getCurrentUserName() {
   const user = await getUserProfile(userId);
   return user.name;
 }
-

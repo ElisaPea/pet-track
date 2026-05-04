@@ -12,7 +12,12 @@ import {
   MenuItem,
 } from "@mui/material";
 import FootprintIcon from "../components/FootprintIcon";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getVetCenters } from "../api/query";
+import { signIn, signUpComplete } from "../api/signInQuery";
+import { useNavigate } from "react-router-dom";
+import { SCREEN } from "../constants/constants";
+import { supabase } from "../api/supabaseClient";
 
 const config = {
   login: {
@@ -28,6 +33,8 @@ const config = {
 };
 
 const initialFormState = {
+  name: "",
+  phone: "",
   email: "",
   password: "",
   typeUser: "user" as "user" | "professional",
@@ -39,9 +46,19 @@ export default function Login() {
   const [mode, setMode] = useState<keyof typeof config>("login");
   const [form, setForm] = useState(initialFormState);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const navigate = useNavigate();
+  const [vetCenters, setVetCenters] = useState<any[]>([]); // List from DB
 
   const isLogin = mode === "login";
   const isProfessional = form.typeUser === "professional";
+
+  useEffect(() => {
+    async function loadData() {
+      const data = await getVetCenters();
+      setVetCenters(data || []);
+    }
+    loadData();
+  }, []);
 
   const handleModeChange = () => {
     setMode(isLogin ? "register" : "login");
@@ -69,13 +86,14 @@ export default function Login() {
     return emailRegex.test(value);
   };
 
-  const handleAccept = () => {
+  const handleAccept = async () => {
     const newErrors: Record<string, string> = {};
 
     if (!form.email) newErrors.email = "El correo es obligatorio.";
     if (form.email && !testEmail(form.email))
       newErrors.email = "El correo no es válido.";
     if (!form.password) newErrors.password = "El password es obligatorio.";
+    if (!form.name && !isLogin) newErrors.name = "El nombre es obligatorio.";
     if (!isLogin && isProfessional) {
       if (!form.licenseNumber)
         newErrors.licenseNumber = "El Nº Colegiado es obligatorio.";
@@ -83,10 +101,67 @@ export default function Login() {
         newErrors.selectedVet = "El Centro Vet es obligatorio.";
     }
 
-    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
-    if (Object.keys(newErrors).length === 0) {
-      // Acción real de login/register aquí
+    try {
+      if (isLogin) {
+        // --- LÓGICA DE LOGIN ---
+        const { data: authData, error: signInError } = await signIn(
+          form.email,
+          form.password,
+        );
+
+        if (signInError) throw signInError;
+
+        // Obtenemos el rol directamente de la base de datos usando el ID que acaba de loguear
+        const { data: userData, error: roleError } = await supabase
+          .from("User")
+          .select("role")
+          .eq("id", authData.user?.id)
+          .single();
+
+        if (roleError) {
+          throw new Error("No se pudo recuperar el rol del usuario.");
+        }
+
+        const userRole = userData?.role;
+
+        if (userRole === "user") {
+          navigate(SCREEN.WELCOME_USER);
+        } else if (userRole === "professional") {
+          navigate(SCREEN.HOME_VET);
+        }
+      } else {
+        // --- LÓGICA DE REGISTRO ---
+        await signUpComplete({
+          email: form.email,
+          password: form.password,
+          name: form.name,
+          phone: form.phone,
+          role: form.typeUser,
+          licenseNumber: form.licenseNumber,
+          veterinaryCenterId: form.selectedVet,
+        });
+        alert("¡Cuenta creada con éxito!");
+        // navigate("/welcome");
+      }
+    } catch (error: any) {
+      // --- MANEJO DE ERROR: USUARIO YA EXISTENTE ---
+      if (
+        error.message.includes("User already registered") ||
+        error.code === "23505"
+      ) {
+        setErrors({
+          email: "Este correo ya está registrado. Intenta iniciar sesión.",
+        });
+      } else if (error.message.includes("Invalid login credentials")) {
+        setErrors({ email: "Credenciales incorrectas.", password: " " });
+      } else {
+        alert("Error: " + error.message);
+      }
     }
   };
 
@@ -228,37 +303,113 @@ export default function Login() {
 
               {/* Tipo de usuario */}
               {!isLogin && (
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  alignItems={{ xs: "flex-start", sm: "center" }}
-                  spacing={{ xs: 0.5, sm: 0 }}
-                  sx={{ width: "100%" }}
-                >
-                  <Typography
-                    sx={{
-                      width: { xs: "100%", sm: 180 },
-                      fontWeight: "bold",
-                    }}
+                <>
+                  <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    alignItems={{ xs: "flex-start", sm: "center" }}
+                    spacing={{ xs: 1, sm: 0 }}
+                    sx={{ width: "100%", position: "relative" }}
                   >
-                    Tipo de usuario:
-                  </Typography>
-                  <RadioGroup
-                    row={!isLogin && !isProfessional}
-                    value={form.typeUser}
-                    onChange={(e) => handleChangeTypeUser(e.target.value)}
+                    <Typography
+                      sx={{
+                        width: { xs: "100%", sm: 180 },
+                        textAlign: "left",
+                        fontWeight: "bold",
+                        mb: { xs: 0.5, sm: 0 },
+                      }}
+                    >
+                      Nombre: *
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      variant="standard"
+                      value={form.name}
+                      onChange={(e) => handleChange("name", e.target.value)}
+                      InputProps={{ disableUnderline: true }}
+                      sx={{
+                        bgcolor: "white",
+                        borderRadius: 50,
+                        px: 2,
+                        py: 0.5,
+                      }}
+                    />
+                    {errors.name && (
+                      <Typography
+                        sx={{
+                          color: "red",
+                          position: "absolute",
+                          left: { xs: 0, sm: "50%" },
+                          top: "100%",
+                          fontSize: "0.8rem",
+                        }}
+                      >
+                        {errors.name}
+                      </Typography>
+                    )}
+                  </Stack>
+
+                  <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    alignItems={{ xs: "flex-start", sm: "center" }}
+                    spacing={{ xs: 1, sm: 0 }}
+                    sx={{ width: "100%", position: "relative" }}
                   >
-                    <FormControlLabel
-                      value="user"
-                      control={<Radio />}
-                      label="Usuario"
+                    <Typography
+                      sx={{
+                        width: { xs: "100%", sm: 180 },
+                        textAlign: "left",
+                        fontWeight: "bold",
+                        mb: { xs: 0.5, sm: 0 },
+                      }}
+                    >
+                      Teléfono:
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      variant="standard"
+                      value={form.phone}
+                      onChange={(e) => handleChange("phone", e.target.value)}
+                      InputProps={{ disableUnderline: true }}
+                      sx={{
+                        bgcolor: "white",
+                        borderRadius: 50,
+                        px: 2,
+                        py: 0.5,
+                      }}
                     />
-                    <FormControlLabel
-                      value="professional"
-                      control={<Radio />}
-                      label="Profesional"
-                    />
-                  </RadioGroup>
-                </Stack>
+                  </Stack>
+                  <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    alignItems={{ xs: "flex-start", sm: "center" }}
+                    spacing={{ xs: 0.5, sm: 0 }}
+                    sx={{ width: "100%" }}
+                  >
+                    <Typography
+                      sx={{
+                        width: { xs: "100%", sm: 180 },
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Tipo de usuario:
+                    </Typography>
+                    <RadioGroup
+                      row={!isLogin && !isProfessional}
+                      value={form.typeUser}
+                      onChange={(e) => handleChangeTypeUser(e.target.value)}
+                    >
+                      <FormControlLabel
+                        value="user"
+                        control={<Radio />}
+                        label="Usuario"
+                      />
+                      <FormControlLabel
+                        value="professional"
+                        control={<Radio />}
+                        label="Profesional"
+                      />
+                    </RadioGroup>
+                  </Stack>
+                </>
               )}
 
               {/* Campos profesionales */}
@@ -341,9 +492,11 @@ export default function Login() {
                         "& .MuiSelect-select": { padding: "6px 8px" },
                       }}
                     >
-                      <MenuItem value="Centro vet 1">Centro Vet 1</MenuItem>
-                      <MenuItem value="Centro vet 2">Centro Vet 2</MenuItem>
-                      <MenuItem value="Centro vet 3">Centro Vet 3</MenuItem>
+                      {vetCenters.map((center) => (
+                        <MenuItem key={center.id} value={center.id}>
+                          {center.name}
+                        </MenuItem>
+                      ))}
                     </Select>
                     {errors.selectedVet && (
                       <Typography

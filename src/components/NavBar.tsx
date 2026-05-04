@@ -18,10 +18,13 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
 import FootprintIcon from "./FootprintIcon";
+import { useAuth } from "../context/AuthContext";
+import { logout } from "../api/signInQuery";
 
 export default function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { userAuthenticated, role, signOut } = useAuth();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -36,11 +39,36 @@ export default function NavBar() {
   const currentTitle = titles[location.pathname] || "Pet Track";
 
   const menuItems = [
-    { label: "Home", screen: SCREEN.WELCOME_USER },
-    { label: "HomeVet", screen: SCREEN.HOME_VET },
-    { label: "Perfil", screen: SCREEN.settingsUser },
-    { label: "PerfilVet", screen: SCREEN.settingsVet },
-    { label: "Log in", screen: SCREEN.LOGIN },
+    {
+      label: "Home",
+      onClick: () => navigate(SCREEN.WELCOME_USER),
+      visible: userAuthenticated && role === "user",
+    },
+    {
+      label: "HomeVet",
+      onClick: () => navigate(SCREEN.HOME_VET),
+      visible: userAuthenticated && role === "professional",
+    },
+    {
+      label: "Perfil",
+      onClick: () => navigate(SCREEN.settingsUser),
+      visible: userAuthenticated && role === "user",
+    },
+    {
+      label: "PerfilVet",
+      onClick: () => navigate(SCREEN.settingsVet),
+      visible: userAuthenticated && role === "professional",
+    },
+    {
+      label: "Log in",
+      onClick: () => navigate(SCREEN.LOGIN),
+      visible: !userAuthenticated,
+    },
+    {
+      label: "Log out",
+      onClick: () => logout(navigate),
+      visible: userAuthenticated,
+    },
   ];
 
   return (
@@ -85,22 +113,24 @@ export default function NavBar() {
           {/* DESKTOP MENU */}
           {!isMobile && (
             <Stack direction="row" spacing={3}>
-              {menuItems.map((item) => (
-                <Button
-                  key={item.label}
-                  color="inherit"
-                  sx={{
-                    textTransform: "none",
-                    borderBottom:
-                      location.pathname === item.screen
-                        ? "2px solid black"
-                        : "",
-                  }}
-                  onClick={() => navigate(item.screen)}
-                >
-                  {item.label}
-                </Button>
-              ))}
+              {menuItems
+                .filter((item) => item.visible)
+                .map((item) => (
+                  <Button
+                    key={item.label}
+                    color="inherit"
+                    sx={{
+                      textTransform: "none",
+                      // borderBottom:
+                      //   location.pathname === item.screen
+                      //     ? "2px solid black"
+                      //     : "",
+                    }}
+                    onClick={item.onClick}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
             </Stack>
           )}
 
@@ -121,7 +151,7 @@ export default function NavBar() {
               <ListItemButton
                 key={item.label}
                 onClick={() => {
-                  navigate(item.screen);
+                  item.onClick();
                   setOpenMenu(false);
                 }}
               >

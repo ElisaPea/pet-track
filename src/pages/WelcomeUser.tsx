@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import BasicScreen from "../components/BasicScreen";
 import { PopupCreatePetUser } from "../components/PopupCreatePetUser";
 import { getPetsByUser, getPetById } from "../api/query";
-import { supabase } from "../api/query";
+import { supabase } from "../api/supabaseClient";
 
 const TEST_USER_ID = "2427a02c-b1c9-423e-9aab-4ed448c34b5b";
 
@@ -18,7 +18,9 @@ export default function WelcomeUser() {
   const [open, setOpen] = useState(false);
   const [mascotas, setMascotas] = useState<any[]>([]);
   const [loadingPets, setLoadingPets] = useState(true);
-  const [mascotaSeleccionada, setMascotaSeleccionada] = useState<any | null>(null);
+  const [mascotaSeleccionada, setMascotaSeleccionada] = useState<any | null>(
+    null,
+  );
 
   const [userName, setUserName] = useState(""); // ✅ añadido
 
@@ -63,7 +65,13 @@ export default function WelcomeUser() {
       <section>
         {/* Title */}
         <Box>
-          <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
             <Typography variant="h4" component="h1" sx={{ fontWeight: "bold" }}>
               Bienvenido {userName}
             </Typography>

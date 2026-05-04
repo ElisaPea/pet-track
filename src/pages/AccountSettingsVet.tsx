@@ -16,22 +16,21 @@ import {
   validateColegiado,
   isNotEmpty,
 } from "../utils/validationUtils";
-import { getVetProfile, supabase, updateVetProfile } from "../api/query";
+import { getVetProfile, updateVetProfile } from "../api/query";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { SCREEN } from "../constants/constants";
 import { useNavigate } from "react-router-dom";
-
 
 export default function AccountSettingsVet() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
-  
+
   // States for error and success messages
   const [error, setError] = useState<string | null>(null);
   const [error2, setError2] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  
+
   //State to store the original copy of the data for comparison
   const [initialData, setInitialData] = useState({
     name: "",
@@ -53,11 +52,11 @@ export default function AccountSettingsVet() {
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      
+
       // DEVELOPMENT HACK: Forcing Bilbo's ID for testing
       // When the app is finished, we will remove this and use supabase.auth.getUser()
       const ID_BILBO = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb";
-      
+
       console.log("1. Forcing search for user:", ID_BILBO);
       setUserId(ID_BILBO);
 
@@ -80,13 +79,13 @@ export default function AccountSettingsVet() {
         } else {
           console.error("DB returned null. Check Bilbo's ID.");
         }
-      } catch (err) { 
-        console.error("Error in query:", err); 
+      } catch (err) {
+        console.error("Error in query:", err);
       }
-      
+
       setLoading(false);
     }
-    
+
     loadData();
   }, []);
 
@@ -101,7 +100,7 @@ export default function AccountSettingsVet() {
   };
 
   //Logical variable that calculates in real-time if changes exist
-  const isFormModified = 
+  const isFormModified =
     formData.name !== initialData.name ||
     formData.email !== initialData.email ||
     formData.phone !== initialData.phone ||
@@ -149,12 +148,12 @@ export default function AccountSettingsVet() {
         await updateVetProfile(userId, {
           name: formData.name,
           phone: formData.phone,
-          licenseNumber: formData.licenseNumber
+          licenseNumber: formData.licenseNumber,
         });
 
         setSuccess(true);
         console.log("Data synchronized with Supabase");
-        
+
         //Update our "backup copy" so the button disables again
         setInitialData(formData);
 
@@ -179,8 +178,15 @@ export default function AccountSettingsVet() {
           mt: 8,
         }}
       >
-         {/* Back Button */}
-          <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-start", mb: 2 }}>
+        {/* Back Button */}
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            mb: 2,
+          }}
+        >
           <IconButton
             onClick={() => navigate(SCREEN.HOME_VET)}
             sx={{
@@ -190,7 +196,7 @@ export default function AccountSettingsVet() {
               boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
             }}
           >
-          <ArrowBackIcon fontSize="medium" />
+            <ArrowBackIcon fontSize="medium" />
           </IconButton>
         </Box>
         <Typography
@@ -199,9 +205,9 @@ export default function AccountSettingsVet() {
         >
           Actualiza tu perfil
         </Typography>
-        
+
         <Box sx={{ width: 60, height: 4, bgcolor: "#00BCD4", mb: 4 }} />
-        
+
         <Box
           sx={{
             bgcolor: "#D1F2F5",
@@ -214,19 +220,18 @@ export default function AccountSettingsVet() {
           }}
         >
           <Box component="form" noValidate sx={{ mt: 1 }}>
-            
             <Collapse in={Boolean(error)}>
               <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
                 {error}
               </Alert>
             </Collapse>
-            
+
             <Collapse in={Boolean(error2)}>
               <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
                 {error2}
               </Alert>
             </Collapse>
-            
+
             <Collapse in={success}>
               <Alert severity="success" sx={{ mb: 3, borderRadius: 5 }}>
                 ¡Datos guardados exitosamente!
@@ -371,7 +376,8 @@ export default function AccountSettingsVet() {
                   value={formData.licenseNumber}
                   error={
                     (Boolean(error) && !isNotEmpty(formData.licenseNumber)) ||
-                    (Boolean(error2) && !validateColegiado(formData.licenseNumber))
+                    (Boolean(error2) &&
+                      !validateColegiado(formData.licenseNumber))
                   }
                   InputProps={{ disableUnderline: true }}
                   sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
@@ -399,14 +405,16 @@ export default function AccountSettingsVet() {
                     fontWeight: "bold",
                     borderRadius: 2,
                     width: { xs: "100%", sm: "50%" },
-                    border: isFormModified ? "2px solid #64B5F6" : "2px solid transparent",
-                    "&:hover": { 
-                      bgcolor: isFormModified ? "#f9a825" : "#e0e0e0" 
+                    border: isFormModified
+                      ? "2px solid #64B5F6"
+                      : "2px solid transparent",
+                    "&:hover": {
+                      bgcolor: isFormModified ? "#f9a825" : "#e0e0e0",
                     },
                     "&.Mui-disabled": {
                       bgcolor: "#e0e0e0",
                       color: "#9e9e9e",
-                    }
+                    },
                   }}
                 >
                   GUARDAR
