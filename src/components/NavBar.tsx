@@ -24,7 +24,7 @@ import { logout } from "../api/signInQuery";
 export default function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userAuthenticated, role, signOut } = useAuth();
+  const { userAuthenticated, role } = useAuth();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));

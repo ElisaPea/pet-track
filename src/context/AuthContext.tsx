@@ -6,8 +6,8 @@ interface AuthContextType {
   userAuthenticated: User | null;
   role: "user" | "professional" | null;
   loading: boolean;
-  signOut: () => Promise<void>;
-  getUserRole: (session: any) => Promise<any>;
+
+  updateAuth: (session: any) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,73 +17,49 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [role, setRole] = useState<"user" | "professional" | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const getUserRole = async (session: any) => {
-    if (!session?.user) return null;
+  const updateAuth = async (session: any) => {
+    if (session?.user) {
+      setUser(session.user);
 
-    const { data, error } = await supabase
-      .from("User")
-      .select("role")
-      .eq("id", session.user.id)
-      .single();
+      // Buscamos el rol sabiendo que ya existe la fila
+      const { data } = await supabase
+        .from("User")
+        .select("role")
+        .eq("id", session.user.id)
+        .single();
 
-    if (error) {
-      console.error("Error al obtener el rol:", error);
-      return null;
+      setRole(data?.role || null);
+    } else {
+      setUser(null);
+      setRole(null);
     }
-
-    return data?.role; // Devolvemos solo el string 'user' o 'professional'
   };
 
   useEffect(() => {
-    // 1. Comprobar sesión actual al arrancar
-    const getSession = async () => {
+    const initialize = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-
-      if (session) {
-        setUser(session.user);
-        // Buscamos el rol en la tabla "User"
-        const role = await getUserRole(session);
-        setRole(role);
-      }
+      await updateAuth(session);
       setLoading(false);
     };
+    initialize();
 
-    getSession();
-
-    // En AuthContext.tsx, dentro del useEffect de onAuthStateChange:
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session?.user) {
-          // Intentar pillar el rol siempre que haya sesión
-          const { data } = await supabase
-            .from("User")
-            .select("role")
-            .eq("id", session.user.id)
-            .single();
-          setUser(session.user);
-          setRole(data?.role || null);
-        } else {
+        if (event === "SIGNED_OUT") {
           setUser(null);
           setRole(null);
         }
-        setLoading(false);
       },
     );
 
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
+    return () => authListener.subscription.unsubscribe();
   }, []);
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
 
   return (
     <AuthContext.Provider
-      value={{ userAuthenticated: user, role, loading, signOut, getUserRole }}
+      value={{ userAuthenticated: user, role, loading, updateAuth }}
     >
       {children}
     </AuthContext.Provider>

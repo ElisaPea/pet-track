@@ -1,9 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = "https://nxawqcahssgckzwqqskk.supabase.co";
-// const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = "sb_publishable_4PGaX7rokNzSpzDSLmIDdg_D_9_sQr8";
-// const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Cuando inicializas el cliente de Supabase con persistSession: true, la librería intenta ser "inteligente" para que el usuario no tenga que loguearse cada vez que refresca la página.
 
@@ -17,6 +15,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storageKey: "pet-track-auth-key",
+    storageKey: "pet-track-v1",
   },
 });

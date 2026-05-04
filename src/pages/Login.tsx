@@ -18,6 +18,12 @@ import { signIn, signUpComplete } from "../api/signInQuery";
 import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
 import { supabase } from "../api/supabaseClient";
+import { useAuth } from "../context/AuthContext";
+
+const navigateConfig = {
+  user: SCREEN.WELCOME_USER,
+  professional: SCREEN.HOME_VET,
+};
 
 const config = {
   login: {
@@ -49,6 +55,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [vetCenters, setVetCenters] = useState<any[]>([]); // List from DB
 
+  const { updateAuth } = useAuth();
   const isLogin = mode === "login";
   const isProfessional = form.typeUser === "professional";
 
@@ -109,12 +116,8 @@ export default function Login() {
     try {
       if (isLogin) {
         // --- LÓGICA DE LOGIN ---
-        const { data: authData, error: signInError } = await signIn(
-          form.email,
-          form.password,
-        );
-
-        if (signInError) throw signInError;
+        const authData = await signIn(form.email, form.password);
+        await updateAuth(authData.session);
 
         // Obtenemos el rol directamente de la base de datos usando el ID que acaba de loguear
         const { data: userData, error: roleError } = await supabase
@@ -127,16 +130,14 @@ export default function Login() {
           throw new Error("No se pudo recuperar el rol del usuario.");
         }
 
-        const userRole = userData?.role;
+        const userRole = userData?.role as keyof typeof navigateConfig;
 
-        if (userRole === "user") {
-          navigate(SCREEN.WELCOME_USER);
-        } else if (userRole === "professional") {
-          navigate(SCREEN.HOME_VET);
+        if (userRole in navigateConfig) {
+          navigate(navigateConfig[userRole]);
         }
       } else {
         // --- LÓGICA DE REGISTRO ---
-        await signUpComplete({
+        const authData = await signUpComplete({
           email: form.email,
           password: form.password,
           name: form.name,
@@ -145,8 +146,16 @@ export default function Login() {
           licenseNumber: form.licenseNumber,
           veterinaryCenterId: form.selectedVet,
         });
-        alert("¡Cuenta creada con éxito!");
-        // navigate("/welcome");
+
+        if (authData?.session) {
+          await updateAuth(authData.session);
+          const targetRole = form.typeUser as keyof typeof navigateConfig;
+          if (targetRole in navigateConfig) {
+            navigate(navigateConfig[targetRole]);
+          }
+        } else {
+          throw new Error("No se pudo iniciar sesión tras el registro.");
+        }
       }
     } catch (error: any) {
       // --- MANEJO DE ERROR: USUARIO YA EXISTENTE ---
