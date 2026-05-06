@@ -12,7 +12,7 @@ export const validatePhone = (phone: string): boolean => {
 
 // Valida que el número de colegiado sea de 4 a 6 dígitos
 export const validateColegiado = (num: string): boolean => {
-  const colegiadoRegex = /^\d{4,6}$/;
+  const colegiadoRegex = /^\d{4,9}$/;
   return colegiadoRegex.test(num.trim());
 };
 

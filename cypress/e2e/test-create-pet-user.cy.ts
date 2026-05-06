@@ -1,6 +1,6 @@
 describe("Flujo de Creación de Mascota", () => {
   beforeEach(() => {
-    cy.visit("/WelcomeUser");
+    cy.visit("/welcome-user");
 
     // Abre el popup
     cy.contains("button", "!AÑADE UNA MASCOTA!").click();

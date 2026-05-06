@@ -10,6 +10,7 @@ import {
   Select,
   Radio,
   MenuItem,
+  IconButton,
 } from "@mui/material";
 import FootprintIcon from "../components/FootprintIcon";
 import { useEffect, useState } from "react";
@@ -19,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
 import { supabase } from "../api/supabaseClient";
 import { useAuth } from "../context/AuthContext";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 const navigateConfig = {
   user: SCREEN.WELCOME_USER,
@@ -54,7 +56,7 @@ export default function Login() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const [vetCenters, setVetCenters] = useState<any[]>([]); // List from DB
-
+  const [viewPassword, setViewPassword] = useState(false);
   const { updateAuth } = useAuth();
   const isLogin = mode === "login";
   const isProfessional = form.typeUser === "professional";
@@ -281,9 +283,22 @@ export default function Login() {
                 >
                   Password: *
                 </Typography>
+                <IconButton
+                  onClick={() => setViewPassword(!viewPassword)}
+                  edge="end"
+                  sx={{
+                    position: "absolute",
+                    right: 10,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 1,
+                  }}
+                >
+                  {viewPassword ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
                 <TextField
                   fullWidth
-                  type="password"
+                  type={viewPassword ? "text" : "password"}
                   variant="standard"
                   value={form.password}
                   onChange={(e) => handleChange("password", e.target.value)}

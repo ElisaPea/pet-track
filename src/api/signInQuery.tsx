@@ -67,7 +67,6 @@ export async function signUpComplete(formData: {
       }
     }
   }
-  console.log("fucking entroooooooooo3");
 
   return authData;
 }

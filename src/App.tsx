@@ -11,53 +11,59 @@ import { SCREEN } from "./constants/constants";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
+const routes = [
+  { path: SCREEN.LANDING_PAGE, element: <LandingPage /> },
+  { path: SCREEN.LOGIN, element: <Login /> },
+  {
+    path: SCREEN.HOME_VET,
+    element: (
+      <ProtectedRoute requiredRole="professional">
+        <HomeVet />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: SCREEN.WELCOME_USER,
+    element: (
+      <ProtectedRoute requiredRole="user">
+        <WelcomeUser />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: SCREEN.SETTINGS_USER,
+    element: (
+      <ProtectedRoute requiredRole="user">
+        <AccountSettingsUser />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: SCREEN.SETTINGS_VET,
+    element: (
+      <ProtectedRoute requiredRole="professional">
+        <AccountSettingsVet />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: SCREEN.LIST_VET,
+    element: (
+      <ProtectedRoute requiredRole="user">
+        <ListVetCenters />
+      </ProtectedRoute>
+    ),
+  },
+];
+
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path={SCREEN.LANDING_PAGE} element={<LandingPage />} />
-          <Route path={SCREEN.LOGIN} element={<Login />} />
-          <Route
-            path={SCREEN.HOME_VET}
-            element={
-              <ProtectedRoute requiredRole="professional">
-                <HomeVet />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path={SCREEN.WELCOME_USER}
-            element={
-              <ProtectedRoute requiredRole="user">
-                <WelcomeUser />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path={SCREEN.settingsUser}
-            element={
-              <ProtectedRoute requiredRole="user">
-                <AccountSettingsUser />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path={SCREEN.settingsVet}
-            element={
-              <ProtectedRoute requiredRole="professional">
-                <AccountSettingsVet />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path={SCREEN.listVet}
-            element={
-              <ProtectedRoute requiredRole="user">
-                <ListVetCenters />
-              </ProtectedRoute>
-            }
-          />
+          {routes.map((route) => (
+            <Route key={route.path} path={route.path} element={route.element} />
+          ))}
         </Routes>
       </BrowserRouter>
     </AuthProvider>

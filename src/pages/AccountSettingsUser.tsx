@@ -431,7 +431,7 @@ export default function AccountSettingsUser() {
                 <Button
                   variant="contained"
                   onClick={() => {
-                    navigate(SCREEN.listVet);
+                    navigate(SCREEN.LIST_VET);
                   }}
                   sx={{
                     bgcolor: "#FBC02D",

@@ -20,9 +20,9 @@ import { getVetProfile, updateVetProfile } from "../api/query";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { SCREEN } from "../constants/constants";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function AccountSettingsVet() {
-  const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -30,64 +30,52 @@ export default function AccountSettingsVet() {
   const [error, setError] = useState<string | null>(null);
   const [error2, setError2] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const { userState, updateAuth } = useAuth();
 
-  //State to store the original copy of the data for comparison
-  const [initialData, setInitialData] = useState({
-    name: "",
-    email: "",
-    phone: "+34 ",
-    address: "",
-    licenseNumber: "",
-  });
+  console.log(userState);
 
   // Form fields state (Current values the user is modifying)
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "+34 ",
-    address: "",
-    licenseNumber: "",
-  });
+  const [formData, setFormData] = useState(userState);
 
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true);
+  // useEffect(() => {
+  //   async function loadData() {
+  //     setLoading(true);
 
-      // DEVELOPMENT HACK: Forcing Bilbo's ID for testing
-      // When the app is finished, we will remove this and use supabase.auth.getUser()
-      const ID_BILBO = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb";
+  //     // DEVELOPMENT HACK: Forcing Bilbo's ID for testing
+  //     // When the app is finished, we will remove this and use supabase.auth.getUser()
+  //     const ID_BILBO = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb";
 
-      console.log("1. Forcing search for user:", ID_BILBO);
-      setUserId(ID_BILBO);
+  //     console.log("1. Forcing search for user:", ID_BILBO);
+  //     setUserId(ID_BILBO);
 
-      try {
-        const profile = await getVetProfile(ID_BILBO);
-        console.log("2. Data arriving from DB:", profile);
+  //     try {
+  //       const profile = await getVetProfile(ID_BILBO);
+  //       console.log("2. Data arriving from DB:", profile);
 
-        if (profile) {
-          const fetchedData = {
-            name: profile.name || "",
-            phone: profile.phone || "",
-            licenseNumber: profile.licenseNumber || "",
-            email: "bilbo@fakeemail.com", // Temporary fake email
-            address: "", // Address is not currently retrieved from the DB in this setup
-          };
+  //       if (profile) {
+  //         const fetchedData = {
+  //           name: profile.name || "",
+  //           phone: profile.phone || "",
+  //           licenseNumber: profile.licenseNumber || "",
+  //           email: "bilbo@fakeemail.com", // Temporary fake email
+  //           address: "", // Address is not currently retrieved from the DB in this setup
+  //         };
 
-          // Save the data both in the view state and the hidden backup copy
-          setFormData(fetchedData);
-          setInitialData(fetchedData);
-        } else {
-          console.error("DB returned null. Check Bilbo's ID.");
-        }
-      } catch (err) {
-        console.error("Error in query:", err);
-      }
+  //         // Save the data both in the view state and the hidden backup copy
+  //         setFormData(fetchedData);
+  //         setInitialData(fetchedData);
+  //       } else {
+  //         console.error("DB returned null. Check Bilbo's ID.");
+  //       }
+  //     } catch (err) {
+  //       console.error("Error in query:", err);
+  //     }
 
-      setLoading(false);
-    }
+  //     setLoading(false);
+  //   }
 
-    loadData();
-  }, []);
+  //   loadData();
+  // }, []);
 
   // Input change handler
   const handleChange = (
@@ -101,11 +89,11 @@ export default function AccountSettingsVet() {
 
   //Logical variable that calculates in real-time if changes exist
   const isFormModified =
-    formData.name !== initialData.name ||
-    formData.email !== initialData.email ||
-    formData.phone !== initialData.phone ||
-    formData.address !== initialData.address ||
-    formData.licenseNumber !== initialData.licenseNumber;
+    formData.name !== userState.name ||
+    formData.email !== userState.email ||
+    formData.phone !== userState.phone ||
+    formData.address !== userState.address ||
+    formData.licenseNumber !== userState.licenseNumber;
 
   // Save handler and validations
   const handleSave = async () => {
@@ -123,7 +111,6 @@ export default function AccountSettingsVet() {
     const missingFields: string[] = [];
     if (!isNotEmpty(name)) missingFields.push("Nombre");
     if (!isNotEmpty(email)) missingFields.push("Correo electrónico");
-    if (!isNotEmpty(phone)) missingFields.push("Teléfono");
     if (!isNotEmpty(licenseNumber)) missingFields.push("Nº Colegiado");
 
     if (missingFields.length > 0) {
@@ -134,7 +121,8 @@ export default function AccountSettingsVet() {
     // Format validation
     const invalidFields: string[] = [];
     if (!validateEmail(email)) invalidFields.push("Correo electrónico");
-    if (!validatePhone(phone)) invalidFields.push("Teléfono");
+    if (phone && phone.length && !validatePhone(phone))
+      invalidFields.push("Teléfono");
     if (!validateColegiado(licenseNumber)) invalidFields.push("Nº Colegiado");
 
     if (invalidFields.length > 0) {
@@ -144,20 +132,21 @@ export default function AccountSettingsVet() {
 
     // API Connection
     try {
-      if (userId) {
-        await updateVetProfile(userId, {
-          name: formData.name,
-          phone: formData.phone,
-          licenseNumber: formData.licenseNumber,
-        });
+      if (userState.id) {
+        console.log(formData);
+        await updateVetProfile(formData);
+        // await updateVetProfile(userState.id, {
+        //   name: formData.name,
+        //   phone: formData.phone,
+        //   licenseNumber: formData.licenseNumber,
+        // });
+
+        await updateAuth();
 
         setSuccess(true);
         console.log("Data synchronized with Supabase");
 
-        //Update our "backup copy" so the button disables again
-        setInitialData(formData);
-
-        setTimeout(() => setSuccess(false), 3000);
+        // setTimeout(() => setSuccess(false), 3000);
       } else {
         setError("No active user session detected.");
       }
@@ -310,7 +299,7 @@ export default function AccountSettingsVet() {
                     fontWeight: "bold",
                   }}
                 >
-                  Número de teléfono*:
+                  Número de teléfono:
                 </Typography>
                 <TextField
                   fullWidth
@@ -318,10 +307,10 @@ export default function AccountSettingsVet() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  error={
-                    (Boolean(error) && !isNotEmpty(formData.phone)) ||
-                    (Boolean(error2) && !validatePhone(formData.phone))
-                  }
+                  // error={
+                  // (Boolean(error) && !isNotEmpty(formData.phone)) ||
+                  // (Boolean(error2) && !validatePhone(formData.phone))
+                  // }
                   InputProps={{ disableUnderline: true }}
                   sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
                 />

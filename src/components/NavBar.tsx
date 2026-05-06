@@ -38,34 +38,41 @@ export default function NavBar() {
 
   const currentTitle = titles[location.pathname] || "Pet Track";
 
+  //add prop screen to menuItems with the name of the screen
   const menuItems = [
     {
       label: "Home",
+      screen: SCREEN.WELCOME_USER,
       onClick: () => navigate(SCREEN.WELCOME_USER),
       visible: userAuthenticated && role === "user",
     },
     {
       label: "HomeVet",
+      screen: SCREEN.HOME_VET,
       onClick: () => navigate(SCREEN.HOME_VET),
       visible: userAuthenticated && role === "professional",
     },
     {
       label: "Perfil",
-      onClick: () => navigate(SCREEN.settingsUser),
+      screen: SCREEN.SETTINGS_USER,
+      onClick: () => navigate(SCREEN.SETTINGS_USER),
       visible: userAuthenticated && role === "user",
     },
     {
       label: "PerfilVet",
-      onClick: () => navigate(SCREEN.settingsVet),
+      screen: SCREEN.SETTINGS_VET,
+      onClick: () => navigate(SCREEN.SETTINGS_VET),
       visible: userAuthenticated && role === "professional",
     },
     {
       label: "Log in",
+      screen: SCREEN.LOGIN,
       onClick: () => navigate(SCREEN.LOGIN),
       visible: !userAuthenticated,
     },
     {
       label: "Log out",
+      screen: null,
       onClick: () => logout(navigate),
       visible: userAuthenticated,
     },
@@ -121,10 +128,10 @@ export default function NavBar() {
                     color="inherit"
                     sx={{
                       textTransform: "none",
-                      // borderBottom:
-                      //   location.pathname === item.screen
-                      //     ? "2px solid black"
-                      //     : "",
+                      borderBottom:
+                        location.pathname === item.screen
+                          ? "2px solid black"
+                          : "",
                     }}
                     onClick={item.onClick}
                   >

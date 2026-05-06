@@ -1,3 +1,4 @@
+import type { UserProfile } from "../types/UserProfile.type";
 import { supabase } from "./supabaseClient";
 
 const veterinarycenterid = "c41de394-45ad-47b2-9d4d-5d2c0b137cec";
@@ -157,17 +158,65 @@ export async function getUserProfile(userId: string) {
 }
 
 // 2. Update Vet Data (Write)
-export async function updateVetProfile(
-  userId: string,
-  updateData: { name: string; phone: string; licenseNumber: string },
-) {
-  // Update Professional table (license number)
-  const { error: errorPro } = await supabase
-    .from("Professional")
-    .update({ licensenumber: updateData.licenseNumber })
-    .eq("userid", userId);
+// export async function updateVetProfile(
+//   userId: string,
+//   updateData: { name: string; phone: string; licenseNumber: string },
+// ) {
+//   // Update Professional table (license number)
+//   const { error: errorPro } = await supabase
+//     .from("Professional")
+//     .update({ licensenumber: updateData.licenseNumber })
+//     .eq("userid", userId);
 
-  if (errorPro) throw errorPro;
+//   if (errorPro) throw errorPro;
+// }
+
+// 2. Update Vet Data (Write) - Recibe el perfil completo
+export async function updateVetProfile(userData: UserProfile) {
+  const {
+    id,
+    name,
+    phone,
+    licenseNumber,
+    veterinaryCenterId,
+    isactive,
+    lgpdconsent,
+  } = userData;
+
+  // 1. Actualizamos la tabla "User"
+  // Solo metemos los campos que pertenecen a esta tabla
+  const { error: errorUser } = await supabase
+    .from("User")
+    .update({
+      name,
+      phone,
+      isactive,
+      lgpdconsent,
+    })
+    .eq("id", id);
+
+  if (errorUser) {
+    console.error("Error al actualizar tabla User:", errorUser);
+    throw errorUser;
+  }
+
+  // 2. Si el rol es profesional, actualizamos la tabla "Professional"
+  if (userData.role === "professional") {
+    const { error: errorPro } = await supabase
+      .from("Professional")
+      .update({
+        licensenumber: licenseNumber,
+        veterinarycenterid: veterinaryCenterId,
+      })
+      .eq("userid", id);
+
+    if (errorPro) {
+      console.error("Error al actualizar tabla Professional:", errorPro);
+      throw errorPro;
+    }
+  }
+
+  return true;
 }
 
 // 2. Update User Data (Write)
