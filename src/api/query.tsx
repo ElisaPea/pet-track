@@ -4,6 +4,10 @@ import { supabase } from "./supabaseClient";
 const veterinarycenterid = "c41de394-45ad-47b2-9d4d-5d2c0b137cec";
 
 // Función para obtener la lista de centros veterinarios
+/**
+ * Obtiene la lista de centros veterinarios de la base de datos.
+ * @returns Una promesa que resuelve a un array de centros veterinarios.
+ */
 export async function getVetCenters() {
   const { data, error } = await supabase
     .from("VeterinaryCenter") // Nombre base de datos
@@ -105,6 +109,54 @@ export async function createPet(
 
   return pet;
 }
+
+// Función para crear una mascota y vincularla a un cliente (veterinaria)
+export async function createPetForClient(
+  petData: {
+    name: string;
+    species?: string;
+    breed?: string;
+    birthdate?: string;
+  },
+  clientId: string,
+) {
+  if (!clientId) throw new Error("No se ha detectado un cliente válido.");
+
+  // 1. Insertamos la mascota en la tabla "Pet"
+  const { data: pet, error: petError } = await supabase
+    .from("Pet")
+    .insert([
+      {
+        name: petData.name,
+        species: petData.species,
+        breed: petData.breed,
+        birthdate: petData.birthdate,
+        isverified: false,
+      },
+    ])
+    .select()
+    .single();
+
+  if (petError) {
+    console.error("Error al crear mascota:", petError);
+    throw new Error("Error en la base de datos al crear la mascota.");
+  }
+
+  // 2. Creamos la relación en "PetClient"
+  const { error: relationError } = await supabase.from("PetClient").insert([
+    {
+      petid: pet.id,
+      clientid: clientId,
+    },
+  ]);
+
+  if (relationError) {
+    console.error("Error al vincular mascota con cliente:", relationError);
+    throw new Error("La mascota se creó pero no pudo vincularse al cliente.");
+  }
+
+  return pet;
+}
 //-------------------------------------------aroa---AccountSettingsVet------------------------------------------
 // 1. Get Vet Data (Read)
 export async function getVetProfile(userId: string) {
@@ -157,7 +209,7 @@ export async function getUserProfile(userId: string) {
   };
 }
 
-// 2. Update Vet Data (Write)
+// 2. Update Vet Data (Write) ANTIGUA
 // export async function updateVetProfile(
 //   userId: string,
 //   updateData: { name: string; phone: string; licenseNumber: string },
@@ -171,52 +223,75 @@ export async function getUserProfile(userId: string) {
 //   if (errorPro) throw errorPro;
 // }
 
+// --- Mia ---
 // 2. Update Vet Data (Write) - Recibe el perfil completo
-export async function updateVetProfile(userData: UserProfile) {
-  const {
-    id,
-    name,
-    phone,
-    licenseNumber,
-    veterinaryCenterId,
-    isactive,
-    lgpdconsent,
-  } = userData;
+// export async function updateVetProfile(userData: UserProfile) {
+//   const {
+//     id,
+//     name,
+//     phone,
+//     licenseNumber,
+//     veterinaryCenterId,
+//     isactive,
+//     lgpdconsent,
+//   } = userData;
 
-  // 1. Actualizamos la tabla "User"
-  // Solo metemos los campos que pertenecen a esta tabla
+//   // 1. Actualizamos la tabla "User"
+//   // Solo metemos los campos que pertenecen a esta tabla
+//   const { error: errorUser } = await supabase
+//     .from("User")
+//     .update({
+//       name,
+//       phone,
+//       isactive,
+//       lgpdconsent,
+//     })
+//     .eq("id", id);
+
+//   if (errorUser) {
+//     console.error("Error al actualizar tabla User:", errorUser);
+//     throw errorUser;
+//   }
+
+//   // 2. Si el rol es profesional, actualizamos la tabla "Professional"
+//   if (userData.role === "professional") {
+//     const { error: errorPro } = await supabase
+//       .from("Professional")
+//       .update({
+//         licensenumber: licenseNumber,
+//         veterinarycenterid: veterinaryCenterId,
+//       })
+//       .eq("userid", id);
+
+//     if (errorPro) {
+//       console.error("Error al actualizar tabla Professional:", errorPro);
+//       throw errorPro;
+//     }
+//   }
+
+//   return true;
+// }
+
+//MALCON
+export async function updateVetProfile(
+  userId: string,
+  updateData: { name: string; phone: string; licenseNumber: string },
+) {
+  // --- IMPORTANTE: También debemos actualizar la tabla User ---
   const { error: errorUser } = await supabase
     .from("User")
-    .update({
-      name,
-      phone,
-      isactive,
-      lgpdconsent,
-    })
-    .eq("id", id);
+    .update({ name: updateData.name, phone: updateData.phone })
+    .eq("id", userId);
 
-  if (errorUser) {
-    console.error("Error al actualizar tabla User:", errorUser);
-    throw errorUser;
-  }
+  if (errorUser) throw errorUser;
 
-  // 2. Si el rol es profesional, actualizamos la tabla "Professional"
-  if (userData.role === "professional") {
-    const { error: errorPro } = await supabase
-      .from("Professional")
-      .update({
-        licensenumber: licenseNumber,
-        veterinarycenterid: veterinaryCenterId,
-      })
-      .eq("userid", id);
+  // Update Professional table (license number)
+  const { error: errorPro } = await supabase
+    .from("Professional")
+    .update({ licensenumber: updateData.licenseNumber })
+    .eq("userid", userId);
 
-    if (errorPro) {
-      console.error("Error al actualizar tabla Professional:", errorPro);
-      throw errorPro;
-    }
-  }
-
-  return true;
+  if (errorPro) throw errorPro;
 }
 
 // 2. Update User Data (Write)
@@ -342,3 +417,92 @@ export async function getCurrentUserName() {
   const user = await getUserProfile(userId);
   return user.name;
 }
+
+//-------------------------------------------Malcon------------------------------------------
+/**
+ * Obtiene los perfiles de los clientes de un centro veterinario.
+ * Estos clientes no son necesariamente usuarios de la aplicación.
+ * @param vetCenterId - ID del centro veterinario (por defecto usa el global mockeado).
+ * @returns Array de clientes del centro veterinario.
+ */
+export async function getClientProfiles(
+  vetCenterId: string = veterinarycenterid,
+) {
+  const { data, error } = await supabase
+    .from("Client")
+    .select("*")
+    .eq("veterinarycenterid", vetCenterId);
+
+  if (error) {
+    console.error(
+      "Error al obtener los clientes del centro veterinario:",
+      error,
+    );
+    throw error;
+  }
+
+  return data;
+}
+//-------------------------------------------Malcon------------------------------------------
+
+//-------------------------------------------Malcon------------------------------------------
+
+/**
+ * Obtiene las mascotas asociadas a un cliente específico.
+ * Utiliza una consulta a PetClient con un JOIN hacia la tabla Pet.
+ * @param clientId - ID del cliente
+ * @returns Array de mascotas
+ */
+export async function getPetsByClient(clientId: string) {
+  const { data, error } = await supabase
+    .from("PetClient")
+    .select(
+      `
+      Pet (
+        id,
+        name,
+        species,
+        breed,
+        birthdate,
+        isverified
+      )
+    `,
+    )
+    .eq("clientid", clientId);
+  if (error) {
+    console.error("Error al obtener las mascotas del cliente:", error);
+    throw error;
+  }
+  // Supabase devuelve el objeto Pet anidado [{ Pet: { id: ... } }].
+  // Lo mapeamos para devolver un array más limpio de las mascotas y filtramos nulos si los hay.
+  return data.map((item) => item.Pet).filter(Boolean);
+}
+//-------------------------------------------Malcon------------------------------------------
+
+//-------------------------------------------Malcon------------------------------------------
+/**
+ * Actualiza los datos de un cliente específico en la tabla Client.
+ * @param clientId - ID del cliente que se quiere actualizar.
+ * @param updateData - Objeto con los datos a actualizar (name, email, phone, userid)
+ */
+export async function updateClientProfile(
+  clientId: string,
+  updateData: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    userid?: string | null;
+  },
+) {
+  const { error } = await supabase
+    .from("Client")
+    .update(updateData)
+    .eq("id", clientId);
+
+  if (error) {
+    console.error("Error al actualizar los datos del cliente:", error);
+    throw error;
+  }
+}
+
+//-------------------------------------------Malcon------------------------------------------
