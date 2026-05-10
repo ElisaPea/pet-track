@@ -7,6 +7,7 @@ import {
   Stack,
   Collapse,
   Alert,
+  IconButton,
 } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import {
@@ -16,17 +17,31 @@ import {
   isNotEmpty,
 } from "../utils/validationUtils";
 import { getVetProfile, supabase, updateVetProfile } from "../api/query";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { SCREEN } from "../constants/constants";
+import { useNavigate } from "react-router-dom";
+
 
 export default function AccountSettingsVet() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const navigate = useNavigate();
   
   // States for error and success messages
   const [error, setError] = useState<string | null>(null);
   const [error2, setError2] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   
-  // Form fields state
+  //State to store the original copy of the data for comparison
+  const [initialData, setInitialData] = useState({
+    name: "",
+    email: "",
+    phone: "+34 ",
+    address: "",
+    licenseNumber: "",
+  });
+
+  // Form fields state (Current values the user is modifying)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -39,7 +54,7 @@ export default function AccountSettingsVet() {
     async function loadData() {
       setLoading(true);
       
-      // ⚠️ DEVELOPMENT HACK: Forcing Bilbo's ID for testing
+      // DEVELOPMENT HACK: Forcing Bilbo's ID for testing
       // When the app is finished, we will remove this and use supabase.auth.getUser()
       const ID_BILBO = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb";
       
@@ -51,14 +66,17 @@ export default function AccountSettingsVet() {
         console.log("2. Data arriving from DB:", profile);
 
         if (profile) {
-          setFormData(prev => ({
-            ...prev,
-            // Mapping the Spanish response from query.ts to English state
+          const fetchedData = {
             name: profile.name || "",
             phone: profile.phone || "",
             licenseNumber: profile.licenseNumber || "",
-            email: "bilbo@fakeemail.com" // Temporary fake email
-          }));
+            email: "bilbo@fakeemail.com", // Temporary fake email
+            address: "", // Address is not currently retrieved from the DB in this setup
+          };
+
+          // Save the data both in the view state and the hidden backup copy
+          setFormData(fetchedData);
+          setInitialData(fetchedData);
         } else {
           console.error("DB returned null. Check Bilbo's ID.");
         }
@@ -78,15 +96,26 @@ export default function AccountSettingsVet() {
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError(null); // Clear error while typing
-    if (error2) setError2(null); // Clear error while typing
-    if (success) setSuccess(false); // Hide success if user types again
+    if (error2) setError2(null); // Clear format error while typing
+    if (success) setSuccess(false); // Hide success message if user types again
   };
+
+  //Logical variable that calculates in real-time if changes exist
+  const isFormModified = 
+    formData.name !== initialData.name ||
+    formData.email !== initialData.email ||
+    formData.phone !== initialData.phone ||
+    formData.address !== initialData.address ||
+    formData.licenseNumber !== initialData.licenseNumber;
 
   // Save handler and validations
   const handleSave = async () => {
+    // If no changes were made, stop execution for safety
+    if (!isFormModified) return;
+
     const { name, email, phone, licenseNumber } = formData;
 
-    // Reset states
+    // Reset alert states
     setError(null);
     setError2(null);
     setSuccess(false);
@@ -99,7 +128,7 @@ export default function AccountSettingsVet() {
     if (!isNotEmpty(licenseNumber)) missingFields.push("Nº Colegiado");
 
     if (missingFields.length > 0) {
-      setError(`Faltan el campo obligatorio: ${missingFields.join(", ")}.`);
+      setError(`Missing required fields: ${missingFields.join(", ")}.`);
       return;
     }
 
@@ -110,7 +139,7 @@ export default function AccountSettingsVet() {
     if (!validateColegiado(licenseNumber)) invalidFields.push("Nº Colegiado");
 
     if (invalidFields.length > 0) {
-      setError2(`Formato incorrecto en: ${invalidFields.join(", ")}.`);
+      setError2(`Incorrect format in: ${invalidFields.join(", ")}.`);
       return;
     }
 
@@ -118,7 +147,6 @@ export default function AccountSettingsVet() {
     try {
       if (userId) {
         await updateVetProfile(userId, {
-          // We map back to Spanish ONLY for the API call to not break query.ts
           name: formData.name,
           phone: formData.phone,
           licenseNumber: formData.licenseNumber
@@ -127,6 +155,9 @@ export default function AccountSettingsVet() {
         setSuccess(true);
         console.log("Data synchronized with Supabase");
         
+        //Update our "backup copy" so the button disables again
+        setInitialData(formData);
+
         setTimeout(() => setSuccess(false), 3000);
       } else {
         setError("No active user session detected.");
@@ -148,6 +179,20 @@ export default function AccountSettingsVet() {
           mt: 8,
         }}
       >
+         {/* Back Button */}
+          <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-start", mb: 2 }}>
+          <IconButton
+            onClick={() => navigate(SCREEN.HOME_VET)}
+            sx={{
+              bgcolor: "#FBC02D",
+              color: "black",
+              "&:hover": { bgcolor: "#f9a825" },
+              boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
+            }}
+          >
+          <ArrowBackIcon fontSize="medium" />
+          </IconButton>
+        </Box>
         <Typography
           variant="h4"
           sx={{ fontWeight: "600", color: "#4A3B3B", mb: 0.5 }}
@@ -333,7 +378,7 @@ export default function AccountSettingsVet() {
                 />
               </Stack>
 
-              {/* Save Button */}
+              {/* Save Button Container */}
               <Box
                 sx={{
                   width: "100%",
@@ -343,17 +388,25 @@ export default function AccountSettingsVet() {
                   pt: 2,
                 }}
               >
+                {/*Conditionally styled and disabled button */}
                 <Button
                   variant="contained"
+                  disabled={!isFormModified}
                   onClick={handleSave}
                   sx={{
-                    bgcolor: "#FBC02D",
-                    color: "black",
+                    bgcolor: isFormModified ? "#FBC02D" : "#e0e0e0",
+                    color: isFormModified ? "black" : "#9e9e9e",
                     fontWeight: "bold",
                     borderRadius: 2,
                     width: { xs: "100%", sm: "50%" },
-                    border: "2px solid #64B5F6",
-                    "&:hover": { bgcolor: "#f9a825" },
+                    border: isFormModified ? "2px solid #64B5F6" : "2px solid transparent",
+                    "&:hover": { 
+                      bgcolor: isFormModified ? "#f9a825" : "#e0e0e0" 
+                    },
+                    "&.Mui-disabled": {
+                      bgcolor: "#e0e0e0",
+                      color: "#9e9e9e",
+                    }
                   }}
                 >
                   GUARDAR
