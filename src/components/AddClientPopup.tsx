@@ -133,6 +133,15 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
         onClose();
     };
 
+    // --- Computed State ---
+    // Comprobamos si el usuario ha introducido o modificado algún dato inicial.
+    // El formulario empieza con los campos de texto vacíos y associated="no".
+    const isFormModified = 
+        formData.Nombre.trim() !== '' || 
+        formData.Email.trim() !== '' || 
+        formData.Telefono.trim() !== '' ||
+        associated !== 'no';
+
     return (
         <Dialog
             open={open}
@@ -307,6 +316,7 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
                     onClick={handleSave}
                     data-testid="save-client-btn" // ID for the test
                     variant="contained"
+                    disabled={!isFormModified} // Se desactiva si no se ha escrito nada
                     sx={{
                         bgcolor: '#FFCA28',
                         borderRadius: 10,
@@ -314,7 +324,9 @@ const AddClientPopup = ({ open, onClose }: AddClientPopupProps) => {
                         color: 'black',
                         fontWeight: 'bold',
                         textTransform: 'none',
-                        '&:hover': { bgcolor: '#f9a825' }
+                        '&:hover': { bgcolor: '#f9a825' },
+                        // Estilo visual cuando está desactivado para que el usuario entienda
+                        '&.Mui-disabled': { bgcolor: '#E0E0E0', color: '#9E9E9E' }
                     }}
                 >
                     GUARDAR

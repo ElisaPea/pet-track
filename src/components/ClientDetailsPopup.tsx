@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 // Importamos Grid que faltaba en tu lista anterior
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
+  DialogActions,
   Box,
   Tabs,
   Tab,
@@ -15,7 +17,12 @@ import {
   Radio,
   Avatar,
   FormControl,
+  Collapse,
+  Alert,
 } from "@mui/material";
+import { updateClientProfile, createPetForClient } from "../api/query";
+import { validateEmail, validatePhone } from "../utils/validationUtils";
+import { validateName } from "../utils/validatorName";
 
 // Pictures import for testing (TO DELETE)
 // import beni from "../assets/Beni_perfil.jpeg";
@@ -32,7 +39,7 @@ interface TabPanelProps {
 interface ClientDetailsPopupProps {
   open: boolean;
   onClose: () => void;
-  clientId: number | null; // The client Id from the HomeVet page
+  clientData: any | null; // Objeto del cliente completo (incluye mascotas) desde HomeVet
 }
 
 /**
@@ -55,7 +62,7 @@ function TabPanel(props: TabPanelProps) {
 const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
   open,
   onClose,
-  clientId,
+  clientData,
 }) => {
   // STATE: Active tab index controller (0: Client Details, 1: Pets)
   const [tabValue, setTabValue] = useState(0);
@@ -64,102 +71,159 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
   // Controls the "Associated to user" radio selection. Default is "no".
   const [associated, setAssociated] = useState<string>("no");
 
+  // State for empty required fields
+  const [error, setError] = useState(false);
+
+  // 3 distinct states to control format errors
+  const [errorName, setErrorName] = useState(false);
+  const [errorEmail, setErrorEmail] = useState(false);
+  const [errorPhone, setErrorPhone] = useState(false);
+
+  // States for Add Pet Popup
+  const [isAddPetOpen, setIsAddPetOpen] = useState(false);
+  const [newPetData, setNewPetData] = useState({
+    name: "",
+    species: "",
+    breed: "",
+    birthdate: ""
+  });
+  const [addPetError, setAddPetError] = useState(false);
+
+  // Form inputs state para detectar cambios
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
+
+  // Handler for text inputs
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError(false); // Clear empty error
+
+    // Clear individual errors while typing
+    if (e.target.name === 'name' && errorName) setErrorName(false);
+    if (e.target.name === 'email' && errorEmail) setErrorEmail(false);
+    if (e.target.name === 'phone' && errorPhone) setErrorPhone(false);
+  };
+
   // EVENT HANDLER: Updates the active tab state upon selection
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  // Mock clients data array
-  const clientList = [
-    {
-      id: 1,
-      client: "Malcon",
-      mail: "malcon@hotmail.com",
-      phone: 123456789,
-      asociated: true,
-    },
-    {
-      id: 2,
-      client: "Aroa",
-      mail: "aroa@hotmail.com",
-      phone: 123456789,
-      asociated: true,
-    },
-    {
-      id: 3,
-      client: "Ventura",
-      mail: "ventura@hotmail.com",
-      phone: 123456789,
-      asociated: true,
-    },
-    {
-      id: 4,
-      client: "Elisa",
-      mail: "elisa@hotmail.com",
-      phone: 123456789,
-      asociated: false,
-    },
-    // Add as many items as needed...
-  ];
+  // EVENT HANDLER: Reinicia los datos si el usuario cancela y cierra el PopUp
+  const handleExit = () => {
+    if (clientData) {
+      setAssociated(clientData.userid ? "si" : "no");
+      setFormData({
+        name: clientData.name || "",
+        email: clientData.email || "",
+        phone: clientData.phone || "",
+      });
+    }
+    setError(false);
+    setErrorName(false);
+    setErrorEmail(false);
+    setErrorPhone(false);
+    setTabValue(0); // Opcional, devolver el Focus a la primera pestaña
+    onClose();
+  };
 
-  // Mock pets data array
-  // const petList = [
-  //   {
-  //     id: 1,
-  //     clientId: 1,
-  //     name: "Beni",
-  //     species: "Gato",
-  //     chip: 109284478563826,
-  //     image: beni,
-  //     vetNotes: "Tiene que tomarse una tila porque está como una cabra",
-  //     userNotes: "Solo hace que comer, dormir y cagar",
-  //   },
-  //   {
-  //     id: 2,
-  //     clientId: 1,
-  //     name: "Thor",
-  //     species: "Gato",
-  //     chip: 109284478745294,
-  //     image: test1,
-  //     vetNotes: "Tiene que moverse más",
-  //     userNotes: "Si sigue durmiendo más, pensaré que está muerto",
-  //   },
-  //   {
-  //     id: 3,
-  //     clientId: 1,
-  //     name: "Atena",
-  //     species: "Gato",
-  //     chip: 909421478563826,
-  //     image: test2,
-  //     vetNotes: "Si sigue comiendo así va a rodar",
-  //     userNotes: "Todo correcto",
-  //   },
-  //   {
-  //     id: 4,
-  //     clientId: 1,
-  //     name: "Luna",
-  //     species: "Gato",
-  //     chip: 109772241563826,
-  //     image: beni,
-  //     vetNotes: "Nada que destacar",
-  //     userNotes: "No se mueve más que para ir a comer",
-  //   },
-  //   // Add as many items as needed...
-  // ];
+  // EVENT HANDLER: Guarda los cambios en la base de datos
+  const handleSave = async () => {
+    if (!clientData || !clientData.id) return;
 
-  // 1. Buscamos los datos del cliente en el array mockeado
-  const selectedClient = clientList.find((c) => c.id === clientId);
+    setError(false);
+    setErrorName(false);
+    setErrorEmail(false);
+    setErrorPhone(false);
 
-  // 2. Filtramos las mascotas asociadas a ese ID
-  // const filteredPets = petList.filter((p) => p.clientId === clientId);
+    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim()) {
+        setError(true);
+        return;
+    }
 
-  // Si no hay ID o no se encuentra el cliente, no mostramos el contenido
-  //if (!selectedClient) return null;
+    const isNameValid = validateName(formData.name);
+    const isEmailValid = validateEmail(formData.email);
+    const isPhoneValid = validatePhone(formData.phone);
+
+    if (!isNameValid || !isEmailValid || !isPhoneValid) {
+        if (!isNameValid) setErrorName(true);
+        if (!isEmailValid) setErrorEmail(true);
+        if (!isPhoneValid) setErrorPhone(true);
+        return;
+    }
+
+    try {
+      // Preparamos el payload a enviar basado en el formData actual
+      // Importante: userid podría ir también si integramos el login (temporalmente "si" no manda nada válido)
+      await updateClientProfile(clientData.id, {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        // userid: associated === "si" ? ... (Pendiente lógica auth)
+      });
+      
+      // Forzar un reload rápido de la página para que HomeVet actualice las tarjetas con la nueva BBDD 
+      // (En el futuro se puede sustituir por un prop "onSaveSuccess" para refrescar el estado de React)
+      window.location.reload();
+    } catch (error) {
+      console.error("No se ha podido actualizar el cliente:", error);
+      alert("Hubo un error al intentar actualizar el cliente.");
+    }
+  };
+
+  // EVENT HANDLER: Añade una nueva mascota y la vincula al cliente
+  const handleAddPet = async () => {
+    if (!newPetData.name.trim()) {
+      setAddPetError(true);
+      return;
+    }
+
+    try {
+      // Usamos única y exclusivamente el ID del cliente
+      const clientId = clientData.id;
+      
+      await createPetForClient(newPetData, clientId);
+      
+      setIsAddPetOpen(false);
+      setNewPetData({ name: "", species: "", breed: "", birthdate: "" });
+      setAddPetError(false);
+      
+      // Forzamos la recarga igual que en handleSave para actualizar la lista de mascotas
+      window.location.reload();
+    } catch (error) {
+      console.error("Error al crear la mascota:", error);
+      alert("Hubo un error al intentar crear la mascota.");
+    }
+  };
+
+  // 1. Configuramos el estado inicial una vez que se recibe clientData
+  useEffect(() => {
+    if (clientData) {
+      setAssociated(clientData.userid ? "si" : "no");
+      setFormData({
+        name: clientData.name || "",
+        email: clientData.email || "",
+        phone: clientData.phone || "",
+      });
+    }
+  }, [clientData]);
+
+  // Computed state para habilitar o deshabilitar botóon Guardar
+  // Compara si el texto actual es distinto al que traía clientData.
+  const isFormModified = clientData ? (
+    formData.name.trim() !== (clientData.name || "").trim() ||
+    formData.email.trim() !== (clientData.email || "").trim() ||
+    formData.phone.trim() !== (clientData.phone || "").trim() ||
+    associated !== (clientData.userid ? "si" : "no")
+  ) : false;
 
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={handleExit}
       fullWidth
       maxWidth="md"
       // Customize the popup background effect
@@ -226,6 +290,25 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
       >
         {/* TAB 1: CLIENT DATA FORM */}
         <TabPanel value={tabValue} index={0}>
+          {/* Visual Error Message Fill in required fields */}
+          <Collapse in={error}>
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+                  Por favor, rellena todos los campos obligatorios (Nombre, Email
+                  y Teléfono).
+              </Alert>
+          </Collapse>
+
+          {/* Visual Error Message Specific format */}
+          <Collapse in={errorName || errorEmail || errorPhone}>
+              <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+                  Por favor, corrige el formato de los siguientes campos: {[
+                      errorName && 'Nombre',
+                      errorEmail && 'Email',
+                      errorPhone && 'Teléfono'
+                  ].filter(Boolean).join(', ')}.
+              </Alert>
+          </Collapse>
+
           <Stack spacing={2.5} sx={{ maxWidth: 600, mx: "auto" }}>
 
             {/* Name field */}
@@ -241,10 +324,12 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
             >
               <Typography sx={{ fontWeight: "bold" }}>Nombre</Typography>
               <TextField
-                key={selectedClient?.id || "empty"}
+                key={`name-${clientData?.id || "empty"}`}
+                name="name"
                 size="small"
                 variant="standard"
-                defaultValue={selectedClient?.client || "VACIO"}
+                value={formData.name}
+                onChange={handleChange}
                 InputProps={{ disableUnderline: true }}
                 sx={{
                   bgcolor: "white",
@@ -272,8 +357,12 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
               </Typography>
               <TextField
                 fullWidth
+                key={`email-${clientData?.id || "empty"}`}
+                name="email"
                 size="small"
                 variant="standard"
+                value={formData.email}
+                onChange={handleChange}
                 InputProps={{ disableUnderline: true }}
                 sx={{
                   bgcolor: "white",
@@ -301,8 +390,12 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
               </Typography>
               <TextField
                 fullWidth
+                key={`phone-${clientData?.id || "empty"}`}
+                name="phone"
                 size="small"
                 variant="standard"
+                value={formData.phone}
+                onChange={handleChange}
                 placeholder="+34"
                 InputProps={{ disableUnderline: true }}
                 sx={{
@@ -359,6 +452,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
           <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
             <Button
               variant="contained"
+              onClick={() => setIsAddPetOpen(true)}
               sx={{
                 bgcolor: "#66BB6A",
                 color: "black",
@@ -386,10 +480,11 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
               }, // Scrollbar thumb color and border radius
             }}
           >
-            {/* Dynamic mapping simulator */}
-            {[1, 2, 3, 4, 5].map((num) => (
+            {/* Mapeo dinámico y real de las mascotas del cliente */}
+            {clientData?.pets && clientData.pets.length > 0 ? (
+              clientData.pets.map((pet: any, index: number) => (
               <Box
-                key={num}
+                key={pet.id || index}
                 sx={{
                   bgcolor: "#00ADBA",
                   borderRadius: 8,
@@ -422,13 +517,15 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                       bgcolor: "white",
                       border: "1px solid black",
                     }}
-                  />
+                  >
+                    {pet.name.charAt(0).toUpperCase()}
+                  </Avatar>
 
                   {/* Pet data */}
                   <Box sx={{ color: "black", textAlign: "left" }}>
-                    <Typography variant="body2">Nombre: Mojito</Typography>
-                    <Typography variant="body2">Especie: Loro</Typography>
-                    <Typography variant="body2">Chip: 999999</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Nombre: {pet.name}</Typography>
+                    <Typography variant="body2">Especie: {pet.species || "-"}</Typography>
+                    <Typography variant="body2">Raza: {pet.breed || "-"}</Typography>
                   </Box>
                 </Box>
 
@@ -478,7 +575,34 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                   </Box>
                 </Box>
               </Box>
-            ))}
+            ))
+            ) : (
+               <Box sx={{ 
+                 bgcolor: "#FFF8E1", 
+                 borderRadius: "24px", 
+                 p: 4, 
+                 display: "flex", 
+                 flexDirection: "column", 
+                 alignItems: "center", 
+                 textAlign: "center",
+                 gap: 1.5, 
+                 boxShadow: "0 4px 15px rgba(255, 202, 40, 0.15)",
+                 maxWidth: 400,
+                 mx: "auto", 
+                 mt: 6,
+                 mb: 4
+               }}>
+                 <Typography sx={{ fontSize: "3.5rem", lineHeight: 1 }}>🐾</Typography>
+                 <Box>
+                   <Typography sx={{ fontWeight: "bold", color: "#F57F17", fontSize: "1.15rem", mb: 0.5 }}>
+                     ¡Vaya! Qué vacío está esto.
+                   </Typography>
+                   <Typography variant="body2" sx={{ color: "#FF8F00" }}>
+                     Parece que este cliente todavía no ha registrado a ningún peludo en el centro.
+                   </Typography>
+                 </Box>
+               </Box>
+            )}
           </Box>
         </TabPanel>
       </DialogContent>
@@ -494,7 +618,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
         }}
       >
         <Button
-          onClick={onClose}
+          onClick={handleExit}
           variant="contained"
           sx={{
             bgcolor: "#F02F0A",
@@ -509,6 +633,8 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
         </Button>
         <Button
           variant="contained"
+          onClick={handleSave}
+          disabled={!isFormModified}
           sx={{
             bgcolor: "#FFCA28",
             color: "black",
@@ -516,11 +642,109 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
             px: 4,
             fontWeight: "bold",
             "&:hover": { bgcolor: "#f9a825" },
+            '&.Mui-disabled': { bgcolor: '#E0E0E0', color: '#9E9E9E' }
           }}
         >
           GUARDAR
         </Button>
       </Box>
+
+      {/* ADD PET POPUP */}
+      <Dialog
+        open={isAddPetOpen}
+        onClose={() => {
+          setIsAddPetOpen(false);
+          setNewPetData({ name: "", species: "", breed: "", birthdate: "" });
+          setAddPetError(false);
+        }}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: { borderRadius: 5, bgcolor: '#E1F5FE', p: 1 }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', fontSize: '1.25rem' }}>
+          Añadir nueva mascota
+        </DialogTitle>
+        <DialogContent>
+          <Collapse in={addPetError}>
+            <Alert severity="error" sx={{ mb: 2, borderRadius: 5 }}>
+              El nombre de la mascota es obligatorio.
+            </Alert>
+          </Collapse>
+          <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Typography sx={{ fontWeight: 'bold' }}>Nombre</Typography>
+            <TextField
+              size="small"
+              variant="standard"
+              placeholder="Nombre de la mascota..."
+              value={newPetData.name}
+              onChange={(e) => {
+                setNewPetData({ ...newPetData, name: e.target.value });
+                if (addPetError) setAddPetError(false);
+              }}
+              InputProps={{ disableUnderline: true }}
+              sx={{ bgcolor: 'white', borderRadius: 4, px: 2, py: 0.5 }}
+            />
+
+            <Typography sx={{ fontWeight: 'bold', mt: 1 }}>Especie</Typography>
+            <TextField
+              size="small"
+              variant="standard"
+              placeholder="Ej: Perro, Gato..."
+              value={newPetData.species}
+              onChange={(e) => setNewPetData({ ...newPetData, species: e.target.value })}
+              InputProps={{ disableUnderline: true }}
+              sx={{ bgcolor: 'white', borderRadius: 4, px: 2, py: 0.5 }}
+            />
+
+            <Typography sx={{ fontWeight: 'bold', mt: 1 }}>Raza</Typography>
+            <TextField
+              size="small"
+              variant="standard"
+              placeholder="Raza..."
+              value={newPetData.breed}
+              onChange={(e) => setNewPetData({ ...newPetData, breed: e.target.value })}
+              InputProps={{ disableUnderline: true }}
+              sx={{ bgcolor: 'white', borderRadius: 4, px: 2, py: 0.5 }}
+            />
+
+            <Typography sx={{ fontWeight: 'bold', mt: 1 }}>Fecha de nacimiento</Typography>
+            <TextField
+              type="date"
+              size="small"
+              variant="standard"
+              value={newPetData.birthdate}
+              onChange={(e) => setNewPetData({ ...newPetData, birthdate: e.target.value })}
+              InputProps={{ disableUnderline: true }}
+              sx={{ bgcolor: 'white', borderRadius: 4, px: 2, py: 0.5 }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, justifyContent: 'center', gap: 2 }}>
+          <Button
+            onClick={() => {
+              setIsAddPetOpen(false);
+              setNewPetData({ name: "", species: "", breed: "", birthdate: "" });
+              setAddPetError(false);
+            }}
+            sx={{
+              bgcolor: '#F02F0A', color: 'black', fontWeight: 'bold', borderRadius: 10, px: 4, textTransform: 'none', '&:hover': { bgcolor: '#D82E0C' }
+            }}
+          >
+            CANCELAR
+          </Button>
+          <Button
+            onClick={handleAddPet}
+            variant="contained"
+            sx={{
+              bgcolor: '#FFCA28', color: 'black', fontWeight: 'bold', borderRadius: 10, px: 4, textTransform: 'none', '&:hover': { bgcolor: '#f9a825' }
+            }}
+          >
+            GUARDAR
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Dialog>
   );
 };
