@@ -8,23 +8,30 @@ import {
   Collapse,
   Alert,
   IconButton,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from "@mui/material";
-import React, { useState, useEffect } from "react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import React, { useState } from "react";
 import {
   validateEmail,
   validatePhone,
   validateColegiado,
   isNotEmpty,
 } from "../utils/validationUtils";
-import { getVetProfile, updateVetProfile } from "../api/query";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { updateVetProfile } from "../api/query";
+import { logout, updateUserSettingsEmail } from "../api/signInQuery";
 import { SCREEN } from "../constants/constants";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function AccountSettingsVet() {
-  const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // States for email specific authentication
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailSuccess, setEmailSuccess] = useState(false);
 
   // States for error and success messages
   const [error, setError] = useState<string | null>(null);
@@ -32,50 +39,8 @@ export default function AccountSettingsVet() {
   const [success, setSuccess] = useState(false);
   const { userState, updateAuth } = useAuth();
 
-  console.log(userState);
-
   // Form fields state (Current values the user is modifying)
   const [formData, setFormData] = useState(userState);
-
-  // useEffect(() => {
-  //   async function loadData() {
-  //     setLoading(true);
-
-  //     // DEVELOPMENT HACK: Forcing Bilbo's ID for testing
-  //     // When the app is finished, we will remove this and use supabase.auth.getUser()
-  //     const ID_BILBO = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb";
-
-  //     console.log("1. Forcing search for user:", ID_BILBO);
-  //     setUserId(ID_BILBO);
-
-  //     try {
-  //       const profile = await getVetProfile(ID_BILBO);
-  //       console.log("2. Data arriving from DB:", profile);
-
-  //       if (profile) {
-  //         const fetchedData = {
-  //           name: profile.name || "",
-  //           phone: profile.phone || "",
-  //           licenseNumber: profile.licenseNumber || "",
-  //           email: "bilbo@fakeemail.com", // Temporary fake email
-  //           address: "", // Address is not currently retrieved from the DB in this setup
-  //         };
-
-  //         // Save the data both in the view state and the hidden backup copy
-  //         setFormData(fetchedData);
-  //         setInitialData(fetchedData);
-  //       } else {
-  //         console.error("DB returned null. Check Bilbo's ID.");
-  //       }
-  //     } catch (err) {
-  //       console.error("Error in query:", err);
-  //     }
-
-  //     setLoading(false);
-  //   }
-
-  //   loadData();
-  // }, []);
 
   // Input change handler
   const handleChange = (
@@ -90,7 +55,6 @@ export default function AccountSettingsVet() {
   //Logical variable that calculates in real-time if changes exist
   const isFormModified =
     formData.name !== userState.name ||
-    formData.email !== userState.email ||
     formData.phone !== userState.phone ||
     formData.address !== userState.address ||
     formData.licenseNumber !== userState.licenseNumber;
@@ -100,7 +64,7 @@ export default function AccountSettingsVet() {
     // If no changes were made, stop execution for safety
     if (!isFormModified) return;
 
-    const { name, email, phone, licenseNumber } = formData;
+    const { name, phone, licenseNumber } = formData;
 
     // Reset alert states
     setError(null);
@@ -110,7 +74,6 @@ export default function AccountSettingsVet() {
     // Empty fields validation
     const missingFields: string[] = [];
     if (!isNotEmpty(name)) missingFields.push("Nombre");
-    if (!isNotEmpty(email)) missingFields.push("Correo electrónico");
     if (!isNotEmpty(licenseNumber)) missingFields.push("Nº Colegiado");
 
     if (missingFields.length > 0) {
@@ -120,7 +83,6 @@ export default function AccountSettingsVet() {
 
     // Format validation
     const invalidFields: string[] = [];
-    if (!validateEmail(email)) invalidFields.push("Correo electrónico");
     if (phone && phone.length && !validatePhone(phone))
       invalidFields.push("Teléfono");
     if (!validateColegiado(licenseNumber)) invalidFields.push("Nº Colegiado");
@@ -134,12 +96,7 @@ export default function AccountSettingsVet() {
     try {
       if (userState.id) {
         console.log(formData);
-        await updateVetProfile(formData);
-        // await updateVetProfile(userState.id, {
-        //   name: formData.name,
-        //   phone: formData.phone,
-        //   licenseNumber: formData.licenseNumber,
-        // });
+        await updateVetProfile(userState?.id, formData);
 
         await updateAuth();
 
@@ -156,6 +113,41 @@ export default function AccountSettingsVet() {
     }
   };
 
+  // Handler para el cambio de email (Accordion)
+  const handleConfirmEmailChange = async () => {
+    setEmailError(null);
+    setEmailSuccess(false);
+
+    // 1. Validaciones previas
+    if (!validateEmail(formData.email)) {
+      setEmailError("Por favor, introduce un correo electrónico válido.");
+      return;
+    }
+
+    if (formData.email === userState?.email) {
+      setEmailError("El nuevo correo debe ser diferente al actual.");
+      return;
+    }
+
+    try {
+      // 2. Intentar actualizar en Supabase
+      await updateUserSettingsEmail(formData.email);
+
+      // 3. Si todo va bien, avisamos al usuario
+      setEmailSuccess(true);
+      console.log("Email actualizado correctamente");
+
+      // 4. Mini delay para que lea el mensaje y logout
+      setTimeout(async () => {
+        await logout(navigate);
+      }, 3000);
+    } catch (err: any) {
+      // 5. Si falla, mostramos el error
+      console.error(err);
+      setEmailError(err.message || "No se pudo actualizar el correo.");
+    }
+  };
+
   return (
     <BasicScreen>
       <Box
@@ -164,30 +156,9 @@ export default function AccountSettingsVet() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          mt: 8,
+          mt: 4,
         }}
       >
-        {/* Back Button */}
-        <Box
-          sx={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            mb: 2,
-          }}
-        >
-          <IconButton
-            onClick={() => navigate(SCREEN.HOME_VET)}
-            sx={{
-              bgcolor: "#FBC02D",
-              color: "black",
-              "&:hover": { bgcolor: "#f9a825" },
-              boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
-            }}
-          >
-            <ArrowBackIcon fontSize="medium" />
-          </IconButton>
-        </Box>
         <Typography
           variant="h4"
           sx={{ fontWeight: "600", color: "#4A3B3B", mb: 0.5 }}
@@ -256,36 +227,6 @@ export default function AccountSettingsVet() {
                 />
               </Stack>
 
-              {/* Email Field */}
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                alignItems="center"
-                sx={{ width: "100%" }}
-              >
-                <Typography
-                  sx={{
-                    width: 400,
-                    textAlign: { xs: "center", sm: "left" },
-                    fontWeight: "bold",
-                  }}
-                >
-                  Correo electrónico*:
-                </Typography>
-                <TextField
-                  fullWidth
-                  variant="standard"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={
-                    (Boolean(error) && !isNotEmpty(formData.email)) ||
-                    (Boolean(error2) && !validateEmail(formData.email))
-                  }
-                  InputProps={{ disableUnderline: true }}
-                  sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
-                />
-              </Stack>
-
               {/* Phone Field */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
@@ -307,10 +248,7 @@ export default function AccountSettingsVet() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  // error={
-                  // (Boolean(error) && !isNotEmpty(formData.phone)) ||
-                  // (Boolean(error2) && !validatePhone(formData.phone))
-                  // }
+                  error={Boolean(error2) && !validatePhone(formData.phone)}
                   InputProps={{ disableUnderline: true }}
                   sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
                 />
@@ -383,7 +321,6 @@ export default function AccountSettingsVet() {
                   pt: 2,
                 }}
               >
-                {/*Conditionally styled and disabled button */}
                 <Button
                   variant="contained"
                   disabled={!isFormModified}
@@ -409,6 +346,85 @@ export default function AccountSettingsVet() {
                   GUARDAR
                 </Button>
               </Box>
+
+              {/* Accordion for Authentication Data */}
+              <Accordion
+                disableGutters
+                elevation={0}
+                sx={{
+                  width: "100%",
+                  borderRadius: "20px !important",
+                  boxShadow: "none",
+                  bgcolor: "rgba(255,255,255,0.5)",
+                  mt: 2,
+                  "&:before": { display: "none" },
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography sx={{ fontWeight: "bold", color: "#4A3B3B" }}>
+                    Datos de autenticación
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {/* Mensajes de feedback específicos para el email */}
+                  <Collapse in={Boolean(emailError)}>
+                    <Alert severity="error" sx={{ mb: 2, borderRadius: 5 }}>
+                      {emailError}
+                    </Alert>
+                  </Collapse>
+                  <Collapse in={emailSuccess}>
+                    <Alert severity="success" sx={{ mb: 2, borderRadius: 5 }}>
+                      ¡Correo actualizado! Cerrando sesión para reiniciar...
+                    </Alert>
+                  </Collapse>
+
+                  <Typography
+                    variant="body2"
+                    sx={{ mb: 2, color: "#666", textAlign: "left" }}
+                  >
+                    Al cambiar tu correo,{" "}
+                    <b>tu sesión se cerrará automáticamente</b>. Deberás volver
+                    a entrar con tu nueva dirección (la contraseña no cambia).
+                  </Typography>
+
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                    <TextField
+                      fullWidth
+                      variant="standard"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Nuevo correo electrónico"
+                      error={Boolean(emailError)}
+                      InputProps={{ disableUnderline: true }}
+                      sx={{
+                        bgcolor: "white",
+                        borderRadius: 50,
+                        px: 2,
+                        py: 0.5,
+                      }}
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={handleConfirmEmailChange}
+                      disabled={emailSuccess}
+                      sx={{
+                        bgcolor: "#FBC02D",
+                        color: "black",
+                        fontWeight: "bold",
+                        borderRadius: 50,
+                        px: 3,
+                        whiteSpace: "nowrap",
+                        border: "2px solid #64B5F6",
+                        "&:hover": { bgcolor: "#f9a825" },
+                        "&.Mui-disabled": { bgcolor: "#e0e0e0" },
+                      }}
+                    >
+                      CONFIRMAR
+                    </Button>
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
             </Stack>
           </Box>
         </Box>

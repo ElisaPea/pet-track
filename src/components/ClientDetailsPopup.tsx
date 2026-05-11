@@ -40,6 +40,7 @@ interface ClientDetailsPopupProps {
   open: boolean;
   onClose: () => void;
   clientData: any | null; // Objeto del cliente completo (incluye mascotas) desde HomeVet
+  vetCenterId: string;
 }
 
 /**
@@ -63,6 +64,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
   open,
   onClose,
   clientData,
+  vetCenterId,
 }) => {
   // STATE: Active tab index controller (0: Client Details, 1: Pets)
   const [tabValue, setTabValue] = useState(0);
@@ -85,7 +87,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
     name: "",
     species: "",
     breed: "",
-    birthdate: ""
+    birthdate: "",
   });
   const [addPetError, setAddPetError] = useState(false);
 
@@ -102,9 +104,9 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
     if (error) setError(false); // Clear empty error
 
     // Clear individual errors while typing
-    if (e.target.name === 'name' && errorName) setErrorName(false);
-    if (e.target.name === 'email' && errorEmail) setErrorEmail(false);
-    if (e.target.name === 'phone' && errorPhone) setErrorPhone(false);
+    if (e.target.name === "name" && errorName) setErrorName(false);
+    if (e.target.name === "email" && errorEmail) setErrorEmail(false);
+    if (e.target.name === "phone" && errorPhone) setErrorPhone(false);
   };
 
   // EVENT HANDLER: Updates the active tab state upon selection
@@ -139,9 +141,9 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
     setErrorEmail(false);
     setErrorPhone(false);
 
-    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim()) {
-        setError(true);
-        return;
+    if (!formData.name.trim() || !formData.email.trim()) {
+      setError(true);
+      return;
     }
 
     const isNameValid = validateName(formData.name);
@@ -149,10 +151,10 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
     const isPhoneValid = validatePhone(formData.phone);
 
     if (!isNameValid || !isEmailValid || !isPhoneValid) {
-        if (!isNameValid) setErrorName(true);
-        if (!isEmailValid) setErrorEmail(true);
-        if (!isPhoneValid) setErrorPhone(true);
-        return;
+      if (!isNameValid) setErrorName(true);
+      if (!isEmailValid) setErrorEmail(true);
+      if (!isPhoneValid) setErrorPhone(true);
+      return;
     }
 
     try {
@@ -164,8 +166,8 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
         phone: formData.phone,
         // userid: associated === "si" ? ... (Pendiente lógica auth)
       });
-      
-      // Forzar un reload rápido de la página para que HomeVet actualice las tarjetas con la nueva BBDD 
+
+      // Forzar un reload rápido de la página para que HomeVet actualice las tarjetas con la nueva BBDD
       // (En el futuro se puede sustituir por un prop "onSaveSuccess" para refrescar el estado de React)
       window.location.reload();
     } catch (error) {
@@ -184,13 +186,13 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
     try {
       // Usamos única y exclusivamente el ID del cliente
       const clientId = clientData.id;
-      
+
       await createPetForClient(newPetData, clientId);
-      
+
       setIsAddPetOpen(false);
       setNewPetData({ name: "", species: "", breed: "", birthdate: "" });
       setAddPetError(false);
-      
+
       // Forzamos la recarga igual que en handleSave para actualizar la lista de mascotas
       window.location.reload();
     } catch (error) {
@@ -213,12 +215,12 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
 
   // Computed state para habilitar o deshabilitar botóon Guardar
   // Compara si el texto actual es distinto al que traía clientData.
-  const isFormModified = clientData ? (
-    formData.name.trim() !== (clientData.name || "").trim() ||
-    formData.email.trim() !== (clientData.email || "").trim() ||
-    formData.phone.trim() !== (clientData.phone || "").trim() ||
-    associated !== (clientData.userid ? "si" : "no")
-  ) : false;
+  const isFormModified = clientData
+    ? formData.name.trim() !== (clientData.name || "").trim() ||
+      formData.email.trim() !== (clientData.email || "").trim() ||
+      formData.phone.trim() !== (clientData.phone || "").trim() ||
+      associated !== (clientData.userid ? "si" : "no")
+    : false;
 
   return (
     <Dialog
@@ -292,25 +294,28 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
         <TabPanel value={tabValue} index={0}>
           {/* Visual Error Message Fill in required fields */}
           <Collapse in={error}>
-              <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
-                  Por favor, rellena todos los campos obligatorios (Nombre, Email
-                  y Teléfono).
-              </Alert>
+            <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+              Por favor, rellena todos los campos obligatorios (Nombre, Email y
+              Teléfono).
+            </Alert>
           </Collapse>
 
           {/* Visual Error Message Specific format */}
           <Collapse in={errorName || errorEmail || errorPhone}>
-              <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
-                  Por favor, corrige el formato de los siguientes campos: {[
-                      errorName && 'Nombre',
-                      errorEmail && 'Email',
-                      errorPhone && 'Teléfono'
-                  ].filter(Boolean).join(', ')}.
-              </Alert>
+            <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
+              Por favor, corrige el formato de los siguientes campos:{" "}
+              {[
+                errorName && "Nombre",
+                errorEmail && "Email",
+                errorPhone && "Teléfono",
+              ]
+                .filter(Boolean)
+                .join(", ")}
+              .
+            </Alert>
           </Collapse>
 
           <Stack spacing={2.5} sx={{ maxWidth: 600, mx: "auto" }}>
-
             {/* Name field */}
             <Box
               sx={{
@@ -411,7 +416,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
             {/* Radio Selection: Associated Client */}
             {/* --- Association Logic Section --- */}
             <Box>
-              <Typography sx={{ fontWeight: 'bold', mb: 0.5 }}>
+              <Typography sx={{ fontWeight: "bold", mb: 0.5 }}>
                 El cliente está asociado a un usuario?
               </Typography>
               <FormControl component="fieldset">
@@ -420,8 +425,16 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                   value={associated}
                   onChange={(e) => setAssociated(e.target.value)}
                 >
-                  <FormControlLabel value="si" control={<Radio size="small" />} label="Si" />
-                  <FormControlLabel value="no" control={<Radio size="small" />} label="No" />
+                  <FormControlLabel
+                    value="si"
+                    control={<Radio size="small" />}
+                    label="Si"
+                  />
+                  <FormControlLabel
+                    value="no"
+                    control={<Radio size="small" />}
+                    label="No"
+                  />
                 </RadioGroup>
               </FormControl>
             </Box>
@@ -431,14 +444,14 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
               variant="contained"
               disabled={associated === "no"}
               sx={{
-                bgcolor: '#66BB6A',
+                bgcolor: "#66BB6A",
                 borderRadius: 10,
-                textTransform: 'none',
-                fontWeight: 'bold',
+                textTransform: "none",
+                fontWeight: "bold",
                 py: 1,
-                '&:hover': { bgcolor: '#52a552ff' },
+                "&:hover": { bgcolor: "#52a552ff" },
                 // Custom style for disabled state to maintain UI clarity
-                '&.Mui-disabled': { bgcolor: '#BDBDBD', color: '#F5F5F5' }
+                "&.Mui-disabled": { bgcolor: "#BDBDBD", color: "#F5F5F5" },
               }}
             >
               Enviar correo de asociación
@@ -483,125 +496,143 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
             {/* Mapeo dinámico y real de las mascotas del cliente */}
             {clientData?.pets && clientData.pets.length > 0 ? (
               clientData.pets.map((pet: any, index: number) => (
-              <Box
-                key={pet.id || index}
-                sx={{
-                  bgcolor: "#00ADBA",
-                  borderRadius: 8,
-                  p: 2,
-                  mb: 2,
-                  display: "flex",
-                  flexDirection: { xs: "column", sm: "row" },
-                  alignItems: "center",
-                  gap: 2,
-                }}
-              >
-                {/* LEFT GROUP: Pet profile pic and data */}
                 <Box
+                  key={pet.id || index}
                   sx={{
+                    bgcolor: "#00ADBA",
+                    borderRadius: 8,
+                    p: 2,
+                    mb: 2,
                     display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
                     alignItems: "center",
                     gap: 2,
-                    minWidth: { sm: "250px" },
-                    width: { xs: "100%", sm: "auto" },
-                    justifyContent: { xs: "center", sm: "flex-start" },
                   }}
                 >
-                  {/* Pet profile pic */}
-                  <Avatar
-                    variant="rounded"
+                  {/* LEFT GROUP: Pet profile pic and data */}
+                  <Box
                     sx={{
-                      width: 80,
-                      height: 80,
-                      borderRadius: 3,
-                      bgcolor: "white",
-                      border: "1px solid black",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      minWidth: { sm: "250px" },
+                      width: { xs: "100%", sm: "auto" },
+                      justifyContent: { xs: "center", sm: "flex-start" },
                     }}
                   >
-                    {pet.name.charAt(0).toUpperCase()}
-                  </Avatar>
+                    {/* Pet profile pic */}
+                    <Avatar
+                      variant="rounded"
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: 3,
+                        bgcolor: "white",
+                        border: "1px solid black",
+                      }}
+                    >
+                      {pet.name.charAt(0).toUpperCase()}
+                    </Avatar>
 
-                  {/* Pet data */}
-                  <Box sx={{ color: "black", textAlign: "left" }}>
-                    <Typography variant="body2" sx={{ fontWeight: 'bold' }}>Nombre: {pet.name}</Typography>
-                    <Typography variant="body2">Especie: {pet.species || "-"}</Typography>
-                    <Typography variant="body2">Raza: {pet.breed || "-"}</Typography>
+                    {/* Pet data */}
+                    <Box sx={{ color: "black", textAlign: "left" }}>
+                      <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+                        Nombre: {pet.name}
+                      </Typography>
+                      <Typography variant="body2">
+                        Especie: {pet.species || "-"}
+                      </Typography>
+                      <Typography variant="body2">
+                        Raza: {pet.breed || "-"}
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  {/* RIGHT GROUP: Veterinary and user notes */}
+                  {/* NOTE: replace the typography to a TextField to read-only state to prevent user input */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexGrow: 1,
+                      gap: 2,
+                      width: "100%",
+                      flexDirection: { xs: "column", sm: "row" },
+                    }}
+                  >
+                    {/* Veterinary notes */}
+                    <Box
+                      sx={{
+                        flex: 1,
+                        bgcolor: "white",
+                        borderRadius: 4,
+                        border: "1px solid black",
+                        p: 0,
+                        minHeight: 80,
+                        textAlign: "center",
+                      }}
+                    >
+                      <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                        Notas del centro vet:
+                      </Typography>
+                    </Box>
+
+                    {/* User notes */}
+                    <Box
+                      sx={{
+                        flex: 1,
+                        bgcolor: "white",
+                        borderRadius: 4,
+                        border: "1px solid black",
+                        p: 0,
+                        minHeight: 80,
+                        textAlign: "center",
+                      }}
+                    >
+                      <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                        Notas del usuario:
+                      </Typography>
+                    </Box>
                   </Box>
                 </Box>
-
-                {/* RIGHT GROUP: Veterinary and user notes */}
-                {/* NOTE: replace the typography to a TextField to read-only state to prevent user input */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexGrow: 1,
-                    gap: 2,
-                    width: "100%",
-                    flexDirection: { xs: "column", sm: "row" },
-                  }}
-                >
-                  {/* Veterinary notes */}
-                  <Box
+              ))
+            ) : (
+              <Box
+                sx={{
+                  bgcolor: "#FFF8E1",
+                  borderRadius: "24px",
+                  p: 4,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  textAlign: "center",
+                  gap: 1.5,
+                  boxShadow: "0 4px 15px rgba(255, 202, 40, 0.15)",
+                  maxWidth: 400,
+                  mx: "auto",
+                  mt: 6,
+                  mb: 4,
+                }}
+              >
+                <Typography sx={{ fontSize: "3.5rem", lineHeight: 1 }}>
+                  🐾
+                </Typography>
+                <Box>
+                  <Typography
                     sx={{
-                      flex: 1,
-                      bgcolor: "white",
-                      borderRadius: 4,
-                      border: "1px solid black",
-                      p: 0,
-                      minHeight: 80,
-                      textAlign: "center",
+                      fontWeight: "bold",
+                      color: "#F57F17",
+                      fontSize: "1.15rem",
+                      mb: 0.5,
                     }}
                   >
-                    <Typography variant="caption" sx={{ fontWeight: "bold" }}>
-                      Notas del centro vet:
-                    </Typography>
-                  </Box>
-
-                  {/* User notes */}
-                  <Box
-                    sx={{
-                      flex: 1,
-                      bgcolor: "white",
-                      borderRadius: 4,
-                      border: "1px solid black",
-                      p: 0,
-                      minHeight: 80,
-                      textAlign: "center",
-                    }}
-                  >
-                    <Typography variant="caption" sx={{ fontWeight: "bold" }}>
-                      Notas del usuario:
-                    </Typography>
-                  </Box>
+                    ¡Vaya! Qué vacío está esto.
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: "#FF8F00" }}>
+                    Parece que este cliente todavía no ha registrado a ningún
+                    peludo en el centro.
+                  </Typography>
                 </Box>
               </Box>
-            ))
-            ) : (
-               <Box sx={{ 
-                 bgcolor: "#FFF8E1", 
-                 borderRadius: "24px", 
-                 p: 4, 
-                 display: "flex", 
-                 flexDirection: "column", 
-                 alignItems: "center", 
-                 textAlign: "center",
-                 gap: 1.5, 
-                 boxShadow: "0 4px 15px rgba(255, 202, 40, 0.15)",
-                 maxWidth: 400,
-                 mx: "auto", 
-                 mt: 6,
-                 mb: 4
-               }}>
-                 <Typography sx={{ fontSize: "3.5rem", lineHeight: 1 }}>🐾</Typography>
-                 <Box>
-                   <Typography sx={{ fontWeight: "bold", color: "#F57F17", fontSize: "1.15rem", mb: 0.5 }}>
-                     ¡Vaya! Qué vacío está esto.
-                   </Typography>
-                   <Typography variant="body2" sx={{ color: "#FF8F00" }}>
-                     Parece que este cliente todavía no ha registrado a ningún peludo en el centro.
-                   </Typography>
-                 </Box>
-               </Box>
             )}
           </Box>
         </TabPanel>
@@ -642,7 +673,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
             px: 4,
             fontWeight: "bold",
             "&:hover": { bgcolor: "#f9a825" },
-            '&.Mui-disabled': { bgcolor: '#E0E0E0', color: '#9E9E9E' }
+            "&.Mui-disabled": { bgcolor: "#E0E0E0", color: "#9E9E9E" },
           }}
         >
           GUARDAR
@@ -660,10 +691,12 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
         fullWidth
         maxWidth="xs"
         PaperProps={{
-          sx: { borderRadius: 5, bgcolor: '#E1F5FE', p: 1 }
+          sx: { borderRadius: 5, bgcolor: "#E1F5FE", p: 1 },
         }}
       >
-        <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', fontSize: '1.25rem' }}>
+        <DialogTitle
+          sx={{ fontWeight: "bold", textAlign: "center", fontSize: "1.25rem" }}
+        >
           Añadir nueva mascota
         </DialogTitle>
         <DialogContent>
@@ -672,8 +705,8 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
               El nombre de la mascota es obligatorio.
             </Alert>
           </Collapse>
-          <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Typography sx={{ fontWeight: 'bold' }}>Nombre</Typography>
+          <Box sx={{ mt: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+            <Typography sx={{ fontWeight: "bold" }}>Nombre</Typography>
             <TextField
               size="small"
               variant="standard"
@@ -684,52 +717,71 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                 if (addPetError) setAddPetError(false);
               }}
               InputProps={{ disableUnderline: true }}
-              sx={{ bgcolor: 'white', borderRadius: 4, px: 2, py: 0.5 }}
+              sx={{ bgcolor: "white", borderRadius: 4, px: 2, py: 0.5 }}
             />
 
-            <Typography sx={{ fontWeight: 'bold', mt: 1 }}>Especie</Typography>
+            <Typography sx={{ fontWeight: "bold", mt: 1 }}>Especie</Typography>
             <TextField
               size="small"
               variant="standard"
               placeholder="Ej: Perro, Gato..."
               value={newPetData.species}
-              onChange={(e) => setNewPetData({ ...newPetData, species: e.target.value })}
+              onChange={(e) =>
+                setNewPetData({ ...newPetData, species: e.target.value })
+              }
               InputProps={{ disableUnderline: true }}
-              sx={{ bgcolor: 'white', borderRadius: 4, px: 2, py: 0.5 }}
+              sx={{ bgcolor: "white", borderRadius: 4, px: 2, py: 0.5 }}
             />
 
-            <Typography sx={{ fontWeight: 'bold', mt: 1 }}>Raza</Typography>
+            <Typography sx={{ fontWeight: "bold", mt: 1 }}>Raza</Typography>
             <TextField
               size="small"
               variant="standard"
               placeholder="Raza..."
               value={newPetData.breed}
-              onChange={(e) => setNewPetData({ ...newPetData, breed: e.target.value })}
+              onChange={(e) =>
+                setNewPetData({ ...newPetData, breed: e.target.value })
+              }
               InputProps={{ disableUnderline: true }}
-              sx={{ bgcolor: 'white', borderRadius: 4, px: 2, py: 0.5 }}
+              sx={{ bgcolor: "white", borderRadius: 4, px: 2, py: 0.5 }}
             />
 
-            <Typography sx={{ fontWeight: 'bold', mt: 1 }}>Fecha de nacimiento</Typography>
+            <Typography sx={{ fontWeight: "bold", mt: 1 }}>
+              Fecha de nacimiento
+            </Typography>
             <TextField
               type="date"
               size="small"
               variant="standard"
               value={newPetData.birthdate}
-              onChange={(e) => setNewPetData({ ...newPetData, birthdate: e.target.value })}
+              onChange={(e) =>
+                setNewPetData({ ...newPetData, birthdate: e.target.value })
+              }
               InputProps={{ disableUnderline: true }}
-              sx={{ bgcolor: 'white', borderRadius: 4, px: 2, py: 0.5 }}
+              sx={{ bgcolor: "white", borderRadius: 4, px: 2, py: 0.5 }}
             />
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 2, justifyContent: 'center', gap: 2 }}>
+        <DialogActions sx={{ p: 2, justifyContent: "center", gap: 2 }}>
           <Button
             onClick={() => {
               setIsAddPetOpen(false);
-              setNewPetData({ name: "", species: "", breed: "", birthdate: "" });
+              setNewPetData({
+                name: "",
+                species: "",
+                breed: "",
+                birthdate: "",
+              });
               setAddPetError(false);
             }}
             sx={{
-              bgcolor: '#F02F0A', color: 'black', fontWeight: 'bold', borderRadius: 10, px: 4, textTransform: 'none', '&:hover': { bgcolor: '#D82E0C' }
+              bgcolor: "#F02F0A",
+              color: "black",
+              fontWeight: "bold",
+              borderRadius: 10,
+              px: 4,
+              textTransform: "none",
+              "&:hover": { bgcolor: "#D82E0C" },
             }}
           >
             CANCELAR
@@ -738,7 +790,13 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
             onClick={handleAddPet}
             variant="contained"
             sx={{
-              bgcolor: '#FFCA28', color: 'black', fontWeight: 'bold', borderRadius: 10, px: 4, textTransform: 'none', '&:hover': { bgcolor: '#f9a825' }
+              bgcolor: "#FFCA28",
+              color: "black",
+              fontWeight: "bold",
+              borderRadius: 10,
+              px: 4,
+              textTransform: "none",
+              "&:hover": { bgcolor: "#f9a825" },
             }}
           >
             GUARDAR

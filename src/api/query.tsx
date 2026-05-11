@@ -1,7 +1,6 @@
-import type { UserProfile } from "../types/UserProfile.type";
 import { supabase } from "./supabaseClient";
 
-const veterinarycenterid = "c41de394-45ad-47b2-9d4d-5d2c0b137cec";
+// const veterinarycenterid = "c41de394-45ad-47b2-9d4d-5d2c0b137cec";
 
 // Función para obtener la lista de centros veterinarios
 /**
@@ -31,6 +30,7 @@ export async function createVetClient(clientData: {
   name: string;
   email: string;
   phone: string;
+  veterinarycenterid: string;
   userid?: string | null;
 }) {
   // We perform the insertion using the Supabase API
@@ -46,7 +46,7 @@ export async function createVetClient(clientData: {
         userid: clientData.userid || null, // Null is explicitly assigned in the case of the 'No' option
 
         // Mockeado temporalmente para permitir crear registros (obligatorio por base de datos)
-        veterinarycenterid: veterinarycenterid,
+        veterinarycenterid: clientData.veterinarycenterid,
       },
     ])
     // .select() asks Supabase to return the newly created record
@@ -425,9 +425,7 @@ export async function getCurrentUserName() {
  * @param vetCenterId - ID del centro veterinario (por defecto usa el global mockeado).
  * @returns Array de clientes del centro veterinario.
  */
-export async function getClientProfiles(
-  vetCenterId: string = veterinarycenterid,
-) {
+export async function getClientProfiles(vetCenterId: string) {
   const { data, error } = await supabase
     .from("Client")
     .select("*")

@@ -99,3 +99,25 @@ export async function logout(navigate: any) {
   if (error) throw error;
   navigate(SCREEN.LANDING_PAGE);
 }
+
+/**
+ * Actualiza el email del usuario en Supabase Auth.
+ * Al tener la confirmación desactivada en el dashboard, el cambio es inmediato.
+ */
+export async function updateUserSettingsEmail(newEmail: string) {
+  const { data, error } = await supabase.auth.updateUser({
+    email: newEmail,
+  });
+
+  if (error) {
+    // Errores comunes: email ya en uso o formato inválido
+    if (error.message.includes("already been registered")) {
+      throw new Error(
+        "Este correo electrónico ya está en uso por otro usuario.",
+      );
+    }
+    throw error;
+  }
+
+  return data;
+}

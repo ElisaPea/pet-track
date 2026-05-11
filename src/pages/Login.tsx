@@ -283,19 +283,7 @@ export default function Login() {
                 >
                   Password: *
                 </Typography>
-                <IconButton
-                  onClick={() => setViewPassword(!viewPassword)}
-                  edge="end"
-                  sx={{
-                    position: "absolute",
-                    right: 10,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    zIndex: 1,
-                  }}
-                >
-                  {viewPassword ? <Visibility /> : <VisibilityOff />}
-                </IconButton>
+
                 <TextField
                   fullWidth
                   type={viewPassword ? "text" : "password"}
@@ -310,6 +298,19 @@ export default function Login() {
                     py: 0.5,
                   }}
                 />
+                <IconButton
+                  onClick={() => setViewPassword(!viewPassword)}
+                  edge="end"
+                  sx={{
+                    position: "absolute",
+                    right: 10,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 1,
+                  }}
+                >
+                  {viewPassword ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
                 {errors.password && (
                   <Typography
                     sx={{

@@ -30,13 +30,14 @@ export default function HomeVet() {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
   const { userState } = useAuth();
+  const vetCenterId = userState?.veterinaryCenterId;
 
   // UseEffect que llama a las APIs al montar el componente
   useEffect(() => {
     const fetchClientsAndPets = async () => {
       try {
         // 1. Obtenemos los clientes
-        const clientsData = await getClientProfiles();
+        const clientsData = await getClientProfiles(vetCenterId);
 
         if (clientsData) {
           // 2. Por cada cliente, traemos sus mascotas usando Promise.all para que sea simultáneo
@@ -336,11 +337,13 @@ export default function HomeVet() {
                   open={isModalOpen && selectedClientId === client.id}
                   onClose={() => setIsModalOpen(false)}
                   clientData={client}
+                  vetCenterId={vetCenterId}
                 />
                 {/* ADD CLIENT POPUP: Triggered from the top "+" button */}
                 <AddClientPopup
                   open={isAddClientOpen}
                   onClose={() => setIsAddClientOpen(false)}
+                  vetCenterId={vetCenterId}
                 />
               </Box>
             </Box>

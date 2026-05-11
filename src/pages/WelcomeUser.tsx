@@ -4,8 +4,9 @@ import BasicScreen from "../components/BasicScreen";
 import { PopupCreatePetUser } from "../components/PopupCreatePetUser";
 import { getPetsByUser, getPetById } from "../api/query";
 import { supabase } from "../api/supabaseClient";
+import { useAuth } from "../context/AuthContext";
 
-const TEST_USER_ID = "2427a02c-b1c9-423e-9aab-4ed448c34b5b";
+// const TEST_USER_ID = "2427a02c-b1c9-423e-9aab-4ed448c34b5b";
 
 // Calcula la edad en años a partir de una fecha ISO
 function calcularEdad(birthdate: string): string {
@@ -22,12 +23,13 @@ export default function WelcomeUser() {
     null,
   );
 
-  const [userName, setUserName] = useState(""); // ✅ añadido
+  const { userState } = useAuth();
 
   const fetchMascotas = async () => {
+    console.log("pido mascotas", userState);
     setLoadingPets(true);
     try {
-      const data = await getPetsByUser(TEST_USER_ID);
+      const data = await getPetsByUser(userState?.id);
       setMascotas(data);
     } catch (e) {
       console.error("Error al cargar mascotas:", e);
@@ -39,25 +41,6 @@ export default function WelcomeUser() {
   // Carga inicial mascotas
   useEffect(() => {
     fetchMascotas();
-  }, []);
-
-  //  cargar nombre desde tabla User
-  useEffect(() => {
-    const loadUser = async () => {
-      const { data, error } = await supabase
-        .from("User")
-        .select("name")
-        .eq("id", TEST_USER_ID)
-        .single();
-
-      if (!error && data) {
-        setUserName(data.name || "");
-      } else {
-        console.error("Error cargando usuario:", error);
-      }
-    };
-
-    loadUser();
   }, []);
 
   return (
@@ -73,7 +56,7 @@ export default function WelcomeUser() {
             }}
           >
             <Typography variant="h4" component="h1" sx={{ fontWeight: "bold" }}>
-              Bienvenido {userName}
+              Bienvenido {userState?.name}
             </Typography>
           </Box>
           <Box

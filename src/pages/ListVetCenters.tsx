@@ -67,12 +67,12 @@ export default function ListVetCenters() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          mt: 8,
+          mt: 4,
           position: "relative",
         }}
       >
         {/* Back Button */}
-        <Box
+        {/* <Box
           sx={{
             width: "100%",
             display: "flex",
@@ -91,9 +91,10 @@ export default function ListVetCenters() {
           >
             <ArrowBackIcon fontSize="medium" />
           </IconButton>
-        </Box>
+        </Box> */}
 
         {/* UX Title in Spanish */}
+
         <Typography
           variant="h4"
           sx={{
@@ -127,6 +128,17 @@ export default function ListVetCenters() {
                 alignItems="center"
                 sx={{ width: "100%" }}
               >
+                <IconButton
+                  onClick={() => navigate(SCREEN.SETTINGS_USER)}
+                  sx={{
+                    bgcolor: "#FBC02D",
+                    color: "black",
+                    "&:hover": { bgcolor: "#f9a825" },
+                    boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
+                  }}
+                >
+                  <ArrowBackIcon fontSize="medium" />
+                </IconButton>
                 {/* UX Label in Spanish */}
                 <Typography
                   sx={{
