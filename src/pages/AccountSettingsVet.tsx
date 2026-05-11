@@ -95,7 +95,6 @@ export default function AccountSettingsVet() {
     // API Connection
     try {
       if (userState.id) {
-        console.log(formData);
         await updateVetProfile(userState?.id, formData);
 
         await updateAuth();

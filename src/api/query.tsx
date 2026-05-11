@@ -209,20 +209,6 @@ export async function getUserProfile(userId: string) {
   };
 }
 
-// 2. Update Vet Data (Write) ANTIGUA
-// export async function updateVetProfile(
-//   userId: string,
-//   updateData: { name: string; phone: string; licenseNumber: string },
-// ) {
-//   // Update Professional table (license number)
-//   const { error: errorPro } = await supabase
-//     .from("Professional")
-//     .update({ licensenumber: updateData.licenseNumber })
-//     .eq("userid", userId);
-
-//   if (errorPro) throw errorPro;
-// }
-
 // --- Mia ---
 // 2. Update Vet Data (Write) - Recibe el perfil completo
 // export async function updateVetProfile(userData: UserProfile) {
@@ -503,4 +489,28 @@ export async function updateClientProfile(
   }
 }
 
-//-------------------------------------------Malcon------------------------------------------
+/**
+ * Crea un nuevo centro veterinario
+ */
+export async function createVetCenter(centerData: {
+  name: string;
+  email: string;
+  address?: string;
+  phone?: string;
+}) {
+  const { data, error } = await supabase
+    .from("VeterinaryCenter")
+    .insert([
+      {
+        name: centerData.name,
+        email: centerData.email,
+        address: centerData.address || null,
+        phone: centerData.phone || null,
+      },
+    ])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
