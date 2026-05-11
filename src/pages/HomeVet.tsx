@@ -339,16 +339,16 @@ export default function HomeVet() {
                   clientData={client}
                   vetCenterId={vetCenterId}
                 />
-                {/* ADD CLIENT POPUP: Triggered from the top "+" button */}
-                <AddClientPopup
-                  open={isAddClientOpen}
-                  onClose={() => setIsAddClientOpen(false)}
-                  vetCenterId={vetCenterId}
-                />
               </Box>
             </Box>
           ))
         )}
+        {/* ADD CLIENT POPUP: Triggered from the top "+" button */}
+        <AddClientPopup
+          open={isAddClientOpen}
+          onClose={() => setIsAddClientOpen(false)}
+          vetCenterId={vetCenterId}
+        />
       </Box>
     </BasicScreen>
   );
