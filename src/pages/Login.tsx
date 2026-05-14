@@ -123,9 +123,16 @@ export default function Login() {
     setForm(initialFormState);
   };
 
+  // 🌟 SENIOR FIX: Logic to completely clear error keys
   const handleChange = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
+    if (errors[field]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleChangeTypeUser = (value: string) => {
@@ -281,73 +288,67 @@ export default function Login() {
                 </>
               )}
 
-              {/* 🌟 SENIOR FIX: Professional Fields with Ellipsis and Correct Error Positioning */}
+              {/* 🌟 SENIOR FIX: Solución definitiva a errores superpuestos y elipsis */}
               {!isLogin && isProfessional && (
                 <>
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    alignItems={{ xs: "flex-start", sm: "center" }}
-                    spacing={{ xs: 1, sm: 0 }}
-                    sx={{ width: "100%", position: "relative", mb: errors.licenseNumber ? 2 : 0 }}
-                  >
+                  <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ xs: "flex-start", sm: "center" }} spacing={{ xs: 1, sm: 0 }} sx={{ width: "100%" }}>
                     <Typography sx={{ width: { xs: "100%", sm: 180 }, fontWeight: "bold", textAlign: "left" }}>
                       Nº Colegiado: *
                     </Typography>
-                    <TextField fullWidth variant="standard" value={form.licenseNumber} onChange={(e) => handleChange("licenseNumber", e.target.value)} InputProps={{ disableUnderline: true }} sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }} />
-                    {errors.licenseNumber && (
-                      <Typography sx={{ color: "red", position: "absolute", left: { xs: 0, sm: 180 }, top: "100%", fontSize: "0.8rem" }}>
-                        {errors.licenseNumber}
-                      </Typography>
-                    )}
+                    <Box sx={{ width: "100%" }}>
+                      <TextField fullWidth variant="standard" value={form.licenseNumber} onChange={(e) => handleChange("licenseNumber", e.target.value)} InputProps={{ disableUnderline: true }} sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }} />
+                      {errors.licenseNumber && (
+                        <Typography sx={{ color: "red", fontSize: "0.75rem", textAlign: "left", mt: 0.5, ml: 2 }}>
+                          {errors.licenseNumber}
+                        </Typography>
+                      )}
+                    </Box>
                   </Stack>
 
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    alignItems={{ xs: "flex-start", sm: "center" }}
-                    spacing={{ xs: 1, sm: 0 }}
-                    sx={{ width: "100%", position: "relative", mt: 1, mb: errors.selectedVet ? 2 : 0 }}
-                  >
+                  <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ xs: "flex-start", sm: "center" }} spacing={{ xs: 1, sm: 0 }} sx={{ width: "100%", mt: 2 }}>
                     <Typography sx={{ width: { xs: "100%", sm: 180 }, fontWeight: "bold", textAlign: "left" }}>
                       Centro Vet: *
                     </Typography>
-                    <Box sx={{ display: "flex", width: "100%", alignItems: "center", gap: 1, minWidth: 0 }}>
-                      <Select
-                        value={form.selectedVet}
-                        onChange={(e) => handleChange("selectedVet", e.target.value as string)}
-                        displayEmpty
-                        fullWidth
-                        renderValue={(selectedId) => {
-                          if (!selectedId) return <Typography sx={{ color: "gray", opacity: 0.7 }}>Selecciona un centro...</Typography>;
-                          const center = vetCenters.find((c) => c.id === selectedId);
-                          return (
-                            <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {center ? center.name : ""}
-                            </Box>
-                          );
-                        }}
-                        sx={{
-                          bgcolor: "white",
-                          borderRadius: 50,
-                          px: 2,
-                          py: 0.5,
-                          "& .MuiSelect-select": { padding: "6px 8px", display: 'flex', alignItems: 'center', overflow: 'hidden', textOverflow: 'ellipsis' },
-                        }}
-                      >
-                        {vetCenters.map((center) => (
-                          <MenuItem key={center.id} value={center.id} sx={{ maxWidth: '450px', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
-                            {center.name} — {center.email}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      <IconButton onClick={handleOpenDialog} sx={{ color: "#00BCD4", flexShrink: 0 }}>
-                        <AddCircle fontSize="large" />
-                      </IconButton>
+                    <Box sx={{ width: "100%" }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, minWidth: 0 }}>
+                        <Select
+                          value={form.selectedVet}
+                          onChange={(e) => handleChange("selectedVet", e.target.value as string)}
+                          displayEmpty
+                          fullWidth
+                          renderValue={(selectedId) => {
+                            if (!selectedId) return <Typography sx={{ color: "gray", opacity: 0.7 }}>Selecciona un centro...</Typography>;
+                            const center = vetCenters.find((c) => c.id === selectedId);
+                            return (
+                              <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {center ? center.name : ""}
+                              </Box>
+                            );
+                          }}
+                          sx={{
+                            bgcolor: "white",
+                            borderRadius: 50,
+                            px: 2,
+                            py: 0.5,
+                            "& .MuiSelect-select": { padding: "6px 8px", display: 'flex', alignItems: 'center', overflow: 'hidden' },
+                          }}
+                        >
+                          {vetCenters.map((center) => (
+                            <MenuItem key={center.id} value={center.id} sx={{ maxWidth: '450px', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+                              {center.name} — {center.email}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        <IconButton onClick={handleOpenDialog} sx={{ color: "#00BCD4", flexShrink: 0 }}>
+                          <AddCircle fontSize="large" />
+                        </IconButton>
+                      </Box>
+                      {errors.selectedVet && (
+                        <Typography sx={{ color: "red", fontSize: "0.75rem", textAlign: "left", mt: 0.5, ml: 2 }}>
+                          {errors.selectedVet}
+                        </Typography>
+                      )}
                     </Box>
-                    {errors.selectedVet && (
-                      <Typography sx={{ color: "red", position: "absolute", left: { xs: 0, sm: 180 }, top: "100%", fontSize: "0.8rem" }}>
-                        {errors.selectedVet}
-                      </Typography>
-                    )}
                   </Stack>
                 </>
               )}
