@@ -168,9 +168,9 @@ export default function NavBar() {
         </Toolbar>
       </AppBar>
 
-      {/* 🌟 NEW INCORPORATION: Floating Action Button (FAB) for Help */}
+      {/* NEW INCORPORATION: Floating Action Button (FAB) for Help */}
       {/* This solves the UX issue by removing the icon from the header and placing it in the 'hot zone' */}
-      <Tooltip title="Help / User Manual" placement="left" arrow>
+      <Tooltip title="Manual Usuario" placement="left" arrow>
         <Fab
           onClick={handleHelpClick}
           aria-label="help"
@@ -212,7 +212,7 @@ export default function NavBar() {
               ))}
             {/* Additional help access inside the mobile menu */}
             <ListItemButton onClick={handleHelpClick}>
-              <ListItemText primary="User Manual" sx={{ color: "#00BCD4" }} />
+              <ListItemText primary="Manual Usuario" sx={{ color: "#00BCD4" }} />
             </ListItemButton>
           </List>
         </Box>
