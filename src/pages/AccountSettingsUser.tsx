@@ -8,7 +8,11 @@ import {
   Collapse,
   Alert,
   IconButton,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
 import React, { useState, useEffect } from "react";
@@ -22,80 +26,40 @@ import {
 } from "../utils/validationUtils";
 
 // Import Supabase queries for the regular user
-import { getUserProfile, supabase, updateUserProfile } from "../api/query";
+import { updateUserProfile } from "../api/query";
+import { useAuth } from "../context/AuthContext";
+import { logout, updateUserSettingsEmail } from "../api/signInQuery";
 
 export default function AccountSettingsUser() {
-  const [vetRequestStatus, setVetRequestStatus] = useState("Ninguno seleccionado");
+  const [vetRequestStatus, setVetRequestStatus] = useState(
+    "Ninguno seleccionado",
+  );
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailSuccess, setEmailSuccess] = useState(false);
 
   // States for error and success messages
   const [error, setError] = useState<string | null>(null);
   const [error2, setError2] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  //State to store the original copy of the data
-  const [initialData, setInitialData] = useState({
-    name: "",
-    email: "",
-    phone: "+34 ",
-    address: "",
-  });
+  const { userState } = useAuth();
 
   // Form fields state in English (what the user modifies)
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "+34 ",
-    address: "",
+    name: userState?.name,
+    email: userState?.email,
+    phone: userState?.phone,
+    address: userState?.address,
   });
 
   // Load Initial Data
   useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-      
-      //DEVELOPMENT HACK: Forcing a regular user ID (like Vin) for testing
-      // Remember to change this to supabase.auth.getUser() when Auth is ready
-      const ID_NORMAL_USER = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb"; 
-      
-      console.log("1. Forcing search for regular user:", ID_NORMAL_USER);
-      setUserId(ID_NORMAL_USER);
-
-      try {
-        const profile = await getUserProfile(ID_NORMAL_USER);
-        console.log("2. Data arriving from DB:", profile);
-
-        if (profile) {
-          const fetchedData = {
-            name: profile.name || "",
-            phone: profile.phone || "",
-            email: "vin@fakeemail.com", // Temporary fake email
-            address: "", // Address doesn't come from DB at the moment
-          };
-
-          //Save data to the view and the backup copy
-          setFormData(fetchedData);
-          setInitialData(fetchedData);
-        } else {
-          console.error("DB returned null. Check the user ID.");
-        }
-      } catch (err) { 
-        console.error("Error in query:", err); 
-      }
-      
-      setLoading(false);
-    }
-    
-    loadData();
-
     // Check if the browser has a pending request note
     const pendingRequest = localStorage.getItem("pendingVetRequest");
     if (pendingRequest) {
       setVetRequestStatus(`Esperando confirmación de: ${pendingRequest}`);
     }
-
   }, []);
 
   // Input change handler
@@ -107,18 +71,17 @@ export default function AccountSettingsUser() {
   };
 
   //Variable that calculates in real-time if there are changes
-  const isFormModified = 
-    formData.name !== initialData.name ||
-    formData.email !== initialData.email ||
-    formData.phone !== initialData.phone ||
-    formData.address !== initialData.address;
+  const isFormModified =
+    formData.name !== userState?.name ||
+    formData.phone !== userState?.phone ||
+    formData.address !== userState?.address;
 
   // Save handler and validations
   const handleSave = async () => {
     // If there are no changes, stop execution for safety
     if (!isFormModified) return;
 
-    const { name, email, phone } = formData;
+    const { name, phone } = formData;
 
     // Reset states
     setError(null);
@@ -128,8 +91,6 @@ export default function AccountSettingsUser() {
     // Empty fields validation using utils
     const missingFields: string[] = [];
     if (!isNotEmpty(name)) missingFields.push("Nombre");
-    if (!isNotEmpty(email)) missingFields.push("Correo electrónico");
-    if (!isNotEmpty(phone)) missingFields.push("Número de teléfono");
 
     if (missingFields.length > 0) {
       setError(`Campos requeridos faltantes: ${missingFields.join(", ")}.`);
@@ -138,7 +99,6 @@ export default function AccountSettingsUser() {
 
     // Format validation using utils
     const invalidFields: string[] = [];
-    if (!validateEmail(email)) invalidFields.push("Correo electrónico");
     if (!validatePhone(phone)) invalidFields.push("Número de teléfono");
 
     if (invalidFields.length > 0) {
@@ -148,26 +108,54 @@ export default function AccountSettingsUser() {
 
     // API Connection
     try {
-      if (userId) {
-        await updateUserProfile(userId, {
-          name: formData.name,
-          phone: formData.phone,
-          // Address is not saved in DB for now according to SQL
-        });
+      await updateUserProfile(userState?.id, {
+        name: formData.name,
+        phone: formData.phone,
+        // Address is not saved in DB for now according to SQL
+      });
 
-        setSuccess(true);
-        console.log("Data synchronized with Supabase");
-        
-        //Update our "backup copy" so the button turns off again
-        setInitialData(formData);
+      setSuccess(true);
+      console.log("Data synchronized with Supabase");
 
-        setTimeout(() => setSuccess(false), 3000);
-      } else {
-        setError("No active user session detected.");
-      }
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error(err);
       setError("Technical error: Could not connect to the database.");
+    }
+  };
+
+  // Handler para el cambio de email (Accordion)
+  const handleConfirmEmailChange = async () => {
+    setEmailError(null);
+    setEmailSuccess(false);
+
+    // 1. Validaciones previas
+    if (!validateEmail(formData.email)) {
+      setEmailError("Por favor, introduce un correo electrónico válido.");
+      return;
+    }
+
+    if (formData.email === userState?.email) {
+      setEmailError("El nuevo correo debe ser diferente al actual.");
+      return;
+    }
+
+    try {
+      // 2. Intentar actualizar en Supabase
+      await updateUserSettingsEmail(formData.email);
+
+      // 3. Si todo va bien, avisamos al usuario
+      setEmailSuccess(true);
+      console.log("Email actualizado correctamente");
+
+      // 4. Mini delay para que lea el mensaje y logout
+      setTimeout(async () => {
+        await logout(navigate);
+      }, 3000);
+    } catch (err: any) {
+      // 5. Si falla (email duplicado, etc.), mostramos el error
+      console.error(err);
+      setEmailError(err.message || "No se pudo actualizar el correo.");
     }
   };
 
@@ -179,11 +167,18 @@ export default function AccountSettingsUser() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          mt: 8,
+          mt: 4,
         }}
       >
         {/* Back Button */}
-          <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-start", mb: 2 }}>
+        {/* <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "flex-start",
+            mb: 2,
+          }}
+        >
           <IconButton
             onClick={() => navigate(SCREEN.WELCOME_USER)}
             sx={{
@@ -193,34 +188,31 @@ export default function AccountSettingsUser() {
               boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
             }}
           >
-          <ArrowBackIcon fontSize="medium" />
+            <ArrowBackIcon fontSize="medium" />
           </IconButton>
-        </Box>
-
-
+        </Box> */}
 
         <Typography
           variant="h4"
           sx={{ fontWeight: "600", color: "#4A3B3B", mb: 0.5 }}
         >
-          Actualiza tu perfil 
+          Actualiza tu perfil
         </Typography>
 
         <Box sx={{ width: 60, height: 4, bgcolor: "#00BCD4", mb: 4 }} />
 
         <Box
           sx={{
-            bgcolor: "#D1F2F5", 
+            bgcolor: "#D1F2F5",
             width: "100%",
             maxWidth: 650,
-            borderRadius: 10, 
+            borderRadius: 10,
             p: 4,
             boxShadow: "0px 4px 10px rgba(0,0,0,0.05)",
             textAlign: "center",
           }}
         >
           <Box component="form" noValidate sx={{ mt: 1 }}>
-            
             <Collapse in={Boolean(error)}>
               <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
                 {error}
@@ -247,7 +239,7 @@ export default function AccountSettingsUser() {
                 sx={{ width: "100%" }}
               >
                 <Typography
-                  component="label" 
+                  component="label"
                   htmlFor="name-input"
                   sx={{
                     width: 400,
@@ -275,44 +267,6 @@ export default function AccountSettingsUser() {
                 />
               </Stack>
 
-              {/* Email Field */}
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                alignItems="center"
-                sx={{ width: "100%" }}
-              >
-                <Typography
-                  component="label" 
-                  htmlFor="email-input"
-                  sx={{
-                    width: 400,
-                    textAlign: { xs: "center", sm: "left" },
-                    fontWeight: "bold",
-                  }}
-                >
-                  Correo electrónico*:
-                </Typography>
-                <TextField
-                  id="email-input"
-                  fullWidth
-                  variant="standard"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={
-                    (Boolean(error) && !isNotEmpty(formData.email)) ||
-                    (Boolean(error2) && !validateEmail(formData.email))
-                  }
-                  InputProps={{ disableUnderline: true }}
-                  sx={{
-                    bgcolor: "white",
-                    borderRadius: 50,
-                    px: 2,
-                    py: 0.5,
-                  }}
-                />
-              </Stack>
-
               {/* Phone Field */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
@@ -320,15 +274,15 @@ export default function AccountSettingsUser() {
                 sx={{ width: "100%" }}
               >
                 <Typography
-                  component="label" 
-                  htmlFor="phone-input" 
+                  component="label"
+                  htmlFor="phone-input"
                   sx={{
                     width: 400,
                     textAlign: { xs: "center", sm: "left" },
                     fontWeight: "bold",
                   }}
                 >
-                  Número de teléfono*:
+                  Número de teléfono:
                 </Typography>
                 <TextField
                   id="phone-input"
@@ -337,10 +291,7 @@ export default function AccountSettingsUser() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  error={
-                    (Boolean(error) && !isNotEmpty(formData.phone)) ||
-                    (Boolean(error2) && !validatePhone(formData.phone))
-                  }
+                  error={Boolean(error2) && !validatePhone(formData.phone)}
                   InputProps={{ disableUnderline: true }}
                   sx={{
                     bgcolor: "white",
@@ -369,7 +320,7 @@ export default function AccountSettingsUser() {
                 <TextField
                   fullWidth
                   variant="standard"
-                  name="address" 
+                  name="address"
                   value={formData.address}
                   onChange={handleChange}
                   InputProps={{ disableUnderline: true }}
@@ -426,7 +377,7 @@ export default function AccountSettingsUser() {
                 <Button
                   variant="contained"
                   onClick={() => {
-                    navigate(SCREEN.listVet);
+                    navigate(SCREEN.LIST_VET);
                   }}
                   sx={{
                     bgcolor: "#FBC02D",
@@ -440,7 +391,7 @@ export default function AccountSettingsUser() {
                 >
                   BUSCAR CENTRO VETERINARIO
                 </Button>
-                
+
                 {/*Conditionally styled and disabled button */}
                 <Button
                   variant="contained"
@@ -452,19 +403,100 @@ export default function AccountSettingsUser() {
                     fontWeight: "bold",
                     borderRadius: 2,
                     width: "100%",
-                    border: isFormModified ? "2px solid #64B5F6" : "2px solid transparent",
-                    "&:hover": { 
-                      bgcolor: isFormModified ? "#f9a825" : "#e0e0e0" 
+                    border: isFormModified
+                      ? "2px solid #64B5F6"
+                      : "2px solid transparent",
+                    "&:hover": {
+                      bgcolor: isFormModified ? "#f9a825" : "#e0e0e0",
                     },
                     "&.Mui-disabled": {
                       bgcolor: "#e0e0e0",
                       color: "#9e9e9e",
-                    }
+                    },
                   }}
                 >
                   GUARDAR
                 </Button>
               </Box>
+
+              {/* Accordion for Authentication Data */}
+              <Accordion
+                disableGutters
+                elevation={0}
+                sx={{
+                  width: "100%",
+                  borderRadius: "20px !important",
+                  boxShadow: "none",
+                  bgcolor: "rgba(255,255,255,0.5)",
+                  mt: 2,
+                  "&:before": { display: "none" },
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography sx={{ fontWeight: "bold", color: "#4A3B3B" }}>
+                    Datos de autenticación
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {/* Mensajes de feedback específicos para el email */}
+                  <Collapse in={Boolean(emailError)}>
+                    <Alert severity="error" sx={{ mb: 2, borderRadius: 5 }}>
+                      {emailError}
+                    </Alert>
+                  </Collapse>
+                  <Collapse in={emailSuccess}>
+                    <Alert severity="success" sx={{ mb: 2, borderRadius: 5 }}>
+                      ¡Correo actualizado! Cerrando sesión para reiniciar...
+                    </Alert>
+                  </Collapse>
+
+                  <Typography
+                    variant="body2"
+                    sx={{ mb: 2, color: "#666", textAlign: "left" }}
+                  >
+                    Al cambiar tu correo,{" "}
+                    <b>tu sesión se cerrará automáticamente</b>. Deberás volver
+                    a entrar con tu nueva dirección (la contraseña no cambia).
+                  </Typography>
+
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                    <TextField
+                      fullWidth
+                      variant="standard"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Nuevo correo electrónico"
+                      error={Boolean(emailError)}
+                      InputProps={{ disableUnderline: true }}
+                      sx={{
+                        bgcolor: "white",
+                        borderRadius: 50,
+                        px: 2,
+                        py: 0.5,
+                      }}
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={handleConfirmEmailChange}
+                      disabled={emailSuccess} // Deshabilitar si ya ha tenido éxito
+                      sx={{
+                        bgcolor: "#FBC02D",
+                        color: "black",
+                        fontWeight: "bold",
+                        borderRadius: 50,
+                        px: 3,
+                        whiteSpace: "nowrap",
+                        border: "2px solid #64B5F6",
+                        "&:hover": { bgcolor: "#f9a825" },
+                        "&.Mui-disabled": { bgcolor: "#e0e0e0" },
+                      }}
+                    >
+                      CONFIRMAR
+                    </Button>
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
             </Stack>
           </Box>
         </Box>

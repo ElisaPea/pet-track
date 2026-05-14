@@ -1,11 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "./supabaseClient";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const veterinarycenterid = "c41de394-45ad-47b2-9d4d-5d2c0b137cec";
+// const veterinarycenterid = "c41de394-45ad-47b2-9d4d-5d2c0b137cec";
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
+// Función para obtener la lista de centros veterinarios
 /**
  * Obtiene la lista de centros veterinarios de la base de datos.
  * @returns Una promesa que resuelve a un array de centros veterinarios.
@@ -33,6 +30,7 @@ export async function createVetClient(clientData: {
   name: string;
   email: string;
   phone: string;
+  veterinarycenterid: string;
   userid?: string | null;
 }) {
   // We perform the insertion using the Supabase API
@@ -48,7 +46,7 @@ export async function createVetClient(clientData: {
         userid: clientData.userid || null, // Null is explicitly assigned in the case of the 'No' option
 
         // Mockeado temporalmente para permitir crear registros (obligatorio por base de datos)
-        veterinarycenterid: veterinarycenterid,
+        veterinarycenterid: clientData.veterinarycenterid,
       },
     ])
     // .select() asks Supabase to return the newly created record
@@ -211,7 +209,56 @@ export async function getUserProfile(userId: string) {
   };
 }
 
-// 2. Update Vet Data (Write)
+// --- Mia ---
+// 2. Update Vet Data (Write) - Recibe el perfil completo
+// export async function updateVetProfile(userData: UserProfile) {
+//   const {
+//     id,
+//     name,
+//     phone,
+//     licenseNumber,
+//     veterinaryCenterId,
+//     isactive,
+//     lgpdconsent,
+//   } = userData;
+
+//   // 1. Actualizamos la tabla "User"
+//   // Solo metemos los campos que pertenecen a esta tabla
+//   const { error: errorUser } = await supabase
+//     .from("User")
+//     .update({
+//       name,
+//       phone,
+//       isactive,
+//       lgpdconsent,
+//     })
+//     .eq("id", id);
+
+//   if (errorUser) {
+//     console.error("Error al actualizar tabla User:", errorUser);
+//     throw errorUser;
+//   }
+
+//   // 2. Si el rol es profesional, actualizamos la tabla "Professional"
+//   if (userData.role === "professional") {
+//     const { error: errorPro } = await supabase
+//       .from("Professional")
+//       .update({
+//         licensenumber: licenseNumber,
+//         veterinarycenterid: veterinaryCenterId,
+//       })
+//       .eq("userid", id);
+
+//     if (errorPro) {
+//       console.error("Error al actualizar tabla Professional:", errorPro);
+//       throw errorPro;
+//     }
+//   }
+
+//   return true;
+// }
+
+//MALCON
 export async function updateVetProfile(
   userId: string,
   updateData: { name: string; phone: string; licenseNumber: string },
@@ -232,20 +279,6 @@ export async function updateVetProfile(
 
   if (errorPro) throw errorPro;
 }
-/*
-export async function updateVetProfile(
-  userId: string,
-  updateData: { name: string; phone: string; licenseNumber: string }
-) {
-  // Update Professional table (license number)
-  const { error: errorPro } = await supabase
-    .from("Professional")
-    .update({ licensenumber: updateData.licenseNumber })
-    .eq("userid", userId);
-
-  if (errorPro) throw errorPro;
-};
-*/
 
 // 2. Update User Data (Write)
 export async function updateUserProfile(
@@ -378,9 +411,7 @@ export async function getCurrentUserName() {
  * @param vetCenterId - ID del centro veterinario (por defecto usa el global mockeado).
  * @returns Array de clientes del centro veterinario.
  */
-export async function getClientProfiles(
-  vetCenterId: string = veterinarycenterid,
-) {
+export async function getClientProfiles(vetCenterId: string) {
   const { data, error } = await supabase
     .from("Client")
     .select("*")
@@ -458,4 +489,28 @@ export async function updateClientProfile(
   }
 }
 
-//-------------------------------------------Malcon------------------------------------------
+/**
+ * Crea un nuevo centro veterinario
+ */
+export async function createVetCenter(centerData: {
+  name: string;
+  email: string;
+  address?: string;
+  phone?: string;
+}) {
+  const { data, error } = await supabase
+    .from("VeterinaryCenter")
+    .insert([
+      {
+        name: centerData.name,
+        email: centerData.email,
+        address: centerData.address || null,
+        phone: centerData.phone || null,
+      },
+    ])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
