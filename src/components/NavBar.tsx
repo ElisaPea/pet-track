@@ -39,8 +39,8 @@ export default function NavBar() {
 
   // Screen titles mapped to current routes
   const titles = {
-    [SCREEN.LOGIN]: "Sign In",
-    [SCREEN.HOME_VET]: "Vet Center",
+    [SCREEN.LOGIN]: "Iniciar Sesión",
+    [SCREEN.HOME_VET]: "Centro veterinario",
   };
 
   const currentTitle = titles[location.pathname] || "Pet Track";
@@ -60,13 +60,13 @@ export default function NavBar() {
       visible: userAuthenticated && role === "professional",
     },
     {
-      label: "Profile",
+      label: "Perfil",
       screen: SCREEN.SETTINGS_USER,
       onClick: () => navigate(SCREEN.SETTINGS_USER),
       visible: userAuthenticated && role === "user",
     },
     {
-      label: "ProfileVet",
+      label: "PerfilVet",
       screen: SCREEN.SETTINGS_VET,
       onClick: () => navigate(SCREEN.SETTINGS_VET),
       visible: userAuthenticated && role === "professional",
@@ -98,7 +98,7 @@ export default function NavBar() {
         sx={{ bgcolor: "#B2EBF2", color: "black" }} // PetTrack main navbar color
       >
         <Toolbar sx={{ justifyContent: "space-between" }}>
-          
+
           {/* LEFT: BRANDING & LOGO */}
           <Stack direction="row" alignItems="center" spacing={1}>
             <FootprintIcon />
@@ -132,7 +132,7 @@ export default function NavBar() {
 
           {/* RIGHT: NAVIGATION (Cleaned up, help button moved to FAB) */}
           <Stack direction="row" spacing={isMobile ? 1 : 2} alignItems="center">
-            
+
             {/* DESKTOP MENU LINKS */}
             {!isMobile && (
               <Stack direction="row" spacing={2}>
