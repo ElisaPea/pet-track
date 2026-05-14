@@ -12,7 +12,9 @@ import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt"; // Alternative arrow icon can be used if preferred
 import ClientDetailsPopup from "../components/ClientDetailsPopup";
-import AddClientPopup from '../components/AddClientPopup';
+
+import { useAuth } from "../context/AuthContext";
+import AddClientPopup from "../components/AddClientPopup";
 import { useState, useEffect } from "react";
 import { getClientProfiles, getPetsByClient } from "../api/query";
 
@@ -27,13 +29,15 @@ export default function HomeVet() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
+  const { userState } = useAuth();
+  const vetCenterId = userState?.veterinaryCenterId;
 
   // UseEffect que llama a las APIs al montar el componente
   useEffect(() => {
     const fetchClientsAndPets = async () => {
       try {
         // 1. Obtenemos los clientes
-        const clientsData = await getClientProfiles();
+        const clientsData = await getClientProfiles(vetCenterId);
 
         if (clientsData) {
           // 2. Por cada cliente, traemos sus mascotas usando Promise.all para que sea simultáneo
@@ -42,7 +46,7 @@ export default function HomeVet() {
               const pets = await getPetsByClient(client.id);
               // Devolvemos el cliente sumándole un nuevo campo "pets"
               return { ...client, pets: pets || [] };
-            })
+            }),
           );
           setClientList(enrichedClients);
         }
@@ -65,10 +69,12 @@ export default function HomeVet() {
     const query = searchQuery.toLowerCase();
     const clientName = client.name || "";
     const matchClientName = clientName.toLowerCase().includes(query);
-    const matchPetName = client.pets && client.pets.some((pet: any) => {
-      const petName = pet.name || "";
-      return petName.toLowerCase().includes(query);
-    });
+    const matchPetName =
+      client.pets &&
+      client.pets.some((pet: any) => {
+        const petName = pet.name || "";
+        return petName.toLowerCase().includes(query);
+      });
     return matchClientName || matchPetName;
   });
 
@@ -84,7 +90,7 @@ export default function HomeVet() {
           }}
         >
           <Typography variant="h4" component="h1" sx={{ fontWeight: "bold" }}>
-            Bienvenido Malcon
+            Bienvenido {userState?.name}
           </Typography>
         </Box>
         <Box
@@ -183,149 +189,166 @@ export default function HomeVet() {
         }}
       >
         {filteredClients.length === 0 ? (
-           <Box sx={{ 
-             bgcolor: "#FFF8E1", 
-             borderRadius: "24px", 
-             p: 4, 
-             display: "flex", 
-             flexDirection: "column", 
-             alignItems: "center", 
-             textAlign: "center",
-             gap: 1.5, 
-             boxShadow: "0 4px 15px rgba(255, 202, 40, 0.15)",
-             maxWidth: 400,
-             mx: "auto", 
-             mt: 4
-           }}>
-             <Typography sx={{ fontSize: "3.5rem", lineHeight: 1 }}>🔍</Typography>
-             <Box>
-               <Typography sx={{ fontWeight: "bold", color: "#F57F17", fontSize: "1.15rem", mb: 0.5 }}>
-                 Sin resultados
-               </Typography>
-               <Typography variant="body2" sx={{ color: "#FF8F00" }}>
-                 No hay ningún cliente ni mascota que coincida con tu búsqueda.
-               </Typography>
-             </Box>
-           </Box>
-        ) : (
-        filteredClients.map((client) => (
-          /* Clients cards */
           <Box
-            key={client.id}
             sx={{
-              width: 300, // Adjust width as necessary for proper scaling
-              bgcolor: "#00ADBA",
-              boxShadow: 5,
-              borderRadius: 4,
-              p: 2, // Inner padding
+              bgcolor: "#FFF8E1",
+              borderRadius: "24px",
+              p: 4,
               display: "flex",
-              flexDirection: "column", // Vertical alignment
-              gap: 1.5, // Gap between the two white blocks
+              flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
+              gap: 1.5,
+              boxShadow: "0 4px 15px rgba(255, 202, 40, 0.15)",
+              maxWidth: 400,
+              mx: "auto",
+              mt: 4,
             }}
           >
-            {/* 1. UPPER SECTION: Client Data */}
+            <Typography sx={{ fontSize: "3.5rem", lineHeight: 1 }}>
+              🔍
+            </Typography>
+            <Box>
+              <Typography
+                sx={{
+                  fontWeight: "bold",
+                  color: "#F57F17",
+                  fontSize: "1.15rem",
+                  mb: 0.5,
+                }}
+              >
+                Sin resultados
+              </Typography>
+              <Typography variant="body2" sx={{ color: "#FF8F00" }}>
+                No hay ningún cliente ni mascota que coincida con tu búsqueda.
+              </Typography>
+            </Box>
+          </Box>
+        ) : (
+          filteredClients.map((client) => (
+            /* Clients cards */
             <Box
+              key={client.id}
               sx={{
-                bgcolor: "white", // White background for the upper block
-                borderRadius: 3, // Rounded corners for the upper block
-                p: 1.5, // Internal padding for the upper block
+                width: 300, // Adjust width as necessary for proper scaling
+                bgcolor: "#00ADBA",
+                boxShadow: 5,
+                borderRadius: 4,
+                p: 2, // Inner padding
+                display: "flex",
+                flexDirection: "column", // Vertical alignment
+                gap: 1.5, // Gap between the two white blocks
               }}
             >
-              <Stack direction="row" spacing={2} alignItems="flex-start">
+              {/* 1. UPPER SECTION: Client Data */}
+              <Box
+                sx={{
+                  bgcolor: "white", // White background for the upper block
+                  borderRadius: 3, // Rounded corners for the upper block
+                  p: 1.5, // Internal padding for the upper block
+                }}
+              >
+                <Stack direction="row" spacing={2} alignItems="flex-start">
+                  <Box sx={{ flex: 1 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "black" }}
+                    >
+                      Cliente:
+                    </Typography>
+                  </Box>
+                  <Box sx={{ textAlign: "right", flex: 1 }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ fontWeight: "bold", color: "black" }}
+                    >
+                      {client.name}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Box>
+
+              {/* 2. LOWER SECTION: Pet Data and Button */}
+              <Box
+                sx={{
+                  bgcolor: "white", // White background for the lower block
+                  borderRadius: 3, // Rounded corners for the lower block
+                  p: 1.5, // Internal padding for the lower block
+                  display: "flex",
+                  alignItems: "center", // Vertical alignment of the elements
+                  gap: 1.5, // Gap between the avatar, text, and button
+                }}
+              >
+                <Avatar
+                  variant="rounded" // Makes the image square with rounded corners
+                  sx={{
+                    width: 70, // Avatar size
+                    height: 70, // Avatar size
+                    borderRadius: "15px", // More subtle rounded corners
+                    boxShadow: 2,
+                    bgcolor: "#B2EBF2",
+                    color: "black",
+                  }}
+                >
+                  {/* Si tiene mascotas, la inicial de la primera, si no, la del cliente */}
+                  {client.pets && client.pets.length > 0
+                    ? (client.pets[0].name || "M").charAt(0).toUpperCase()
+                    : (client.name || "C").charAt(0).toUpperCase()}
+                </Avatar>
+
                 <Box sx={{ flex: 1 }}>
                   <Typography
                     variant="body2"
                     sx={{ fontWeight: "bold", color: "black" }}
                   >
-                    Cliente:
+                    Mascota(s):
                   </Typography>
-                </Box>
-                <Box sx={{ textAlign: "right", flex: 1 }}>
                   <Typography
                     variant="body2"
-                    sx={{ fontWeight: "bold", color: "black" }}
+                    sx={{
+                      fontWeight: "bold",
+                      color: "black",
+                      fontSize: "0.85rem",
+                    }}
                   >
-                    {client.name}
+                    {client.pets && client.pets.length > 0
+                      ? client.pets.map((p: any) => p.name).join(", ")
+                      : "(Sin mascotas)"}
                   </Typography>
                 </Box>
-              </Stack>
-            </Box>
 
-            {/* 2. LOWER SECTION: Pet Data and Button */}
-            <Box
-              sx={{
-                bgcolor: "white", // White background for the lower block
-                borderRadius: 3, // Rounded corners for the lower block
-                p: 1.5, // Internal padding for the lower block
-                display: "flex",
-                alignItems: "center", // Vertical alignment of the elements
-                gap: 1.5, // Gap between the avatar, text, and button
-              }}
-            >
-              <Avatar
-                variant="rounded" // Makes the image square with rounded corners
-                sx={{
-                  width: 70, // Avatar size
-                  height: 70, // Avatar size
-                  borderRadius: "15px", // More subtle rounded corners
-                  boxShadow: 2,
-                  bgcolor: "#B2EBF2",
-                  color: "black",
-                }}
-              >
-                {/* Si tiene mascotas, la inicial de la primera, si no, la del cliente */}
-                {client.pets && client.pets.length > 0
-                  ? (client.pets[0].name || "M").charAt(0).toUpperCase()
-                  : (client.name || "C").charAt(0).toUpperCase()}
-              </Avatar>
+                <IconButton
+                  sx={{
+                    bgcolor: "#00ADBA", // Turquoise button background color
+                    color: "white", // Icon color
+                    borderRadius: "50%", // Circular button
+                    p: 1, // Internal padding
+                    ml: 2, // Left margin to separate it
+                    "&:hover": { bgcolor: "#00838F" }, // Change color on hover
+                  }}
+                  onClick={() => handleOpenDetails(client.id)} // Pass the client.id to the button handler
+                >
+                  <ArrowRightAltIcon /> {/* Arrow icon */}
+                </IconButton>
 
-              <Box sx={{ flex: 1 }}>
-                <Typography
-                  variant="body2"
-                  sx={{ fontWeight: "bold", color: "black" }}
-                >
-                  Mascota(s):
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ fontWeight: "bold", color: "black", fontSize: "0.85rem" }}
-                >
-                  {client.pets && client.pets.length > 0
-                    ? client.pets.map((p: any) => p.name).join(", ")
-                    : "(Sin mascotas)"}
-                </Typography>
+                {/* POPUPS SECTION */}
+                {/* CLIENT DETAILS POPUP: Place the Modal at the bottom. It will be 'listening' to the isModalOpen switch. */}
+                <ClientDetailsPopup
+                  open={isModalOpen && selectedClientId === client.id}
+                  onClose={() => setIsModalOpen(false)}
+                  clientData={client}
+                  vetCenterId={vetCenterId}
+                />
               </Box>
-
-              <IconButton
-                sx={{
-                  bgcolor: "#00ADBA", // Turquoise button background color
-                  color: "white", // Icon color
-                  borderRadius: "50%", // Circular button
-                  p: 1, // Internal padding
-                  ml: 2, // Left margin to separate it
-                  "&:hover": { bgcolor: "#00838F" }, // Change color on hover
-                }}
-                onClick={() => handleOpenDetails(client.id)} // Pass the client.id to the button handler
-              >
-                <ArrowRightAltIcon /> {/* Arrow icon */}
-              </IconButton>
-
-              {/* POPUPS SECTION */}
-              {/* CLIENT DETAILS POPUP: Place the Modal at the bottom. It will be 'listening' to the isModalOpen switch. */}
-              <ClientDetailsPopup
-                open={isModalOpen && selectedClientId === client.id}
-                onClose={() => setIsModalOpen(false)}
-                clientData={client}
-              />
-              {/* ADD CLIENT POPUP: Triggered from the top "+" button */}
-              <AddClientPopup
-                open={isAddClientOpen}
-                onClose={() => setIsAddClientOpen(false)}
-              />
             </Box>
-          </Box>
-        ))
+          ))
         )}
+        {/* ADD CLIENT POPUP: Triggered from the top "+" button */}
+        <AddClientPopup
+          open={isAddClientOpen}
+          onClose={() => setIsAddClientOpen(false)}
+          vetCenterId={vetCenterId}
+        />
       </Box>
     </BasicScreen>
   );

@@ -8,87 +8,39 @@ import {
   Collapse,
   Alert,
   IconButton,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from "@mui/material";
-import React, { useState, useEffect } from "react";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import React, { useState } from "react";
 import {
   validateEmail,
   validatePhone,
   validateColegiado,
   isNotEmpty,
 } from "../utils/validationUtils";
-import { getVetProfile, supabase, updateVetProfile } from "../api/query";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { updateVetProfile } from "../api/query";
+import { logout, updateUserSettingsEmail } from "../api/signInQuery";
 import { SCREEN } from "../constants/constants";
 import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "../context/AuthContext";
 
 export default function AccountSettingsVet() {
-  const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
   const navigate = useNavigate();
-  
+
+  // States for email specific authentication
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailSuccess, setEmailSuccess] = useState(false);
+
   // States for error and success messages
   const [error, setError] = useState<string | null>(null);
   const [error2, setError2] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  
-  //State to store the original copy of the data for comparison
-  const [initialData, setInitialData] = useState({
-    name: "",
-    email: "",
-    phone: "+34 ",
-    address: "",
-    licenseNumber: "",
-  });
+  const { userState, updateAuth } = useAuth();
 
   // Form fields state (Current values the user is modifying)
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "+34 ",
-    address: "",
-    licenseNumber: "",
-  });
-
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true);
-      
-      // DEVELOPMENT HACK: Forcing Bilbo's ID for testing
-      // When the app is finished, we will remove this and use supabase.auth.getUser()
-      const ID_BILBO = "25a8fd56-fcf7-4629-a419-c5dd9f5891eb";
-      
-      console.log("1. Forcing search for user:", ID_BILBO);
-      setUserId(ID_BILBO);
-
-      try {
-        const profile = await getVetProfile(ID_BILBO);
-        console.log("2. Data arriving from DB:", profile);
-
-        if (profile) {
-          const fetchedData = {
-            name: profile.name || "",
-            phone: profile.phone || "",
-            licenseNumber: profile.licenseNumber || "",
-            email: "bilbo@fakeemail.com", // Temporary fake email
-            address: "", // Address is not currently retrieved from the DB in this setup
-          };
-
-          // Save the data both in the view state and the hidden backup copy
-          setFormData(fetchedData);
-          setInitialData(fetchedData);
-        } else {
-          console.error("DB returned null. Check Bilbo's ID.");
-        }
-      } catch (err) { 
-        console.error("Error in query:", err); 
-      }
-      
-      setLoading(false);
-    }
-    
-    loadData();
-  }, []);
+  const [formData, setFormData] = useState(userState);
 
   // Input change handler
   const handleChange = (
@@ -101,19 +53,18 @@ export default function AccountSettingsVet() {
   };
 
   //Logical variable that calculates in real-time if changes exist
-  const isFormModified = 
-    formData.name !== initialData.name ||
-    formData.email !== initialData.email ||
-    formData.phone !== initialData.phone ||
-    formData.address !== initialData.address ||
-    formData.licenseNumber !== initialData.licenseNumber;
+  const isFormModified =
+    formData.name !== userState.name ||
+    formData.phone !== userState.phone ||
+    formData.address !== userState.address ||
+    formData.licenseNumber !== userState.licenseNumber;
 
   // Save handler and validations
   const handleSave = async () => {
     // If no changes were made, stop execution for safety
     if (!isFormModified) return;
 
-    const { name, email, phone, licenseNumber } = formData;
+    const { name, phone, licenseNumber } = formData;
 
     // Reset alert states
     setError(null);
@@ -123,8 +74,6 @@ export default function AccountSettingsVet() {
     // Empty fields validation
     const missingFields: string[] = [];
     if (!isNotEmpty(name)) missingFields.push("Nombre");
-    if (!isNotEmpty(email)) missingFields.push("Correo electrónico");
-    if (!isNotEmpty(phone)) missingFields.push("Teléfono");
     if (!isNotEmpty(licenseNumber)) missingFields.push("Nº Colegiado");
 
     if (missingFields.length > 0) {
@@ -134,8 +83,8 @@ export default function AccountSettingsVet() {
 
     // Format validation
     const invalidFields: string[] = [];
-    if (!validateEmail(email)) invalidFields.push("Correo electrónico");
-    if (!validatePhone(phone)) invalidFields.push("Teléfono");
+    if (phone && phone.length && !validatePhone(phone))
+      invalidFields.push("Teléfono");
     if (!validateColegiado(licenseNumber)) invalidFields.push("Nº Colegiado");
 
     if (invalidFields.length > 0) {
@@ -145,26 +94,56 @@ export default function AccountSettingsVet() {
 
     // API Connection
     try {
-      if (userId) {
-        await updateVetProfile(userId, {
-          name: formData.name,
-          phone: formData.phone,
-          licenseNumber: formData.licenseNumber
-        });
+      if (userState.id) {
+        await updateVetProfile(userState?.id, formData);
+
+        await updateAuth();
 
         setSuccess(true);
         console.log("Data synchronized with Supabase");
-        
-        //Update our "backup copy" so the button disables again
-        setInitialData(formData);
 
-        setTimeout(() => setSuccess(false), 3000);
+        // setTimeout(() => setSuccess(false), 3000);
       } else {
         setError("No active user session detected.");
       }
     } catch (err) {
       console.error(err);
       setError("Technical error: Could not connect to the database.");
+    }
+  };
+
+  // Handler para el cambio de email (Accordion)
+  const handleConfirmEmailChange = async () => {
+    setEmailError(null);
+    setEmailSuccess(false);
+
+    // 1. Validaciones previas
+    if (!validateEmail(formData.email)) {
+      setEmailError("Por favor, introduce un correo electrónico válido.");
+      return;
+    }
+
+    if (formData.email === userState?.email) {
+      setEmailError("El nuevo correo debe ser diferente al actual.");
+      return;
+    }
+
+    try {
+      // 2. Intentar actualizar en Supabase
+      await updateUserSettingsEmail(formData.email);
+
+      // 3. Si todo va bien, avisamos al usuario
+      setEmailSuccess(true);
+      console.log("Email actualizado correctamente");
+
+      // 4. Mini delay para que lea el mensaje y logout
+      setTimeout(async () => {
+        await logout(navigate);
+      }, 3000);
+    } catch (err: any) {
+      // 5. Si falla, mostramos el error
+      console.error(err);
+      setEmailError(err.message || "No se pudo actualizar el correo.");
     }
   };
 
@@ -176,32 +155,18 @@ export default function AccountSettingsVet() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          mt: 8,
+          mt: 4,
         }}
       >
-         {/* Back Button */}
-          <Box sx={{ width: "100%", display: "flex", justifyContent: "flex-start", mb: 2 }}>
-          <IconButton
-            onClick={() => navigate(SCREEN.HOME_VET)}
-            sx={{
-              bgcolor: "#FBC02D",
-              color: "black",
-              "&:hover": { bgcolor: "#f9a825" },
-              boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
-            }}
-          >
-          <ArrowBackIcon fontSize="medium" />
-          </IconButton>
-        </Box>
         <Typography
           variant="h4"
           sx={{ fontWeight: "600", color: "#4A3B3B", mb: 0.5 }}
         >
           Actualiza tu perfil
         </Typography>
-        
+
         <Box sx={{ width: 60, height: 4, bgcolor: "#00BCD4", mb: 4 }} />
-        
+
         <Box
           sx={{
             bgcolor: "#D1F2F5",
@@ -214,19 +179,18 @@ export default function AccountSettingsVet() {
           }}
         >
           <Box component="form" noValidate sx={{ mt: 1 }}>
-            
             <Collapse in={Boolean(error)}>
               <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
                 {error}
               </Alert>
             </Collapse>
-            
+
             <Collapse in={Boolean(error2)}>
               <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
                 {error2}
               </Alert>
             </Collapse>
-            
+
             <Collapse in={success}>
               <Alert severity="success" sx={{ mb: 3, borderRadius: 5 }}>
                 ¡Datos guardados exitosamente!
@@ -262,36 +226,6 @@ export default function AccountSettingsVet() {
                 />
               </Stack>
 
-              {/* Email Field */}
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                alignItems="center"
-                sx={{ width: "100%" }}
-              >
-                <Typography
-                  sx={{
-                    width: 400,
-                    textAlign: { xs: "center", sm: "left" },
-                    fontWeight: "bold",
-                  }}
-                >
-                  Correo electrónico*:
-                </Typography>
-                <TextField
-                  fullWidth
-                  variant="standard"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={
-                    (Boolean(error) && !isNotEmpty(formData.email)) ||
-                    (Boolean(error2) && !validateEmail(formData.email))
-                  }
-                  InputProps={{ disableUnderline: true }}
-                  sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
-                />
-              </Stack>
-
               {/* Phone Field */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
@@ -305,7 +239,7 @@ export default function AccountSettingsVet() {
                     fontWeight: "bold",
                   }}
                 >
-                  Número de teléfono*:
+                  Número de teléfono:
                 </Typography>
                 <TextField
                   fullWidth
@@ -313,10 +247,7 @@ export default function AccountSettingsVet() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
-                  error={
-                    (Boolean(error) && !isNotEmpty(formData.phone)) ||
-                    (Boolean(error2) && !validatePhone(formData.phone))
-                  }
+                  error={Boolean(error2) && !validatePhone(formData.phone)}
                   InputProps={{ disableUnderline: true }}
                   sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
                 />
@@ -371,7 +302,8 @@ export default function AccountSettingsVet() {
                   value={formData.licenseNumber}
                   error={
                     (Boolean(error) && !isNotEmpty(formData.licenseNumber)) ||
-                    (Boolean(error2) && !validateColegiado(formData.licenseNumber))
+                    (Boolean(error2) &&
+                      !validateColegiado(formData.licenseNumber))
                   }
                   InputProps={{ disableUnderline: true }}
                   sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
@@ -388,7 +320,6 @@ export default function AccountSettingsVet() {
                   pt: 2,
                 }}
               >
-                {/*Conditionally styled and disabled button */}
                 <Button
                   variant="contained"
                   disabled={!isFormModified}
@@ -399,19 +330,100 @@ export default function AccountSettingsVet() {
                     fontWeight: "bold",
                     borderRadius: 2,
                     width: { xs: "100%", sm: "50%" },
-                    border: isFormModified ? "2px solid #64B5F6" : "2px solid transparent",
-                    "&:hover": { 
-                      bgcolor: isFormModified ? "#f9a825" : "#e0e0e0" 
+                    border: isFormModified
+                      ? "2px solid #64B5F6"
+                      : "2px solid transparent",
+                    "&:hover": {
+                      bgcolor: isFormModified ? "#f9a825" : "#e0e0e0",
                     },
                     "&.Mui-disabled": {
                       bgcolor: "#e0e0e0",
                       color: "#9e9e9e",
-                    }
+                    },
                   }}
                 >
                   GUARDAR
                 </Button>
               </Box>
+
+              {/* Accordion for Authentication Data */}
+              <Accordion
+                disableGutters
+                elevation={0}
+                sx={{
+                  width: "100%",
+                  borderRadius: "20px !important",
+                  boxShadow: "none",
+                  bgcolor: "rgba(255,255,255,0.5)",
+                  mt: 2,
+                  "&:before": { display: "none" },
+                }}
+              >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Typography sx={{ fontWeight: "bold", color: "#4A3B3B" }}>
+                    Datos de autenticación
+                  </Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {/* Mensajes de feedback específicos para el email */}
+                  <Collapse in={Boolean(emailError)}>
+                    <Alert severity="error" sx={{ mb: 2, borderRadius: 5 }}>
+                      {emailError}
+                    </Alert>
+                  </Collapse>
+                  <Collapse in={emailSuccess}>
+                    <Alert severity="success" sx={{ mb: 2, borderRadius: 5 }}>
+                      ¡Correo actualizado! Cerrando sesión para reiniciar...
+                    </Alert>
+                  </Collapse>
+
+                  <Typography
+                    variant="body2"
+                    sx={{ mb: 2, color: "#666", textAlign: "left" }}
+                  >
+                    Al cambiar tu correo,{" "}
+                    <b>tu sesión se cerrará automáticamente</b>. Deberás volver
+                    a entrar con tu nueva dirección (la contraseña no cambia).
+                  </Typography>
+
+                  <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                    <TextField
+                      fullWidth
+                      variant="standard"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="Nuevo correo electrónico"
+                      error={Boolean(emailError)}
+                      InputProps={{ disableUnderline: true }}
+                      sx={{
+                        bgcolor: "white",
+                        borderRadius: 50,
+                        px: 2,
+                        py: 0.5,
+                      }}
+                    />
+                    <Button
+                      variant="contained"
+                      onClick={handleConfirmEmailChange}
+                      disabled={emailSuccess}
+                      sx={{
+                        bgcolor: "#FBC02D",
+                        color: "black",
+                        fontWeight: "bold",
+                        borderRadius: 50,
+                        px: 3,
+                        whiteSpace: "nowrap",
+                        border: "2px solid #64B5F6",
+                        "&:hover": { bgcolor: "#f9a825" },
+                        "&.Mui-disabled": { bgcolor: "#e0e0e0" },
+                      }}
+                    >
+                      CONFIRMAR
+                    </Button>
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
             </Stack>
           </Box>
         </Box>

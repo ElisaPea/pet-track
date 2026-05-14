@@ -1,12 +1,27 @@
 import {
-  Box, Typography, Button, Stack, Dialog, Tabs, Tab,
-  TextField, Select, MenuItem, Snackbar, Alert, CircularProgress,
+  Box,
+  Typography,
+  Button,
+  Stack,
+  Dialog,
+  Tabs,
+  Tab,
+  TextField,
+  Select,
+  MenuItem,
+  Snackbar,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { getEtapaVida } from "../utils/getEtapaVida";
-import { createPet, updatePet, updatePetUserNotas, getPetUserNotas } from "../api/query";
-
-const TEST_USER_ID = "2427a02c-b1c9-423e-9aab-4ed448c34b5b";
+import {
+  createPet,
+  updatePet,
+  updatePetUserNotas,
+  getPetUserNotas,
+} from "../api/query";
+import { useAuth } from "../context/AuthContext";
 
 interface MascotaExistente {
   id: string;
@@ -31,6 +46,8 @@ export function PopupCreatePetUser({
   mascota?: MascotaExistente | null;
 }) {
   const modoLectura = !!mascota;
+
+  const { userState } = useAuth();
 
   const [tabActual, setTabActual] = useState(0);
   const [vacunas, setVacunas] = useState("");
@@ -67,7 +84,7 @@ export function PopupCreatePetUser({
         setRaza(mascota.breed || "");
         setEdad(edadCalc);
 
-        const extras = await getPetUserNotas(mascota.id, TEST_USER_ID);
+        const extras = await getPetUserNotas(mascota.id, userState?.id);
         setNotasUser(extras.notasUser || "");
 
         setOriginalData({
@@ -121,13 +138,7 @@ export function PopupCreatePetUser({
   };
 
   const isFormValid =
-    name &&
-    !nameError &&
-    edad &&
-    peso &&
-    raza &&
-    !razaError &&
-    vacunas;
+    name && !nameError && edad && peso && raza && !razaError && vacunas;
 
   const hasChanges =
     name !== originalData.name ||
@@ -146,12 +157,16 @@ export function PopupCreatePetUser({
 
       const pet = await createPet(
         { name, breed: raza, birthDate },
-        TEST_USER_ID
+        userState?.id,
       );
 
-      await updatePetUserNotas(pet.id, TEST_USER_ID, notasUser);
+      await updatePetUserNotas(pet.id, userState?.id, notasUser);
 
-      setToast({ open: true, message: "¡Mascota creada!", severity: "success" });
+      setToast({
+        open: true,
+        message: "¡Mascota creada!",
+        severity: "success",
+      });
       setTimeout(() => setOpen(false), 1500);
     } catch {
       setToast({ open: true, message: "Error al guardar", severity: "error" });
@@ -175,12 +190,20 @@ export function PopupCreatePetUser({
         birthDate,
       });
 
-      await updatePetUserNotas(mascota.id, TEST_USER_ID, notasUser);
+      await updatePetUserNotas(mascota.id, userState?.id, notasUser);
 
-      setToast({ open: true, message: "¡Mascota actualizada!", severity: "success" });
+      setToast({
+        open: true,
+        message: "¡Mascota actualizada!",
+        severity: "success",
+      });
       setTimeout(() => setOpen(false), 1500);
     } catch {
-      setToast({ open: true, message: "Error al actualizar", severity: "error" });
+      setToast({
+        open: true,
+        message: "Error al actualizar",
+        severity: "error",
+      });
     } finally {
       setLoading(false);
     }
@@ -199,49 +222,103 @@ export function PopupCreatePetUser({
             height: "85vh",
             display: "flex",
             flexDirection: "column",
-          }
+          },
         }}
       >
         <Box sx={{ borderBottom: "2px solid black" }}>
-          <Tabs value={tabActual} onChange={(_, v) => setTabActual(v)} variant="fullWidth">
+          <Tabs
+            value={tabActual}
+            onChange={(_, v) => setTabActual(v)}
+            variant="fullWidth"
+          >
             <Tab label="Datos Mascota" />
             <Tab label="Notas" />
           </Tabs>
         </Box>
 
-        <Box sx={{ p: 4, overflowY: "auto", flex: 1, display: "flex", flexDirection: "column", gap: 3 }}>
+        <Box
+          sx={{
+            p: 4,
+            overflowY: "auto",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+          }}
+        >
           {tabActual === 0 && (
             <>
-              <Box sx={{ bgcolor: "white", borderRadius: 5, p: 4, display: "flex", gap: 4, alignItems: "center", boxShadow: 1 }}>
+              <Box
+                sx={{
+                  bgcolor: "white",
+                  borderRadius: 5,
+                  p: 4,
+                  display: "flex",
+                  gap: 4,
+                  alignItems: "center",
+                  boxShadow: 1,
+                }}
+              >
                 <Box sx={{ textAlign: "center" }}>
-                  <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold', color: 'gray' }}>Foto</Typography>
-                  <Button sx={{ width: 120, height: 120, bgcolor: "#F7F9FA", border: "2px dashed #00ADBA", fontSize: 40 }}>+</Button>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ mb: 1, fontWeight: "bold", color: "gray" }}
+                  >
+                    Foto
+                  </Typography>
+                  <Button
+                    sx={{
+                      width: 120,
+                      height: 120,
+                      bgcolor: "#F7F9FA",
+                      border: "2px dashed #00ADBA",
+                      fontSize: 40,
+                    }}
+                  >
+                    +
+                  </Button>
                 </Box>
 
                 <Box sx={{ flex: 1 }}>
-                  <Typography sx={{ fontWeight: "bold", mb: 1 }}>¿Cuál es el nombre de tu mascota?</Typography>
+                  <Typography sx={{ fontWeight: "bold", mb: 1 }}>
+                    ¿Cuál es el nombre de tu mascota?
+                  </Typography>
                   <TextField
                     fullWidth
                     value={name}
                     onChange={(e) => nameValidation(e.target.value)}
                     error={!!nameError}
                     helperText={nameError}
-                    sx={{ "& .MuiOutlinedInput-root": { borderRadius: 10, bgcolor: "#F7F9FA" } }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 10,
+                        bgcolor: "#F7F9FA",
+                      },
+                    }}
                   />
                 </Box>
               </Box>
 
-              <Box sx={{ bgcolor: "white", borderRadius: 5, p: 4, boxShadow: 1 }}>
-                <Typography variant="h6" sx={{ color: "#00ADBA", fontWeight: "bold", mb: 3 }}>
+              <Box
+                sx={{ bgcolor: "white", borderRadius: 5, p: 4, boxShadow: 1 }}
+              >
+                <Typography
+                  variant="h6"
+                  sx={{ color: "#00ADBA", fontWeight: "bold", mb: 3 }}
+                >
                   Información adicional:
                 </Typography>
 
                 <Stack direction="row" spacing={3} flexWrap="wrap">
                   <Box sx={{ width: 80 }}>
-                    <Typography variant="caption" sx={{ fontWeight: "bold" }}>Edad (años)</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                      Edad (años)
+                    </Typography>
                     <TextField
                       value={edad}
-                      onChange={(e) => handleNumberInput(e.target.value, setEdad)}
+                      onChange={(e) =>
+                        handleNumberInput(e.target.value, setEdad)
+                      }
                       sx={{
                         "& .MuiOutlinedInput-root": {
                           borderRadius: 10,
@@ -256,10 +333,14 @@ export function PopupCreatePetUser({
                   </Box>
 
                   <Box sx={{ width: 80 }}>
-                    <Typography variant="caption" sx={{ fontWeight: "bold" }}>Peso (kg)</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                      Peso (kg)
+                    </Typography>
                     <TextField
                       value={peso}
-                      onChange={(e) => handleNumberInput(e.target.value, setPeso)}
+                      onChange={(e) =>
+                        handleNumberInput(e.target.value, setPeso)
+                      }
                       sx={{
                         "& .MuiOutlinedInput-root": {
                           borderRadius: 10,
@@ -271,19 +352,28 @@ export function PopupCreatePetUser({
                   </Box>
 
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="caption" sx={{ fontWeight: "bold" }}>Raza</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                      Raza
+                    </Typography>
                     <TextField
                       fullWidth
                       value={raza}
                       onChange={(e) => razaValidation(e.target.value)}
                       error={!!razaError}
                       helperText={razaError}
-                      sx={{ "& .MuiOutlinedInput-root": { borderRadius: 10, bgcolor: "#F7F9FA" } }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 10,
+                          bgcolor: "#F7F9FA",
+                        },
+                      }}
                     />
                   </Box>
 
                   <Box sx={{ minWidth: 120 }}>
-                    <Typography variant="caption" sx={{ fontWeight: "bold" }}>¿Vacunas?</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                      ¿Vacunas?
+                    </Typography>
                     <Select
                       fullWidth
                       value={vacunas}
@@ -302,7 +392,9 @@ export function PopupCreatePetUser({
           {tabActual === 1 && (
             <div>
               <Box sx={{ bgcolor: "white", borderRadius: 5, p: 4, mb: 4 }}>
-                <Typography sx={{ fontWeight: "bold", mb: 2 }}>Notas del propietario</Typography>
+                <Typography sx={{ fontWeight: "bold", mb: 2 }}>
+                  Notas del propietario
+                </Typography>
                 <TextField
                   fullWidth
                   multiline
@@ -312,7 +404,9 @@ export function PopupCreatePetUser({
                 />
               </Box>
               <Box sx={{ bgcolor: "white", borderRadius: 5, p: 4 }}>
-                <Typography sx={{ fontWeight: "bold", mb: 2 }}>Notas del centro veterinario</Typography>
+                <Typography sx={{ fontWeight: "bold", mb: 2 }}>
+                  Notas del centro veterinario
+                </Typography>
                 <TextField
                   fullWidth
                   multiline
@@ -326,7 +420,15 @@ export function PopupCreatePetUser({
           )}
         </Box>
 
-        <Box sx={{ p: 3, display: "flex", justifyContent: "flex-end", gap: 2, bgcolor: "white" }}>
+        <Box
+          sx={{
+            p: 3,
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 2,
+            bgcolor: "white",
+          }}
+        >
           <Button onClick={() => setOpen(false)}>Cancelar</Button>
 
           {!modoLectura && (
