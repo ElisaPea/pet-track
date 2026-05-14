@@ -26,7 +26,6 @@ export default function WelcomeUser() {
   const { userState } = useAuth();
 
   const fetchMascotas = async () => {
-    console.log("pido mascotas", userState);
     setLoadingPets(true);
     try {
       const data = await getPetsByUser(userState?.id);

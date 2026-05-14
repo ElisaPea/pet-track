@@ -8,7 +8,7 @@ export const validateEmail = (email: string): boolean => {
 export const validatePhone = (phone: string): boolean => {
   if (!phone || !phone?.length) return true;
   const justNumbers = phone.replace(/\D/g, "");
-  return justNumbers.length > 3 && justNumbers.length < 15;
+  return justNumbers.length > 3 && justNumbers.length < 9;
   // return justNumbers.length === 9; // 34 + 9 dígitos
 };
 
