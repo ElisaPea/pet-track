@@ -28,6 +28,8 @@ interface MascotaExistente {
   name: string;
   breed?: string;
   birthdate?: string;
+  weight?: number;
+  vaccines?: boolean;
 }
 
 function edadDesde(birthdate?: string): string {
@@ -72,6 +74,8 @@ export function PopupCreatePetUser({
     name: "",
     raza: "",
     edad: "",
+    peso: "",
+    vacunas: "",
     notasUser: "",
   });
 
@@ -83,6 +87,8 @@ export function PopupCreatePetUser({
         setName(mascota.name || "");
         setRaza(mascota.breed || "");
         setEdad(edadCalc);
+        setPeso(String(mascota.weight || ""));
+        setVacunas(mascota.vaccines ? "yes" : "no");
 
         const extras = await getPetUserNotas(mascota.id, userState?.id);
         setNotasUser(extras.notasUser || "");
@@ -91,6 +97,8 @@ export function PopupCreatePetUser({
           name: mascota.name || "",
           raza: mascota.breed || "",
           edad: edadCalc,
+          peso: String(mascota.weight || ""),
+          vacunas: mascota.vaccines ? "yes" : "no",
           notasUser: extras.notasUser || "",
         });
       } else {
@@ -105,6 +113,8 @@ export function PopupCreatePetUser({
           name: "",
           raza: "",
           edad: "",
+          peso: "",
+          vacunas: "",
           notasUser: "",
         });
       }
@@ -138,12 +148,14 @@ export function PopupCreatePetUser({
   };
 
   const isFormValid =
-    name && !nameError && edad && peso && raza && !razaError && vacunas;
+    name && !nameError && !razaError;
 
   const hasChanges =
     name !== originalData.name ||
     raza !== originalData.raza ||
     edad !== originalData.edad ||
+    peso !== originalData.peso ||
+    vacunas !== originalData.vacunas ||
     notasUser !== originalData.notasUser;
 
   const handleGuardar = async () => {
@@ -156,7 +168,7 @@ export function PopupCreatePetUser({
       const birthDate = `${birthYear}-01-01`;
 
       const pet = await createPet(
-        { name, breed: raza, birthDate },
+        { name, breed: raza, birthDate, weight: parseInt(peso) || 0, vaccines: vacunas === "yes" },
         userState?.id,
       );
 
@@ -188,6 +200,8 @@ export function PopupCreatePetUser({
         name,
         breed: raza,
         birthDate,
+        weight: parseInt(peso) || 0,
+        vaccines: vacunas === "yes",
       });
 
       await updatePetUserNotas(mascota.id, userState?.id, notasUser);
