@@ -31,6 +31,8 @@ interface MascotaExistente {
   birthdate?: string;
   associatedVet?: string | null;
   centerNotes?: string | null;
+  weight?: number;
+  vaccines?: boolean;
 }
 
 function edadDesde(birthdate?: string): string {
@@ -77,6 +79,8 @@ export function PopupCreatePetUser({
     name: "",
     raza: "",
     edad: "",
+    peso: "",
+    vacunas: "",
     notasUser: "",
   });
 
@@ -88,6 +92,8 @@ export function PopupCreatePetUser({
         setRaza(mascota.breed || "");
         setEdad(edadCalc);
         setNotasCentro(mascota.centerNotes || "");
+        setPeso(String(mascota.weight || ""));
+        setVacunas(mascota.vaccines ? "yes" : "no");
 
         const extras = await getPetUserNotas(mascota.id, userState?.id);
         setNotasUser(extras.notasUser || "");
@@ -96,6 +102,8 @@ export function PopupCreatePetUser({
           name: mascota.name || "",
           raza: mascota.breed || "",
           edad: edadCalc,
+          peso: String(mascota.weight || ""),
+          vacunas: mascota.vaccines ? "yes" : "no",
           notasUser: extras.notasUser || "",
         });
       } else {
@@ -105,8 +113,16 @@ export function PopupCreatePetUser({
         setPeso("");
         setVacunas("");
         setNotasUser("");
+
         setNotasCentro("");
-        setOriginalData({ name: "", raza: "", edad: "", notasUser: "" });
+        setOriginalData({
+          name: "",
+          raza: "",
+          edad: "",
+          peso: "",
+          vacunas: "",
+          notasUser: "",
+        });
       }
     };
     loadData();
@@ -136,6 +152,8 @@ export function PopupCreatePetUser({
     name !== originalData.name ||
     raza !== originalData.raza ||
     edad !== originalData.edad ||
+    peso !== originalData.peso ||
+    vacunas !== originalData.vacunas ||
     notasUser !== originalData.notasUser;
 
   const handleGuardar = async () => {
@@ -146,7 +164,13 @@ export function PopupCreatePetUser({
       const birthYear = currentYear - (parseInt(edad) || 0);
       const birthDate = `${birthYear}-01-01`;
       const pet = await createPet(
-        { name, breed: raza, birthDate },
+        {
+          name,
+          breed: raza,
+          birthDate,
+          weight: parseInt(peso) || 0,
+          vaccines: vacunas === "yes",
+        },
         userState?.id,
       );
       await updatePetUserNotas(pet.id, userState?.id, notasUser);
@@ -170,7 +194,15 @@ export function PopupCreatePetUser({
       const currentYear = new Date().getFullYear();
       const birthYear = currentYear - (parseInt(edad) || 0);
       const birthDate = `${birthYear}-01-01`;
-      await updatePet(mascota.id, { name, breed: raza, birthDate });
+
+      await updatePet(mascota.id, {
+        name,
+        breed: raza,
+        birthDate,
+        weight: parseInt(peso) || 0,
+        vaccines: vacunas === "yes",
+      });
+
       await updatePetUserNotas(mascota.id, userState?.id, notasUser);
       setToast({
         open: true,

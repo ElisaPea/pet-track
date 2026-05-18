@@ -69,7 +69,13 @@ export async function createVetClient(clientData: {
 
 // Función para crear una mascota y vincularla a un usuario
 export async function createPet(
-  petData: { name: string; breed?: string; birthDate?: string },
+  petData: {
+    name: string;
+    breed?: string;
+    birthDate?: string;
+    weight?: number;
+    vaccines?: boolean;
+  },
   userId: string,
 ) {
   if (!userId) throw new Error("No se ha detectado un usuario válido.");
@@ -82,6 +88,8 @@ export async function createPet(
         name: petData.name,
         breed: petData.breed,
         birthdate: petData.birthDate,
+        weight: petData.weight,
+        vaccines: petData.vaccines,
         isverified: false,
       },
     ])
@@ -295,6 +303,8 @@ export async function getPetById(petId: string) {
       name, 
       breed, 
       birthdate,
+      weight,
+      vaccines,
       PetClient (
         extrafields,
         Client (
@@ -344,7 +354,13 @@ export async function deletePetUser(petId: string, userId: string) {
 // UPDATE PET
 export async function updatePet(
   petId: string,
-  petData: { name: string; breed?: string; birthDate?: string },
+  petData: {
+    name: string;
+    breed?: string;
+    birthDate?: string;
+    weight?: number;
+    vaccines?: boolean;
+  },
 ) {
   const { data, error } = await supabase
     .from("Pet")
@@ -352,6 +368,8 @@ export async function updatePet(
       name: petData.name,
       breed: petData.breed,
       birthdate: petData.birthDate,
+      weight: petData.weight,
+      vaccines: petData.vaccines,
     })
     .eq("id", petId)
     .select()

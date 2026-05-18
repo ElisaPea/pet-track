@@ -302,37 +302,6 @@ export default function AccountSettingsUser() {
                 />
               </Stack>
 
-              {/* Address Field */}
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                alignItems="center"
-                sx={{ width: "100%" }}
-              >
-                <Typography
-                  sx={{
-                    width: 400,
-                    textAlign: { xs: "center", sm: "left" },
-                    fontWeight: "bold",
-                  }}
-                >
-                  Dirección:
-                </Typography>
-                <TextField
-                  fullWidth
-                  variant="standard"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  InputProps={{ disableUnderline: true }}
-                  sx={{
-                    bgcolor: "white",
-                    borderRadius: 50,
-                    px: 2,
-                    py: 0.5,
-                  }}
-                />
-              </Stack>
-
               {/* Associated Vet Center Field */}
               <Stack
                 direction={{ xs: "column", sm: "row" }}
