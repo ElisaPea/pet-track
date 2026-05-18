@@ -3,10 +3,9 @@ import { useState, useEffect } from "react";
 import BasicScreen from "../components/BasicScreen";
 import { PopupCreatePetUser } from "../components/PopupCreatePetUser";
 import { getPetsByUser, getPetById } from "../api/query";
-import { supabase } from "../api/supabaseClient";
 import { useAuth } from "../context/AuthContext";
-
-// const TEST_USER_ID = "2427a02c-b1c9-423e-9aab-4ed448c34b5b";
+import { useAssociation } from "../context/AssociationContext";
+import AssociationRequestPopup from "../components/AssociationReuquestPopup";
 
 // Calcula la edad en años a partir de una fecha ISO
 function calcularEdad(birthdate: string): string {
@@ -24,6 +23,21 @@ export default function WelcomeUser() {
   );
 
   const { userState } = useAuth();
+  const { pendingRequests, refreshAssociations } = useAssociation();
+  const [isAssocModalOpen, setIsAssocModalOpen] = useState(false);
+
+  // Effect para abrir el modal si hay peticiones nuevas que no hayamos enviado nosotros
+  useEffect(() => {
+    const hasReceivedRequests = pendingRequests.some(
+      (req) => req.senderid !== userState?.id,
+    );
+
+    if (hasReceivedRequests) {
+      setIsAssocModalOpen(true);
+    } else {
+      setIsAssocModalOpen(false);
+    }
+  }, [pendingRequests, userState?.id]);
 
   const fetchMascotas = async () => {
     setLoadingPets(true);
@@ -37,13 +51,23 @@ export default function WelcomeUser() {
     }
   };
 
-  // Carga inicial mascotas
   useEffect(() => {
     fetchMascotas();
   }, []);
 
   return (
     <BasicScreen>
+      {isAssocModalOpen && (
+        <AssociationRequestPopup
+          open={isAssocModalOpen}
+          onClose={() => setIsAssocModalOpen(false)}
+          requests={pendingRequests}
+          onRefresh={() => {
+            refreshAssociations();
+            fetchMascotas();
+          }}
+        />
+      )}
       <section>
         {/* Title */}
         <Box>
@@ -111,7 +135,6 @@ export default function WelcomeUser() {
             </Button>
           </Box>
 
-          {/* Loading state */}
           {loadingPets && (
             <Box
               sx={{
@@ -126,7 +149,6 @@ export default function WelcomeUser() {
             </Box>
           )}
 
-          {/* Box for n pets */}
           {!loadingPets &&
             mascotas.map((mascota) => (
               <Box
@@ -140,8 +162,32 @@ export default function WelcomeUser() {
                   display: "flex",
                   justifyContent: "center",
                   alignItems: "center",
+                  position: "relative",
                 }}
               >
+                {/* BADGE DE ASOCIACIÓN */}
+                {mascota.associatedVet && (
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: -12,
+                      right: 15,
+                      bgcolor: "white",
+                      color: "#00ADBA",
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 5,
+                      border: "2px solid #00ADBA",
+                      fontWeight: "bold",
+                      fontSize: "0.7rem",
+                      zIndex: 2,
+                      boxShadow: 3,
+                    }}
+                  >
+                    🐾 {mascota.associatedVet.toUpperCase()}
+                  </Box>
+                )}
+
                 <Box
                   sx={{
                     display: "flex",
@@ -152,7 +198,6 @@ export default function WelcomeUser() {
                     width: "100%",
                   }}
                 >
-                  {/* Main info + image  */}
                   <Box sx={{ display: "flex", gap: 1.5, width: "100%" }}>
                     <Box
                       sx={{
@@ -174,7 +219,6 @@ export default function WelcomeUser() {
                         - {calcularEdad(mascota.birthdate)}
                       </Typography>
                     </Box>
-
                     <Box
                       sx={{
                         bgcolor: "white",

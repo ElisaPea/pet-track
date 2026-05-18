@@ -14,19 +14,14 @@ export async function signUpComplete(formData: {
   veterinaryCenterId?: string;
 }) {
   // 1. Registro en Supabase Auth: el usuario se crea y se loguea automáticamente
-  console.log("1. Empezando signUp");
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: formData.email,
     password: formData.password,
   });
-
-  console.log("authError", authError);
   if (authError) throw authError;
   const user = authData.user;
-  console.log("user", user);
 
   if (user) {
-    console.log("2. Usuario en Auth creado, insertando en tabla User...");
     // 2. Insertamos en tabla "User" (el ID de authData.user.id para mantener la relación)
     const { error: userError } = await supabase.from("User").insert([
       {
@@ -41,16 +36,13 @@ export async function signUpComplete(formData: {
     ]);
 
     if (userError) {
-      console.log("3. Error en tabla User:", userError);
       console.error("Error al crear perfil de usuario:", userError);
       throw new Error(
         "Se creó la cuenta pero no el perfil. Contacta con soporte.",
       );
     }
-    console.log("4. Inserción en User exitosa");
     // 3. Si el rol es profesional, rellenamos la tabla "Professional"
     if (formData.role === "professional") {
-      console.log("5. Es profesional, insertando...");
       const { error: profError } = await supabase.from("Professional").insert([
         {
           userid: user.id,

@@ -7,63 +7,56 @@ import {
   InputAdornment,
   IconButton,
   Avatar,
+  Chip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
-import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt"; // Alternative arrow icon can be used if preferred
+import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
+import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import ClientDetailsPopup from "../components/ClientDetailsPopup";
 
 import { useAuth } from "../context/AuthContext";
 import AddClientPopup from "../components/AddClientPopup";
 import { useState, useEffect } from "react";
 import { getClientProfiles, getPetsByClient } from "../api/query";
+import { useAssociation } from "../context/AssociationContext";
+import AssociationRequestPopup from "../components/AssociationReuquestPopup";
 
 export default function HomeVet() {
-  // Estado para almacenar la lista de clientes junto con sus mascotas
   const [clientList, setClientList] = useState<any[]>([]);
-
-  // Estado para rastrear lo que el usuario escribe en el buscador
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Create the 'switch'. It is closed by default (false)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [isAddClientOpen, setIsAddClientOpen] = useState(false);
   const { userState } = useAuth();
   const vetCenterId = userState?.veterinaryCenterId;
 
-  // UseEffect que llama a las APIs al montar el componente
-  useEffect(() => {
-    const fetchClientsAndPets = async () => {
-      try {
-        // 1. Obtenemos los clientes
-        const clientsData = await getClientProfiles(vetCenterId);
-
-        if (clientsData) {
-          // 2. Por cada cliente, traemos sus mascotas usando Promise.all para que sea simultáneo
-          const enrichedClients = await Promise.all(
-            clientsData.map(async (client) => {
-              const pets = await getPetsByClient(client.id);
-              // Devolvemos el cliente sumándole un nuevo campo "pets"
-              return { ...client, pets: pets || [] };
-            }),
-          );
-          setClientList(enrichedClients);
-        }
-      } catch (error) {
-        console.error("Error al cargar los datos:", error);
+  const fetchClientsAndPets = async () => {
+    try {
+      const clientsData = await getClientProfiles(vetCenterId);
+      if (clientsData) {
+        const enrichedClients = await Promise.all(
+          clientsData.map(async (client) => {
+            const pets = await getPetsByClient(client.id);
+            return { ...client, pets: pets || [] };
+          }),
+        );
+        setClientList(enrichedClients);
       }
-    };
-    fetchClientsAndPets();
-  }, []);
+    } catch (error) {
+      console.error("Error al cargar los datos:", error);
+    }
+  };
 
-  // Function to open the popup with a specific ID
+  useEffect(() => {
+    fetchClientsAndPets();
+  }, [vetCenterId]);
+
   const handleOpenDetails = (id: string) => {
     setSelectedClientId(id);
     setIsModalOpen(true);
   };
 
-  // Lógica de filtrado dinámico. Extraemos los que coinciden con el texto.
   const filteredClients = clientList.filter((client) => {
     if (!client) return false;
     const query = searchQuery.toLowerCase();
@@ -78,9 +71,35 @@ export default function HomeVet() {
     return matchClientName || matchPetName;
   });
 
+  const { pendingRequests, refreshAssociations } = useAssociation();
+  const [isAssocModalOpen, setIsAssocModalOpen] = useState(false);
+
+  useEffect(() => {
+    const hasReceivedRequests = pendingRequests.some(
+      (req) => req.senderid !== userState?.veterinaryCenterId,
+    );
+
+    if (hasReceivedRequests) {
+      setIsAssocModalOpen(true);
+    } else {
+      setIsAssocModalOpen(false);
+    }
+  }, [pendingRequests, userState?.veterinaryCenterId]);
+
   return (
     <BasicScreen>
-      {/* Welcome Vet Title & Blue Line */}
+      {isAssocModalOpen && (
+        <AssociationRequestPopup
+          open={isAssocModalOpen}
+          onClose={() => setIsAssocModalOpen(false)}
+          requests={pendingRequests}
+          onRefresh={() => {
+            refreshAssociations();
+            fetchClientsAndPets();
+          }}
+        />
+      )}
+
       <Box>
         <Box
           sx={{
@@ -107,22 +126,20 @@ export default function HomeVet() {
         />
       </Box>
 
-      {/* Actions Bar: Search and Create */}
       <Box
         sx={{
           bgcolor: "#B2EBF2",
           p: 4,
           borderRadius: 8,
           boxShadow: 1,
-          maxWidth: 450, // Limit the maximum width to prevent full-screen expansion.
-          mx: "auto", // "Horizontal centering
+          maxWidth: 450,
+          mx: "auto",
           mt: 4,
           display: "flex",
           flexDirection: "column",
-          gap: 3, // Gap between children
+          gap: 3,
         }}
       >
-        {/* 1. SEARCH SECTION */}
         <Box>
           <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>
             Buscar cliente o mascota:
@@ -149,7 +166,6 @@ export default function HomeVet() {
           />
         </Box>
 
-        {/* 2. ADD SECTION */}
         <Stack
           direction="row"
           alignItems="center"
@@ -160,7 +176,6 @@ export default function HomeVet() {
           </Typography>
           <IconButton
             color="primary"
-            // --- THIS IS THE KEY LINE FOR CYPRESS ---
             data-testid="add-client-button"
             sx={{
               bgcolor: "white",
@@ -175,15 +190,13 @@ export default function HomeVet() {
           </IconButton>
         </Stack>
       </Box>
-      {/* End of Actions Bar */}
 
-      {/* DYNAMIC CONTAINER */}
       <Box
         sx={{
           display: "flex",
-          flexWrap: "wrap", // Enable flex wrapping
-          gap: 3, // Gap between card elements
-          justifyContent: "center", // Center justify content when items are fewer than row width
+          flexWrap: "wrap",
+          gap: 3,
+          justifyContent: "center",
           mt: 5,
           p: 2,
         }}
@@ -226,85 +239,114 @@ export default function HomeVet() {
           </Box>
         ) : (
           filteredClients.map((client) => (
-            /* Clients cards */
             <Box
               key={client.id}
               sx={{
-                width: 300, // Adjust width as necessary for proper scaling
+                width: 320,
                 bgcolor: "#00ADBA",
                 boxShadow: 5,
                 borderRadius: 4,
-                p: 2, // Inner padding
+                p: 2,
                 display: "flex",
-                flexDirection: "column", // Vertical alignment
-                gap: 1.5, // Gap between the two white blocks
+                flexDirection: "column",
+                gap: 1.5,
+                position: "relative", // Para posicionar el badge si fuera necesario fuera de los bloques
               }}
             >
+              {/* BADGE DE VINCULACIÓN (Si el cliente tiene userId) */}
+              {client.userid && (
+                <Chip
+                  icon={
+                    <VerifiedUserIcon
+                      sx={{
+                        fontSize: "1rem !important",
+                        color: "white !important",
+                      }}
+                    />
+                  }
+                  label="VINCULADO"
+                  size="small"
+                  sx={{
+                    position: "absolute",
+                    top: -12,
+                    right: 15,
+                    bgcolor: "#66BB6A",
+                    color: "white",
+                    fontWeight: "bold",
+                    fontSize: "0.65rem",
+                    boxShadow: 3,
+                    zIndex: 1,
+                    "& .MuiChip-label": { px: 1 },
+                  }}
+                />
+              )}
+
               {/* 1. UPPER SECTION: Client Data */}
-              <Box
-                sx={{
-                  bgcolor: "white", // White background for the upper block
-                  borderRadius: 3, // Rounded corners for the upper block
-                  p: 1.5, // Internal padding for the upper block
-                }}
-              >
-                <Stack direction="row" spacing={2} alignItems="flex-start">
-                  <Box sx={{ flex: 1 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: "bold", color: "black" }}
-                    >
-                      Cliente:
-                    </Typography>
-                  </Box>
-                  <Box sx={{ textAlign: "right", flex: 1 }}>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: "bold", color: "black" }}
-                    >
-                      {client.name}
-                    </Typography>
-                  </Box>
+              <Box sx={{ bgcolor: "white", borderRadius: 3, p: 1.5 }}>
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{ fontWeight: "bold", color: "gray" }}
+                  >
+                    Cliente:
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: "bold",
+                      color: "black",
+                      textAlign: "right",
+                    }}
+                  >
+                    {client.name}
+                  </Typography>
                 </Stack>
               </Box>
 
               {/* 2. LOWER SECTION: Pet Data and Button */}
               <Box
                 sx={{
-                  bgcolor: "white", // White background for the lower block
-                  borderRadius: 3, // Rounded corners for the lower block
-                  p: 1.5, // Internal padding for the lower block
+                  bgcolor: "white",
+                  borderRadius: 3,
+                  p: 1.5,
                   display: "flex",
-                  alignItems: "center", // Vertical alignment of the elements
-                  gap: 1.5, // Gap between the avatar, text, and button
+                  alignItems: "center",
+                  gap: 1.5,
                 }}
               >
                 <Avatar
-                  variant="rounded" // Makes the image square with rounded corners
+                  variant="rounded"
                   sx={{
-                    width: 70, // Avatar size
-                    height: 70, // Avatar size
-                    borderRadius: "15px", // More subtle rounded corners
-                    boxShadow: 2,
+                    width: 65,
+                    height: 65,
+                    borderRadius: "15px",
+                    boxShadow: 1,
                     bgcolor: "#B2EBF2",
                     color: "black",
+                    fontWeight: "bold",
+                    fontSize: "1.5rem",
                   }}
                 >
-                  {/* Si tiene mascotas, la inicial de la primera, si no, la del cliente */}
                   {client.pets && client.pets.length > 0
                     ? (client.pets[0].name || "M").charAt(0).toUpperCase()
                     : (client.name || "C").charAt(0).toUpperCase()}
                 </Avatar>
 
-                <Box sx={{ flex: 1 }}>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography
-                    variant="body2"
-                    sx={{ fontWeight: "bold", color: "black" }}
+                    variant="caption"
+                    sx={{ fontWeight: "bold", color: "gray", display: "block" }}
                   >
                     Mascota(s):
                   </Typography>
                   <Typography
                     variant="body2"
+                    noWrap
                     sx={{
                       fontWeight: "bold",
                       color: "black",
@@ -319,23 +361,24 @@ export default function HomeVet() {
 
                 <IconButton
                   sx={{
-                    bgcolor: "#00ADBA", // Turquoise button background color
-                    color: "white", // Icon color
-                    borderRadius: "50%", // Circular button
-                    p: 1, // Internal padding
-                    ml: 2, // Left margin to separate it
-                    "&:hover": { bgcolor: "#00838F" }, // Change color on hover
+                    bgcolor: "#00ADBA",
+                    color: "white",
+                    borderRadius: "50%",
+                    p: 1,
+                    "&:hover": { bgcolor: "#00838F" },
                   }}
-                  onClick={() => handleOpenDetails(client.id)} // Pass the client.id to the button handler
+                  onClick={() => handleOpenDetails(client.id)}
                 >
-                  <ArrowRightAltIcon /> {/* Arrow icon */}
+                  <ArrowRightAltIcon />
                 </IconButton>
 
-                {/* POPUPS SECTION */}
-                {/* CLIENT DETAILS POPUP: Place the Modal at the bottom. It will be 'listening' to the isModalOpen switch. */}
+                {/* MODAL DE DETALLES */}
                 <ClientDetailsPopup
                   open={isModalOpen && selectedClientId === client.id}
-                  onClose={() => setIsModalOpen(false)}
+                  onClose={() => {
+                    setIsModalOpen(false);
+                    fetchClientsAndPets(); // Refrescamos al cerrar por si hubo cambios
+                  }}
                   clientData={client}
                   vetCenterId={vetCenterId}
                 />
@@ -343,10 +386,12 @@ export default function HomeVet() {
             </Box>
           ))
         )}
-        {/* ADD CLIENT POPUP: Triggered from the top "+" button */}
         <AddClientPopup
           open={isAddClientOpen}
-          onClose={() => setIsAddClientOpen(false)}
+          onClose={() => {
+            setIsAddClientOpen(false);
+            fetchClientsAndPets();
+          }}
           vetCenterId={vetCenterId}
         />
       </Box>

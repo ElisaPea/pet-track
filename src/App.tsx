@@ -10,6 +10,7 @@ import ListVetCenters from "./pages/ListVetCenters";
 import { SCREEN } from "./constants/constants";
 import { AuthProvider } from "./context/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AssociationProvider } from "./context/AssociationContext";
 
 const routes = [
   { path: SCREEN.LANDING_PAGE, element: <LandingPage /> },
@@ -59,13 +60,19 @@ const routes = [
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {routes.map((route) => (
-            <Route key={route.path} path={route.path} element={route.element} />
-          ))}
-        </Routes>
-      </BrowserRouter>
+      <AssociationProvider>
+        <BrowserRouter>
+          <Routes>
+            {routes.map((route) => (
+              <Route
+                key={route.path}
+                path={route.path}
+                element={route.element}
+              />
+            ))}
+          </Routes>
+        </BrowserRouter>
+      </AssociationProvider>
     </AuthProvider>
   );
 }

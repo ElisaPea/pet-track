@@ -9,17 +9,16 @@ import {
   Typography,
   Box,
   Stack,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
   Divider,
   Alert,
   Collapse,
+  CircularProgress,
 } from "@mui/material";
 import { createVetClient } from "../api/query";
 import { validateEmail, validatePhone } from "../utils/validationUtils";
 import { validateName } from "../utils/validatorName";
+import { supabase } from "../api/supabaseClient";
+import { createAssociationRequest } from "../api/createAssociationReq";
 
 // --- Types & Interfaces ---
 interface AddClientPopupProps {
@@ -34,22 +33,14 @@ const AddClientPopup = ({
   vetCenterId,
 }: AddClientPopupProps) => {
   // --- State Management ---
-  // Controls the "Associated to user" radio selection. Default is "no".
-  const [associated, setAssociated] = useState<string>("no");
-
-  // State for empty required fields
   const [error, setError] = useState(false);
-
-  // 3 distinct states to control format errors
   const [errorName, setErrorName] = useState(false);
   const [errorEmail, setErrorEmail] = useState(false);
   const [errorPhone, setErrorPhone] = useState(false);
-
-  // State for database error
   const [dbError, setDbError] = useState(false);
-
-  // State for success
+  const [emailExistsError, setEmailExistsError] = useState(false); // Nuevo estado para email duplicado
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Form inputs state
   const [formData, setFormData] = useState({
@@ -61,21 +52,17 @@ const AddClientPopup = ({
   // Handler for changes in the inputs
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (error) setError(false); // Clear empty error
 
-    // Clear individual errors while typing
+    // Limpiamos errores al escribir
+    if (error) setError(false);
+    if (emailExistsError) setEmailExistsError(false);
     if (e.target.name === "Nombre" && errorName) setErrorName(false);
     if (e.target.name === "Email" && errorEmail) setErrorEmail(false);
-    if (e.target.name === "Teléfono" && errorPhone) setErrorPhone(false);
-
+    if (e.target.name === "Telefono" && errorPhone) setErrorPhone(false);
     if (dbError) setDbError(false);
-
-    // Hide success if the user types again
     if (success) setSuccess(false);
   };
 
-  // --- Styling Constants ---
-  // Centralized styles for the dark-gray inputs to ensure consistency
   const grayInputStyle = {
     bgcolor: "white",
     borderRadius: 4,
@@ -86,20 +73,18 @@ const AddClientPopup = ({
     },
   };
 
-  // --- Handlers ---
-  const handleSave = async () => {
+  // --- Lógica de Validación ---
+  const validateForm = () => {
     const { Nombre, Email, Telefono } = formData;
-
     setError(false);
     setErrorName(false);
     setErrorEmail(false);
     setErrorPhone(false);
-    setDbError(false);
-    setSuccess(false);
+    setEmailExistsError(false);
 
-    if (!Nombre.trim() || !Email.trim()) {
+    if (!Nombre.trim() || !Email.trim() || !Telefono.trim()) {
       setError(true);
-      return;
+      return false;
     }
 
     const isNameValid = validateName(Nombre);
@@ -110,75 +95,109 @@ const AddClientPopup = ({
       if (!isNameValid) setErrorName(true);
       if (!isEmailValid) setErrorEmail(true);
       if (!isPhoneValid) setErrorPhone(true);
-      return;
+      return false;
     }
+    return true;
+  };
+
+  // --- Handlers ---
+
+  const handleSave = async (sendRequest: boolean = false) => {
+    if (!validateForm()) return;
+    setLoading(true);
 
     try {
-      await createVetClient({
-        name: Nombre,
-        email: Email,
-        phone: Telefono,
+      // 1. COMPROBAR SI EL EMAIL YA EXISTE EN ESTE CENTRO
+      const { data: existingClient } = await supabase
+        .from("Client")
+        .select("id")
+        .eq("email", formData.Email.trim().toLowerCase())
+        .eq("veterinarycenterid", vetCenterId)
+        .maybeSingle();
+
+      if (existingClient) {
+        setEmailExistsError(true);
+        setLoading(false);
+        return;
+      }
+
+      // 2. CREAR CLIENTE
+      const newClient = await createVetClient({
+        name: formData.Nombre,
+        email: formData.Email.trim().toLowerCase(),
+        phone: formData.Telefono,
         veterinarycenterid: vetCenterId,
-        // If the radio button is "no", we send null.
-        // For now, if it's "yes" we'll also send null
-        // but we already leave this logic prepared.
-        userid: associated === "no" ? null : null,
+        userid: null,
       });
+
+      // 3. ENVIAR SOLICITUD (Si aplica)
+      if (sendRequest && newClient) {
+        await createAssociationRequest(
+          vetCenterId,
+          formData.Email.trim().toLowerCase(),
+          "", // El mail del centro se puede obviar si la query usa el ID
+          "professional",
+        );
+
+        // Mailto pasivo
+        const subject = encodeURIComponent(
+          "¡Tu veterinario te invita a Pet Track!",
+        );
+        const body = encodeURIComponent(
+          `Hola ${formData.Nombre},\n\nTu centro veterinario quiere vincular tu ficha con la aplicación Pet Track para que puedas ver el historial de tus mascotas.\n\nRegístrate con este email aquí: [URL_APP]\n\n¡Saludos!`,
+        );
+        const mailtoUrl = `mailto:${formData.Email}?subject=${subject}&body=${body}`;
+        const link = document.createElement("a");
+        link.href = mailtoUrl;
+        link.click();
+        // window.location.href = mailtoUrl;
+      }
+
       setSuccess(true);
       setTimeout(() => {
-        setSuccess(false);
-        setFormData({ Nombre: "", Email: "", Telefono: "" });
-        onClose();
+        handleExit();
+        window.location.reload(); // Recargamos para ver el nuevo cliente en la lista
       }, 2000);
     } catch (err) {
       console.error(err);
       setDbError(true);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleExit = () => {
-    // Clear forms and error states
     setFormData({ Nombre: "", Email: "", Telefono: "" });
     setError(false);
     setErrorName(false);
     setErrorEmail(false);
     setErrorPhone(false);
     setDbError(false);
+    setEmailExistsError(false);
     setSuccess(false);
-
     onClose();
   };
 
-  // --- Computed State ---
-  // Comprobamos si el usuario ha introducido o modificado algún dato inicial.
-  // El formulario empieza con los campos de texto vacíos y associated="no".
   const isFormModified =
     formData.Nombre.trim() !== "" ||
     formData.Email.trim() !== "" ||
-    formData.Telefono.trim() !== "" ||
-    associated !== "no";
+    formData.Telefono.trim() !== "";
 
   return (
     <Dialog
       open={open}
-      onClose={onClose}
-      data-testid="add-client-popup-container" // For cypress
+      onClose={handleExit}
       fullWidth
       maxWidth="sm"
-      // --- Backdrop Blur Effect ---
-      // This targets the background layer specifically
       slotProps={{
         backdrop: {
           sx: {
-            // Background color with low opacity
             backgroundColor: "rgba(0, 0, 0, 0)",
-            // Standard blur and safari support
             backdropFilter: "blur(8px)",
             WebkitBackdropFilter: "blur(8px)",
           },
         },
       }}
-      // Using PaperProps to style the dialog container itself
       PaperProps={{
         sx: { borderRadius: 5, bgcolor: "#E1F5FE", p: 1 },
       }}
@@ -190,22 +209,26 @@ const AddClientPopup = ({
       </DialogTitle>
 
       <DialogContent>
-        {/* Visual Error Message Fill in required fields */}
+        {/* Errores de Validación */}
         <Collapse in={error}>
-          <Alert
-            data-testid="error-fields-required" // For cypress test
-            severity="error"
-            sx={{ mb: 3, borderRadius: 5 }}
-          >
-            Por favor, rellena todos los campos obligatorios (Nombre, Email y
-            Teléfono).
+          <Alert severity="error" sx={{ mb: 2, borderRadius: 5 }}>
+            Por favor, rellena todos los campos obligatorios.
           </Alert>
         </Collapse>
 
-        {/* Visual Error Message Specific format */}
+        {/* Error Email Duplicado */}
+        <Collapse in={emailExistsError}>
+          <Alert
+            severity="warning"
+            sx={{ mb: 2, borderRadius: 5, fontWeight: "bold" }}
+          >
+            ⚠️ Ya existe un cliente registrado con este correo en tu centro.
+          </Alert>
+        </Collapse>
+
         <Collapse in={errorName || errorEmail || errorPhone}>
-          <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
-            Por favor, corrige el formato de los siguientes campos:{" "}
+          <Alert severity="error" sx={{ mb: 2, borderRadius: 5 }}>
+            Formato incorrecto en:{" "}
             {[
               errorName && "Nombre",
               errorEmail && "Email",
@@ -217,41 +240,33 @@ const AddClientPopup = ({
           </Alert>
         </Collapse>
 
-        {/* Database Error Message */}
         <Collapse in={dbError}>
-          <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
-            Ocurrió un error al intentar guardar en la base de datos.
+          <Alert severity="error" sx={{ mb: 2, borderRadius: 5 }}>
+            Error al guardar en la base de datos.
           </Alert>
         </Collapse>
 
-        {/* Success Message */}
         <Collapse in={success}>
-          <Alert severity="success" sx={{ mb: 3, borderRadius: 5 }}>
-            ¡Datos guardados correctamente!
+          <Alert severity="success" sx={{ mb: 2, borderRadius: 5 }}>
+            ¡Cliente registrado correctamente!
           </Alert>
         </Collapse>
+
         <Stack spacing={2} sx={{ mt: 1 }}>
-          {/* --- Input Fields Section --- 
-                        If we need to add more fields,
-                        just add a new object to this array.
-                    */}
           {[
             {
               label: "Nombre",
               fieldKey: "Nombre",
-              type: "text",
               placeholder: "Nombre completo ...",
             },
             {
               label: "Email",
               fieldKey: "Email",
-              type: "email",
               placeholder: "ejemplo@mail.com ...",
             },
             {
               label: "Teléfono",
               fieldKey: "Telefono",
-              type: "tel",
               placeholder: "600 000 000 ...",
             },
           ].map((field) => (
@@ -259,21 +274,14 @@ const AddClientPopup = ({
               key={field.label}
               sx={{
                 display: "flex",
-                justifyContent: { xs: "flex-start", sm: "space-between" },
+                justifyContent: "space-between",
                 alignItems: { xs: "flex-start", sm: "center" },
                 flexDirection: { xs: "column", sm: "row" },
                 gap: { xs: 0.5, sm: 0 },
                 width: "100%",
               }}
             >
-              <Typography
-                sx={{
-                  fontWeight: "bold",
-                  minWidth: "120px",
-                  textAlign: "left",
-                  width: { xs: "100%", sm: "auto" },
-                }}
-              >
+              <Typography sx={{ fontWeight: "bold", minWidth: "120px" }}>
                 {field.label}
               </Typography>
               <TextField
@@ -282,101 +290,75 @@ const AddClientPopup = ({
                 placeholder={field.placeholder}
                 name={field.fieldKey}
                 InputProps={{ disableUnderline: true }}
-                // This creates data-testid="input-nombre", data-testid="input-email", etc.
-                inputProps={{ "data-testid": `input-${field.fieldKey}` }}
                 value={formData[field.fieldKey as keyof typeof formData]}
                 onChange={handleChange}
                 sx={{ ...grayInputStyle, width: { xs: "100%", sm: 300 } }}
               />
             </Box>
           ))}
-
-          <Divider sx={{ my: 1, opacity: 0.5 }} />
-
-          {/* --- Association Logic Section --- */}
-          <Box>
-            <Typography sx={{ fontWeight: "bold", mb: 0.5 }}>
-              El cliente está asociado a un usuario?
-            </Typography>
-            <FormControl component="fieldset">
-              <RadioGroup
-                row
-                value={associated}
-                onChange={(e) => setAssociated(e.target.value)}
-              >
-                <FormControlLabel
-                  value="si"
-                  control={<Radio size="small" />}
-                  label="Si"
-                />
-                <FormControlLabel
-                  value="no"
-                  control={<Radio size="small" />}
-                  label="No"
-                />
-              </RadioGroup>
-            </FormControl>
-          </Box>
-
-          {/* Logic: This button remains disabled unless "Yes" is selected.
-                        Target for future modification: Add the email sending logic here.
-                    */}
-          <Button
-            variant="contained"
-            disabled={associated === "no"}
-            sx={{
-              bgcolor: "#66BB6A",
-              borderRadius: 10,
-              textTransform: "none",
-              fontWeight: "bold",
-              py: 1,
-              "&:hover": { bgcolor: "#52a552ff" },
-              // Custom style for disabled state to maintain UI clarity
-              "&.Mui-disabled": { bgcolor: "#BDBDBD", color: "#F5F5F5" },
-            }}
-          >
-            Enviar correo de asociación
-          </Button>
         </Stack>
       </DialogContent>
 
-      {/* --- Action Buttons --- */}
-      {/* --- SALIR Button --- */}
-      <DialogActions sx={{ p: 3, justifyContent: "flex-end", gap: 2 }}>
-        <Button
-          onClick={handleExit}
-          sx={{
-            bgcolor: "#F02F0A",
-            borderRadius: 10,
-            px: 5,
-            color: "black",
-            fontWeight: "bold",
-            textTransform: "none",
-            "&:hover": { bgcolor: "#D82E0C" },
-          }}
+      <DialogActions sx={{ p: 3, flexDirection: "column", gap: 2 }}>
+        <Stack
+          direction="row"
+          spacing={2}
+          sx={{ width: "100%", justifyContent: "flex-end" }}
         >
-          SALIR
-        </Button>
+          <Button
+            onClick={handleExit}
+            sx={{
+              bgcolor: "#F02F0A",
+              borderRadius: 10,
+              px: 3,
+              color: "white",
+              fontWeight: "bold",
+              textTransform: "none",
+              "&:hover": { bgcolor: "#D82E0C" },
+            }}
+          >
+            SALIR
+          </Button>
 
-        {/* --- GUARDAR button --- */}
+          <Button
+            onClick={() => handleSave(false)}
+            variant="contained"
+            disabled={!isFormModified || loading}
+            sx={{
+              bgcolor: "#FFCA28",
+              borderRadius: 10,
+              px: 3,
+              color: "black",
+              fontWeight: "bold",
+              textTransform: "none",
+              "&:hover": { bgcolor: "#f9a825" },
+            }}
+          >
+            {loading ? <CircularProgress size={20} /> : "SOLO GUARDAR"}
+          </Button>
+        </Stack>
+
         <Button
-          onClick={handleSave}
-          data-testid="save-client-btn" // ID for the test
+          onClick={() => handleSave(true)}
           variant="contained"
-          disabled={!isFormModified} // Se desactiva si no se ha escrito nada
+          fullWidth
+          disabled={!formData.Email || loading}
           sx={{
-            bgcolor: "#FFCA28",
+            bgcolor: "#66BB6A",
             borderRadius: 10,
-            px: 5,
-            color: "black",
+            py: 1.5,
+            color: "white",
             fontWeight: "bold",
             textTransform: "none",
-            "&:hover": { bgcolor: "#f9a825" },
-            // Estilo visual cuando está desactivado para que el usuario entienda
-            "&.Mui-disabled": { bgcolor: "#E0E0E0", color: "#9E9E9E" },
+            "&:hover": { bgcolor: "#4CAF50" },
+            "&.Mui-disabled": { bgcolor: "#BDBDBD" },
           }}
         >
-          GUARDAR
+          {loading ? (
+            <CircularProgress size={24} color="inherit" />
+          ) : (
+            "GUARDAR Y ENVIAR SOLICITUD DE ASOCIACIÓN"
+          )}
         </Button>
       </DialogActions>
     </Dialog>

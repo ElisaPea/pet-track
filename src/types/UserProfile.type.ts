@@ -9,4 +9,5 @@ export interface UserProfile {
   // Campos específicos de profesional (opcionales)
   licenseNumber?: string;
   veterinaryCenterId?: string;
+  vetCenterEmail?: string;
 }

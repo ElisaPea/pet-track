@@ -111,6 +111,10 @@ export async function createPet(
 }
 
 // Función para crear una mascota y vincularla a un cliente (veterinaria)
+/**
+ * Crea una mascota y la vincula a PetClient.
+ * Si se pasa userId, también la vincula a PetUser (Sincronización automática).
+ */
 export async function createPetForClient(
   petData: {
     name: string;
@@ -119,6 +123,7 @@ export async function createPetForClient(
     birthdate?: string;
   },
   clientId: string,
+  userId?: string | null, // <-- Nuevo parámetro opcional
 ) {
   if (!clientId) throw new Error("No se ha detectado un cliente válido.");
 
@@ -131,28 +136,31 @@ export async function createPetForClient(
         species: petData.species,
         breed: petData.breed,
         birthdate: petData.birthdate,
-        isverified: false,
+        isverified: !!userId, // Si hay userId, la mascota nace ya verificada
       },
     ])
     .select()
     .single();
 
-  if (petError) {
-    console.error("Error al crear mascota:", petError);
-    throw new Error("Error en la base de datos al crear la mascota.");
-  }
+  if (petError) throw new Error("Error al crear la mascota.");
 
-  // 2. Creamos la relación en "PetClient"
-  const { error: relationError } = await supabase.from("PetClient").insert([
-    {
-      petid: pet.id,
-      clientid: clientId,
-    },
-  ]);
+  // 2. Relación obligatoria: PetClient
+  const { error: relationError } = await supabase
+    .from("PetClient")
+    .insert([{ petid: pet.id, clientid: clientId }]);
 
-  if (relationError) {
-    console.error("Error al vincular mascota con cliente:", relationError);
-    throw new Error("La mascota se creó pero no pudo vincularse al cliente.");
+  if (relationError) throw new Error("Error al vincular con el cliente.");
+
+  // 3. Relación condicional: PetUser (SOLO SI ESTÁ ASOCIADO)
+  if (userId) {
+    const { error: userRelationError } = await supabase
+      .from("PetUser")
+      .insert([{ petid: pet.id, userid: userId }]);
+
+    if (userRelationError) {
+      console.error("Error al vincular con el usuario:", userRelationError);
+      // No lanzamos error fatal aquí porque la mascota ya existe en el centro
+    }
   }
 
   return pet;
@@ -209,56 +217,6 @@ export async function getUserProfile(userId: string) {
   };
 }
 
-// --- Mia ---
-// 2. Update Vet Data (Write) - Recibe el perfil completo
-// export async function updateVetProfile(userData: UserProfile) {
-//   const {
-//     id,
-//     name,
-//     phone,
-//     licenseNumber,
-//     veterinaryCenterId,
-//     isactive,
-//     lgpdconsent,
-//   } = userData;
-
-//   // 1. Actualizamos la tabla "User"
-//   // Solo metemos los campos que pertenecen a esta tabla
-//   const { error: errorUser } = await supabase
-//     .from("User")
-//     .update({
-//       name,
-//       phone,
-//       isactive,
-//       lgpdconsent,
-//     })
-//     .eq("id", id);
-
-//   if (errorUser) {
-//     console.error("Error al actualizar tabla User:", errorUser);
-//     throw errorUser;
-//   }
-
-//   // 2. Si el rol es profesional, actualizamos la tabla "Professional"
-//   if (userData.role === "professional") {
-//     const { error: errorPro } = await supabase
-//       .from("Professional")
-//       .update({
-//         licensenumber: licenseNumber,
-//         veterinarycenterid: veterinaryCenterId,
-//       })
-//       .eq("userid", id);
-
-//     if (errorPro) {
-//       console.error("Error al actualizar tabla Professional:", errorPro);
-//       throw errorPro;
-//     }
-//   }
-
-//   return true;
-// }
-
-//MALCON
 export async function updateVetProfile(
   userId: string,
   updateData: { name: string; phone: string; licenseNumber: string },
@@ -304,25 +262,50 @@ export async function getPetsByUser(userId: string) {
         id,
         name,
         breed,
-        birthdate
+        birthdate,
+        PetClient (
+          Client (
+            id,
+            VeterinaryCenter (
+              name
+            )
+          )
+        )
       )
     `,
     )
     .eq("userid", userId);
 
-  if (error) {
-    console.error("Error al obtener mascotas:", error);
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
 
-  // Aplanamos el resultado para tener un array de mascotas directamente
-  return data?.map((row: any) => row.Pet).filter(Boolean) ?? [];
+  // Mapeamos para aplanar la respuesta y que sea fácil de leer en el front
+  return data.map((item: any) => ({
+    ...item.Pet,
+    associatedVet:
+      item.Pet?.PetClient?.[0]?.Client?.VeterinaryCenter?.name || null,
+  }));
 }
 // SELECT PET BY ID
 export async function getPetById(petId: string) {
   const { data, error } = await supabase
     .from("Pet")
-    .select("id, name, breed, birthdate")
+    .select(
+      `
+      id, 
+      name, 
+      breed, 
+      birthdate,
+      PetClient (
+        extrafields,
+        Client (
+          id,
+          VeterinaryCenter (
+            name
+          )
+        )
+      )
+    `,
+    )
     .eq("id", petId)
     .single();
 
@@ -331,8 +314,33 @@ export async function getPetById(petId: string) {
     throw error;
   }
 
-  return data;
+  // Accedemos de forma segura a los arrays anidados
+  // PetClient[0] -> Client -> VeterinaryCenter -> name
+  const rawPetClient = data.PetClient as any[];
+  const associatedVetName =
+    rawPetClient?.[0]?.Client?.VeterinaryCenter?.name || null;
+  const centerNotes = rawPetClient?.[0]?.extrafields || "";
+
+  return {
+    ...data,
+    associatedVet: associatedVetName,
+    centerNotes,
+  };
 }
+
+export async function deletePetUser(petId: string, userId: string) {
+  const { error } = await supabase
+    .from("PetUser")
+    .delete()
+    .eq("petid", petId)
+    .eq("userid", userId);
+
+  if (error) throw error;
+
+  // Opcional: Podríamos borrar la Pet si ya no tiene más dueños,
+  // pero de momento cumplimos tu lógica de cancelar acceso.
+}
+
 // UPDATE PET
 export async function updatePet(
   petId: string,
@@ -392,6 +400,23 @@ export async function updatePetUserNotas(
   }
 }
 
+export async function updatePetVetNotes(
+  petId: string,
+  clientId: string,
+  notes: string,
+) {
+  const { error } = await supabase
+    .from("PetClient")
+    .update({ extrafields: notes })
+    .eq("petid", petId)
+    .eq("clientid", clientId);
+
+  if (error) {
+    console.error("Error al actualizar notas del veterinario:", error);
+    throw error;
+  }
+}
+
 // USER
 
 export async function getCurrentUserId() {
@@ -442,6 +467,7 @@ export async function getPetsByClient(clientId: string) {
     .from("PetClient")
     .select(
       `
+      extrafields,
       Pet (
         id,
         name,
@@ -457,9 +483,15 @@ export async function getPetsByClient(clientId: string) {
     console.error("Error al obtener las mascotas del cliente:", error);
     throw error;
   }
-  // Supabase devuelve el objeto Pet anidado [{ Pet: { id: ... } }].
-  // Lo mapeamos para devolver un array más limpio de las mascotas y filtramos nulos si los hay.
-  return data.map((item) => item.Pet).filter(Boolean);
+  return data
+    .map((item: any) => {
+      if (!item.Pet) return null;
+      return {
+        ...item.Pet,
+        vetNotes: item.extrafields || "", // <--- Metemos la nota aquí para que el Front la vea
+      };
+    })
+    .filter(Boolean);
 }
 //-------------------------------------------Malcon------------------------------------------
 

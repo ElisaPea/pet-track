@@ -2,6 +2,9 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { type User } from "@supabase/supabase-js";
 import { supabase } from "../api/supabaseClient";
 import type { UserProfile } from "../types/UserProfile.type";
+import { logout } from "../api/signInQuery";
+import { useNavigate } from "react-router-dom";
+import { SCREEN } from "../constants/constants";
 
 interface AuthContextType {
   userAuthenticated: User | null;
@@ -18,6 +21,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [role, setRole] = useState<"user" | "professional" | null>(null);
   const [userState, setUserState] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  // const navigate = useNavigate();
 
   const updateAuth = async (session?: any) => {
     try {
@@ -63,8 +67,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const profData = Array.isArray(data.Professional)
             ? data.Professional[0]
             : data.Professional;
-          fullProfile.licenseNumber = profData?.licensenumber;
-          fullProfile.veterinaryCenterId = profData?.veterinarycenterid;
+          const vetId = profData?.veterinarycenterid;
+
+          // 2. Solo si tenemos un ID válido, hacemos la segunda consulta
+          if (vetId) {
+            const { data: vetCenterData, error: vetError } = await supabase
+              .from("VeterinaryCenter")
+              .select("email")
+              .eq("id", vetId)
+              .single();
+
+            if (vetError) throw vetError;
+            fullProfile.licenseNumber = profData?.licensenumber;
+            fullProfile.veterinaryCenterId = profData?.veterinarycenterid;
+            fullProfile.vetCenterEmail = vetCenterData?.email;
+          }
         }
 
         setUserState(fullProfile);
@@ -77,6 +94,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (err) {
       console.error("Error en updateAuth:", err);
+      //send to landing page and logout if necessary
+      // navigate(SCREEN.LANDING_PAGE);
     } finally {
       setLoading(false);
     }

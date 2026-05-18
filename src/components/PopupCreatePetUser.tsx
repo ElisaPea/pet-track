@@ -20,6 +20,7 @@ import {
   updatePet,
   updatePetUserNotas,
   getPetUserNotas,
+  deletePetUser, // Asegúrate de tenerla en tu query
 } from "../api/query";
 import { useAuth } from "../context/AuthContext";
 
@@ -28,6 +29,8 @@ interface MascotaExistente {
   name: string;
   breed?: string;
   birthdate?: string;
+  associatedVet?: string | null;
+  centerNotes?: string | null;
 }
 
 function edadDesde(birthdate?: string): string {
@@ -46,6 +49,7 @@ export function PopupCreatePetUser({
   mascota?: MascotaExistente | null;
 }) {
   const modoLectura = !!mascota;
+  const isAsociada = !!mascota?.associatedVet;
 
   const { userState } = useAuth();
 
@@ -55,6 +59,7 @@ export function PopupCreatePetUser({
   const [raza, setRaza] = useState("");
   const [peso, setPeso] = useState("");
   const [notasUser, setNotasUser] = useState("");
+  const [notasCentro, setNotasCentro] = useState("");
   const [name, setName] = useState("");
 
   const [nameError, setNameError] = useState("");
@@ -79,10 +84,10 @@ export function PopupCreatePetUser({
     const loadData = async () => {
       if (mascota) {
         const edadCalc = edadDesde(mascota.birthdate);
-
         setName(mascota.name || "");
         setRaza(mascota.breed || "");
         setEdad(edadCalc);
+        setNotasCentro(mascota.centerNotes || "");
 
         const extras = await getPetUserNotas(mascota.id, userState?.id);
         setNotasUser(extras.notasUser || "");
@@ -100,46 +105,33 @@ export function PopupCreatePetUser({
         setPeso("");
         setVacunas("");
         setNotasUser("");
-
-        setOriginalData({
-          name: "",
-          raza: "",
-          edad: "",
-          notasUser: "",
-        });
+        setNotasCentro("");
+        setOriginalData({ name: "", raza: "", edad: "", notasUser: "" });
       }
     };
-
     loadData();
-  }, [mascota]);
+  }, [mascota, userState?.id]);
 
   const nameValidation = (value: string) => {
-    if (/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/.test(value)) {
+    if (/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/.test(value))
       setNameError("❗ El nombre solo puede contener letras ❗");
-    } else {
-      setNameError("");
-    }
+    else setNameError("");
     setName(value);
   };
 
   const razaValidation = (value: string) => {
-    if (/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/.test(value)) {
+    if (/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/.test(value))
       setRazaError("❗ Solo letras ❗");
-    } else {
-      setRazaError("");
-    }
+    else setRazaError("");
     setRaza(value);
   };
 
   const handleNumberInput = (value: string, setter: (v: string) => void) => {
-    if (/^\d{0,2}$/.test(value)) {
-      setter(value);
-    }
+    if (/^\d{0,2}$/.test(value)) setter(value);
   };
 
   const isFormValid =
     name && !nameError && edad && peso && raza && !razaError && vacunas;
-
   const hasChanges =
     name !== originalData.name ||
     raza !== originalData.raza ||
@@ -148,20 +140,16 @@ export function PopupCreatePetUser({
 
   const handleGuardar = async () => {
     if (!isFormValid) return;
-
     setLoading(true);
     try {
       const currentYear = new Date().getFullYear();
       const birthYear = currentYear - (parseInt(edad) || 0);
       const birthDate = `${birthYear}-01-01`;
-
       const pet = await createPet(
         { name, breed: raza, birthDate },
         userState?.id,
       );
-
       await updatePetUserNotas(pet.id, userState?.id, notasUser);
-
       setToast({
         open: true,
         message: "¡Mascota creada!",
@@ -177,21 +165,13 @@ export function PopupCreatePetUser({
 
   const handleUpdate = async () => {
     if (!mascota || !hasChanges) return;
-
     setLoading(true);
     try {
       const currentYear = new Date().getFullYear();
       const birthYear = currentYear - (parseInt(edad) || 0);
       const birthDate = `${birthYear}-01-01`;
-
-      await updatePet(mascota.id, {
-        name,
-        breed: raza,
-        birthDate,
-      });
-
+      await updatePet(mascota.id, { name, breed: raza, birthDate });
       await updatePetUserNotas(mascota.id, userState?.id, notasUser);
-
       setToast({
         open: true,
         message: "¡Mascota actualizada!",
@@ -206,6 +186,38 @@ export function PopupCreatePetUser({
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEliminar = async () => {
+    if (isAsociada) {
+      setToast({
+        open: true,
+        message:
+          "⚠️ Mascota vinculada. Debes anular la asociación del centro primero.",
+        severity: "error",
+      });
+      return;
+    }
+    if (window.confirm("¿Estás seguro de que quieres eliminar esta mascota?")) {
+      setLoading(true);
+      try {
+        await deletePetUser(mascota!.id, userState?.id);
+        setToast({
+          open: true,
+          message: "Mascota eliminada correctamente",
+          severity: "success",
+        });
+        setTimeout(() => setOpen(false), 1500);
+      } catch {
+        setToast({
+          open: true,
+          message: "Error al eliminar",
+          severity: "error",
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -246,6 +258,21 @@ export function PopupCreatePetUser({
             gap: 3,
           }}
         >
+          {modoLectura && isAsociada && (
+            <Alert
+              severity="info"
+              sx={{
+                borderRadius: 4,
+                border: "1px solid #00ADBA",
+                bgcolor: "white",
+              }}
+            >
+              Esta mascota está gestionada por el centro:{" "}
+              <strong>{mascota.associatedVet}</strong>. Ciertos campos médicos
+              son solo de lectura.
+            </Alert>
+          )}
+
           {tabActual === 0 && (
             <>
               <Box
@@ -278,7 +305,6 @@ export function PopupCreatePetUser({
                     +
                   </Button>
                 </Box>
-
                 <Box sx={{ flex: 1 }}>
                   <Typography sx={{ fontWeight: "bold", mb: 1 }}>
                     ¿Cuál es el nombre de tu mascota?
@@ -289,10 +315,11 @@ export function PopupCreatePetUser({
                     onChange={(e) => nameValidation(e.target.value)}
                     error={!!nameError}
                     helperText={nameError}
+                    disabled={isAsociada}
                     sx={{
                       "& .MuiOutlinedInput-root": {
                         borderRadius: 10,
-                        bgcolor: "#F7F9FA",
+                        bgcolor: isAsociada ? "#F0F0F0" : "#F7F9FA",
                       },
                     }}
                   />
@@ -308,7 +335,6 @@ export function PopupCreatePetUser({
                 >
                   Información adicional:
                 </Typography>
-
                 <Stack direction="row" spacing={3} flexWrap="wrap">
                   <Box sx={{ width: 80 }}>
                     <Typography variant="caption" sx={{ fontWeight: "bold" }}>
@@ -331,7 +357,6 @@ export function PopupCreatePetUser({
                       {getEtapaVida(edad)}
                     </Typography>
                   </Box>
-
                   <Box sx={{ width: 80 }}>
                     <Typography variant="caption" sx={{ fontWeight: "bold" }}>
                       Peso (kg)
@@ -350,7 +375,6 @@ export function PopupCreatePetUser({
                       inputProps={{ maxLength: 2 }}
                     />
                   </Box>
-
                   <Box sx={{ flex: 1 }}>
                     <Typography variant="caption" sx={{ fontWeight: "bold" }}>
                       Raza
@@ -369,7 +393,6 @@ export function PopupCreatePetUser({
                       }}
                     />
                   </Box>
-
                   <Box sx={{ minWidth: 120 }}>
                     <Typography variant="caption" sx={{ fontWeight: "bold" }}>
                       ¿Vacunas?
@@ -411,9 +434,13 @@ export function PopupCreatePetUser({
                   fullWidth
                   multiline
                   rows={10}
-                  inputProps={{
-                    readOnly: true,
-                  }}
+                  inputProps={{ readOnly: true }}
+                  value={notasCentro}
+                  placeholder={
+                    isAsociada
+                      ? "Cargando notas médicas..."
+                      : "Mascota no asociada a ningún centro."
+                  }
                 />
               </Box>
             </div>
@@ -424,31 +451,58 @@ export function PopupCreatePetUser({
           sx={{
             p: 3,
             display: "flex",
-            justifyContent: "flex-end",
-            gap: 2,
+            justifyContent: "space-between",
+            alignItems: "center",
             bgcolor: "white",
           }}
         >
-          <Button onClick={() => setOpen(false)}>Cancelar</Button>
-
-          {!modoLectura && (
-            <Button onClick={handleGuardar} disabled={loading || !isFormValid}>
-              {loading ? <CircularProgress size={24} /> : "Guardar Mascota"}
-            </Button>
-          )}
-
-          {modoLectura && (
+          {modoLectura ? (
             <Button
-              onClick={handleUpdate}
-              disabled={loading || !hasChanges || !!nameError || !!razaError}
+              variant="contained"
+              sx={{
+                bgcolor: isAsociada ? "#BDBDBD" : "#F02F0A",
+                color: "white",
+                borderRadius: 10,
+                fontWeight: "bold",
+                "&:hover": { bgcolor: isAsociada ? "#BDBDBD" : "#D82E0C" },
+              }}
+              onClick={handleEliminar}
             >
-              {loading ? <CircularProgress size={24} /> : "Guardar cambios"}
+              {isAsociada ? "BLOQUEADO (MASCOTA ASOCIADA)" : "ELIMINAR MASCOTA"}
             </Button>
+          ) : (
+            <Box />
           )}
+          <Stack direction="row" spacing={2}>
+            <Button onClick={() => setOpen(false)}>Cancelar</Button>
+            {!modoLectura && (
+              <Button
+                variant="contained"
+                onClick={handleGuardar}
+                disabled={loading || !isFormValid}
+                sx={{ bgcolor: "#00ADBA", borderRadius: 10 }}
+              >
+                {loading ? <CircularProgress size={24} /> : "Guardar Mascota"}
+              </Button>
+            )}
+            {modoLectura && (
+              <Button
+                variant="contained"
+                onClick={handleUpdate}
+                disabled={loading || !hasChanges || !!nameError || !!razaError}
+                sx={{ bgcolor: "#00ADBA", borderRadius: 10 }}
+              >
+                {loading ? <CircularProgress size={24} /> : "Guardar cambios"}
+              </Button>
+            )}
+          </Stack>
         </Box>
       </Dialog>
-
-      <Snackbar open={toast.open}>
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={3000}
+        onClose={() => setToast({ ...toast, open: false })}
+      >
         <Alert severity={toast.severity}>{toast.message}</Alert>
       </Snackbar>
     </>

@@ -18,10 +18,13 @@ export function ProtectedRoute({
   // 2. Si no hay usuario en absoluto
   if (!userAuthenticated) return <Navigate to={SCREEN.LOGIN} />;
 
-  // 3. CAMBIO CLAVE: Si hay usuario pero el rol aún no ha llegado de la DB
-  // No bloquees todavía, espera a que el rol deje de ser null
-  if (requiredRole && role === null) {
-    return <p>Verificando permisos...</p>;
+  // 3. Si hay sesión pero el AuthContext terminó de cargar y no hay rol o userState
+  // (Esto significa que la query de perfil falló o el usuario no existe en la tabla User)
+  if (!loading && userAuthenticated && !role) {
+    console.error(
+      "Error crítico: Sesión activa pero sin perfil en base de datos.",
+    );
+    return <Navigate to={SCREEN.LANDING_PAGE} />;
   }
 
   // 4. Ahora sí, si el rol llegó y no es el correcto

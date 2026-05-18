@@ -13,20 +13,31 @@ import IconButton from "@mui/material/IconButton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
-import { getVetCenters } from "../api/query";
+import { getVetCenters } from "../api/query"; // Importamos la query
 import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useAssociation } from "../context/AssociationContext";
+import {
+  createAssociationRequest,
+  deleteAssociationRequest,
+  unlinkAssociation,
+} from "../api/createAssociationReq";
 
 export default function ListVetCenters() {
-  // Logic and State in English
   const navigate = useNavigate();
-  const [vetCenters, setVetCenters] = useState<any[]>([]); // List from DB
-  const [searchTerm, setSearchTerm] = useState(""); // Search filter
-  const [loading, setLoading] = useState(true); // Loading control
+  const { userState } = useAuth();
+  const {
+    pendingRequests,
+    associatedVets,
+    acceptedRequests,
+    rejectedRequests,
+    refreshAssociations,
+  } = useAssociation();
 
-  // Array to keep track of which specific centers we have sent emails to
-  const [sentEmails, setSentEmails] = useState<string[]>([]);
+  const [vetCenters, setVetCenters] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // Data fetching effect
   useEffect(() => {
     async function loadData() {
       const data = await getVetCenters();
@@ -36,27 +47,54 @@ export default function ListVetCenters() {
     loadData();
   }, []);
 
-  // Filter logic
   const filteredCenters = vetCenters.filter((center) =>
     center.name?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  // Email handler
-  const handleEmail = (
-    centerId: string,
-    emailCenter: string,
-    nameCenter: string,
-  ) => {
-    console.log(`Sending request to: ${nameCenter} (${emailCenter})`); // Dev log in English
+  // --- LÓGICA DE ASOCIACIÓN ---
 
-    // Track sent email visually in this screen
-    setSentEmails((prev) => [...prev, centerId]);
+  const handleRequestAssociation = async (vetCenter: any) => {
+    try {
+      await createAssociationRequest(
+        userState.id,
+        userState.email,
+        vetCenter.email,
+        "user",
+      );
 
-    // 🌟 NUEVO: Guardamos en la memoria del navegador el nombre de la clínica
-    localStorage.setItem("pendingVetRequest", nameCenter);
+      // Enviamos el correo pasivo como querías
+      const subject = encodeURIComponent("Solicitud de Asociación - Pet Track");
+      const body = encodeURIComponent(
+        `Hola ${vetCenter.name},\n\nEl usuario ${userState.name} ha solicitado asociarse a su centro a través de Pet Track. Por favor, entren en la aplicación para aceptar la solicitud.\n\nSaludos.`,
+      );
+      const mailtoUrl = `mailto:${vetCenter.email}?subject=${subject}&body=${body}`;
 
-    // UX Email text in Spanish
-    window.location.href = `mailto:${emailCenter}?subject=Solicitud de Asociación&body=Hola, me gustaría asociarme a su centro...`;
+      const link = document.createElement("a");
+      link.href = mailtoUrl;
+      link.click();
+
+      // window.location.href = mailtoUrl;
+
+      await refreshAssociations(); // Refrescamos el contexto para que cambie el botón
+    } catch (error) {
+      console.error("Error al solicitar asociación:", error);
+    }
+  };
+
+  const handleCancelRequest = async (requestId: string) => {
+    await deleteAssociationRequest(requestId);
+    await refreshAssociations();
+  };
+
+  const handleUnlink = async (vetCenterEmail: string) => {
+    const requestToUnlink = acceptedRequests.find(
+      (r) => r.vetcenteremail.toLowerCase() === vetCenterEmail.toLowerCase(),
+    );
+
+    if (requestToUnlink) {
+      await unlinkAssociation(requestToUnlink);
+      await refreshAssociations();
+    }
   };
 
   return (
@@ -71,30 +109,6 @@ export default function ListVetCenters() {
           position: "relative",
         }}
       >
-        {/* Back Button */}
-        {/* <Box
-          sx={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            mb: 2,
-          }}
-        >
-          <IconButton
-            onClick={() => navigate(SCREEN.SETTINGS_USER)}
-            sx={{
-              bgcolor: "#FBC02D",
-              color: "black",
-              "&:hover": { bgcolor: "#f9a825" },
-              boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
-            }}
-          >
-            <ArrowBackIcon fontSize="medium" />
-          </IconButton>
-        </Box> */}
-
-        {/* UX Title in Spanish */}
-
         <Typography
           variant="h4"
           sx={{
@@ -129,7 +143,7 @@ export default function ListVetCenters() {
                 sx={{ width: "100%" }}
               >
                 <IconButton
-                  onClick={() => navigate(SCREEN.SETTINGS_USER)}
+                  onClick={() => navigate(SCREEN.WELCOME_USER)}
                   sx={{
                     bgcolor: "#FBC02D",
                     color: "black",
@@ -139,7 +153,6 @@ export default function ListVetCenters() {
                 >
                   <ArrowBackIcon fontSize="medium" />
                 </IconButton>
-                {/* UX Label in Spanish */}
                 <Typography
                   sx={{
                     width: 200,
@@ -153,7 +166,7 @@ export default function ListVetCenters() {
                 <TextField
                   fullWidth
                   variant="standard"
-                  placeholder="Filtra la lista..." // UX Placeholder in Spanish
+                  placeholder="Filtra la lista..."
                   onChange={(e) => setSearchTerm(e.target.value)}
                   InputProps={{
                     disableUnderline: true,
@@ -170,10 +183,7 @@ export default function ListVetCenters() {
                     py: 0.4,
                     width: { xs: "100%", sm: "50%" },
                     ml: "auto",
-                    input: {
-                      color: "black",
-                      px: 2,
-                    },
+                    input: { color: "black", px: 2 },
                   }}
                 />
               </Stack>
@@ -195,7 +205,20 @@ export default function ListVetCenters() {
               </Box>
             ) : filteredCenters.length > 0 ? (
               filteredCenters.map((center, index) => {
-                const isSent = sentEmails.includes(center.id);
+                // COMPROBACIONES DE ESTADO
+                const isAssociated = associatedVets.some(
+                  (v) => v.id === center.id,
+                );
+                const pendingRequest = pendingRequests.find(
+                  (r) => r.vetcenteremail === center.email,
+                );
+                const isIRequested =
+                  pendingRequest && pendingRequest.senderid === userState.id;
+                const theyRequested =
+                  pendingRequest && pendingRequest.senderid !== userState.id;
+                const isRejected = rejectedRequests.some(
+                  (r) => r.vetcenteremail === center.email,
+                );
 
                 return (
                   <Box
@@ -214,41 +237,110 @@ export default function ListVetCenters() {
                       textAlign: { xs: "center", sm: "left" },
                     }}
                   >
-                    <Typography sx={{ fontWeight: "600", fontSize: "1.1rem" }}>
-                      {center.name}
-                    </Typography>
+                    <Box>
+                      <Typography
+                        sx={{ fontWeight: "600", fontSize: "1.1rem" }}
+                      >
+                        {center.name}
+                      </Typography>
+                      <Typography variant="caption" sx={{ opacity: 0.7 }}>
+                        {center.email}
+                      </Typography>
+                    </Box>
 
-                    <Button
-                      variant="contained"
-                      disabled={isSent}
-                      onClick={() =>
-                        handleEmail(center.id, center.email, center.name)
-                      }
-                      sx={{
-                        bgcolor: isSent ? "#9E9E9E" : "#66BB6A",
-                        color: isSent ? "white" : "black",
-                        borderRadius: 50,
-                        textTransform: "none",
-                        fontWeight: "bold",
-                        px: 3,
-                        border: isSent ? "none" : "1px solid #2E7D32",
-                        "&:hover": { bgcolor: isSent ? "#9E9E9E" : "#4CAF50" },
-                        "&.Mui-disabled": {
-                          bgcolor: "#BDBDBD",
+                    {/* LÓGICA DE BOTONES DINÁMICA */}
+                    {isAssociated ? (
+                      <Button
+                        variant="contained"
+                        onClick={() => handleUnlink(center.email)}
+                        sx={{
+                          bgcolor: "#F02F0A",
                           color: "white",
-                        },
-                      }}
-                    >
-                      {/* UX Button Text in Spanish */}
-                      {isSent
-                        ? "CORREO ENVIADO, ESPERANDO RESPUESTA"
-                        : "ENVIAR CORREO DE ASOCIACIÓN"}
-                    </Button>
+                          borderRadius: 50,
+                          textTransform: "none",
+                          fontWeight: "bold",
+                          px: 3,
+                          "&:hover": { bgcolor: "#D82E0C" },
+                        }}
+                      >
+                        ANULAR ASOCIACIÓN
+                      </Button>
+                    ) : isIRequested ? (
+                      <Button
+                        variant="contained"
+                        onClick={() => handleCancelRequest(pendingRequest.id)}
+                        sx={{
+                          bgcolor: "#FFCA28",
+                          color: "black",
+                          borderRadius: 50,
+                          textTransform: "none",
+                          fontWeight: "bold",
+                          px: 3,
+                          "&:hover": { bgcolor: "#FFB300" },
+                        }}
+                      >
+                        PETICIÓN ENVIADA (CANCELAR)
+                      </Button>
+                    ) : theyRequested ? (
+                      <Button
+                        variant="contained"
+                        sx={{
+                          bgcolor: "#66BB6A",
+                          color: "black",
+                          borderRadius: 50,
+                          textTransform: "none",
+                          fontWeight: "bold",
+                          px: 3,
+                          "&:hover": { bgcolor: "#4CAF50" },
+                        }}
+                      >
+                        REVISAR INVITACIÓN (EN HOME)
+                      </Button>
+                    ) : isRejected ? (
+                      //QUIERO QUE CUANDO SEA REJECTED NO SEA UN BOTON SINO UN TEXTO DE INFO
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          mt: 2,
+                          flexDirection: "column",
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "#FF8A80",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                          }}
+                        >
+                          Petición Rechazada, Podrás Volver a Enviarla en Otro
+                          Momento
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Button
+                        variant="contained"
+                        onClick={() => handleRequestAssociation(center)}
+                        sx={{
+                          bgcolor: "#66BB6A",
+                          color: "black",
+                          borderRadius: 50,
+                          textTransform: "none",
+                          fontWeight: "bold",
+                          px: 3,
+                          border: "1px solid #2E7D32",
+                          "&:hover": { bgcolor: "#4CAF50" },
+                        }}
+                      >
+                        SOLICITAR ASOCIACIÓN
+                      </Button>
+                    )}
                   </Box>
                 );
               })
             ) : (
-              // UX Empty State in Spanish
               <Box sx={{ p: 4, textAlign: "center" }}>
                 <Typography>No se encontraron centros veterinarios.</Typography>
               </Box>
