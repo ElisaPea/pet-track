@@ -12,14 +12,20 @@ import {
   ListItemText,
   useTheme,
   useMediaQuery,
+  Tooltip,
+  Fab, // Added for the Floating Action Button
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
 import FootprintIcon from "./FootprintIcon";
 import { useAuth } from "../context/AuthContext";
 import { logout } from "../api/signInQuery";
+
+// External documentation link (GitBook manual) 
+const HELP_URL = "https://dam-6.gitbook.io/manual-usuario-pettrack";
 
 export default function NavBar() {
   const navigate = useNavigate();
@@ -31,6 +37,7 @@ export default function NavBar() {
 
   const [openMenu, setOpenMenu] = useState(false);
 
+  // Screen titles mapped to current routes
   const titles = {
     [SCREEN.LOGIN]: "Iniciar Sesión",
     [SCREEN.HOME_VET]: "Centro veterinario",
@@ -38,7 +45,7 @@ export default function NavBar() {
 
   const currentTitle = titles[location.pathname] || "Pet Track";
 
-  //add prop screen to menuItems with the name of the screen
+  // Menu items visibility and navigation logic
   const menuItems = [
     {
       label: "Home",
@@ -78,21 +85,27 @@ export default function NavBar() {
     },
   ];
 
+  // Handler to open the manual in a new window
+  const handleHelpClick = () => {
+    window.open(HELP_URL, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <>
       <AppBar
         position="sticky"
         elevation={0}
-        sx={{ bgcolor: "#B2EBF2", color: "black" }}
+        sx={{ bgcolor: "#B2EBF2", color: "black" }} // PetTrack main navbar color
       >
         <Toolbar sx={{ justifyContent: "space-between" }}>
-          {/* LOGO */}
+
+          {/* LEFT: BRANDING & LOGO */}
           <Stack direction="row" alignItems="center" spacing={1}>
             <FootprintIcon />
             <Typography
               variant="h6"
               sx={{
-                fontSize: { xs: "1rem", sm: "1.1rem" },
+                fontSize: { xs: "0.9rem", sm: "1.1rem" },
                 fontWeight: "bold",
                 cursor: "pointer",
               }}
@@ -102,7 +115,7 @@ export default function NavBar() {
             </Typography>
           </Stack>
 
-          {/* TITULO SOLO DESKTOP */}
+          {/* CENTER: DYNAMIC PAGE TITLE (Desktop Only) */}
           {!isMobile && (
             <Typography
               variant="h6"
@@ -117,54 +130,90 @@ export default function NavBar() {
             </Typography>
           )}
 
-          {/* DESKTOP MENU */}
-          {!isMobile && (
-            <Stack direction="row" spacing={3}>
-              {menuItems
-                .filter((item) => item.visible)
-                .map((item) => (
-                  <Button
-                    key={item.label}
-                    color="inherit"
-                    sx={{
-                      textTransform: "none",
-                      borderBottom:
-                        location.pathname === item.screen
-                          ? "2px solid black"
-                          : "",
-                    }}
-                    onClick={item.onClick}
-                  >
-                    {item.label}
-                  </Button>
-                ))}
-            </Stack>
-          )}
+          {/* RIGHT: NAVIGATION (Cleaned up, help button moved to FAB) */}
+          <Stack direction="row" spacing={isMobile ? 1 : 2} alignItems="center">
 
-          {/* MOBILE MENU BUTTON */}
-          {isMobile && (
-            <IconButton onClick={() => setOpenMenu(true)}>
-              <MenuIcon />
-            </IconButton>
-          )}
+            {/* DESKTOP MENU LINKS */}
+            {!isMobile && (
+              <Stack direction="row" spacing={2}>
+                {menuItems
+                  .filter((item) => item.visible)
+                  .map((item) => (
+                    <Button
+                      key={item.label}
+                      color="inherit"
+                      sx={{
+                        textTransform: "none",
+                        fontWeight: "bold",
+                        borderBottom:
+                          location.pathname === item.screen
+                            ? "2px solid black"
+                            : "none",
+                      }}
+                      onClick={item.onClick}
+                    >
+                      {item.label}
+                    </Button>
+                  ))}
+              </Stack>
+            )}
+
+            {/* MOBILE HAMBURGER MENU */}
+            {isMobile && (
+              <IconButton onClick={() => setOpenMenu(true)}>
+                <MenuIcon />
+              </IconButton>
+            )}
+          </Stack>
         </Toolbar>
       </AppBar>
 
-      {/* DRAWER MENU MOBILE */}
+      {/* NEW INCORPORATION: Floating Action Button (FAB) for Help */}
+      {/* This solves the UX issue by removing the icon from the header and placing it in the 'hot zone' */}
+      <Tooltip title="Manual Usuario" placement="left" arrow>
+        <Fab
+          onClick={handleHelpClick}
+          aria-label="help"
+          sx={{
+            position: "fixed",
+            bottom: { xs: 20, sm: 30 },
+            right: { xs: 20, sm: 30 },
+            bgcolor: "white",            // White background as requested
+            color: "#00BCD4",            // Cyan icon from PetTrack logo
+            border: "2px solid #00BCD4", // Cyan border matching the branding
+            zIndex: 2000,                // Stays above all other content
+            "&:hover": {
+              bgcolor: "#f0fdfe",        // Very light cyan tint on hover
+              transform: "scale(1.1)",
+              transition: "all 0.2s ease-in-out",
+            },
+          }}
+        >
+          <HelpOutlineIcon sx={{ fontSize: 28 }} />
+        </Fab>
+      </Tooltip>
+
+      {/* MOBILE NAVIGATION DRAWER */}
       <Drawer anchor="right" open={openMenu} onClose={() => setOpenMenu(false)}>
         <Box sx={{ width: 250 }}>
           <List>
-            {menuItems.map((item) => (
-              <ListItemButton
-                key={item.label}
-                onClick={() => {
-                  item.onClick();
-                  setOpenMenu(false);
-                }}
-              >
-                <ListItemText primary={item.label} />
-              </ListItemButton>
-            ))}
+            {menuItems
+              .filter((item) => item.visible)
+              .map((item) => (
+                <ListItemButton
+                  key={item.label}
+                  onClick={() => {
+                    item.onClick();
+                    setOpenMenu(false);
+                  }}
+                >
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              ))}
+            {/* Additional help access inside the mobile menu */}
+            <ListItemButton onClick={handleHelpClick}>
+              <ListItemText primary="Manual Usuario" sx={{ color: "#00BCD4" }} />
+            </ListItemButton>
           </List>
         </Box>
       </Drawer>
