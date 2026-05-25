@@ -92,11 +92,11 @@ export async function logout(navigate: any) {
   navigate(SCREEN.LANDING_PAGE);
 }
 
-/**
- * Actualiza el email del usuario en Supabase Auth.
- * Al tener la confirmación desactivada en el dashboard, el cambio es inmediato.
- */
-export async function updateUserSettingsEmail(newEmail: string) {
+export async function updateUserSettingsEmail(
+  newEmail: string,
+  oldEmail: string,
+  currentUserId: string,
+) {
   const { data, error } = await supabase.auth.updateUser({
     email: newEmail,
   });
@@ -110,6 +110,18 @@ export async function updateUserSettingsEmail(newEmail: string) {
     }
     throw error;
   }
+
+  // Sincronizar en la tabla Client
+  await supabase
+    .from("Client")
+    .update({ email: newEmail })
+    .eq("userid", currentUserId);
+
+  // Sincronizar en la tabla AssociationRequest
+  await supabase
+    .from("AssociationRequest")
+    .update({ useremail: newEmail })
+    .eq("useremail", oldEmail);
 
   return data;
 }
