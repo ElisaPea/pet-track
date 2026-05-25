@@ -172,39 +172,18 @@ export default function AccountSettingsUser() {
           alignItems: "center",
           justifyContent: "center",
           mt: 4,
+          px: 2,
         }}
       >
-        {/* Back Button */}
-        {/* <Box
-          sx={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "flex-start",
-            mb: 2,
-          }}
-        >
-          <IconButton
-            onClick={() => navigate(SCREEN.WELCOME_USER)}
-            sx={{
-              bgcolor: "#FBC02D",
-              color: "black",
-              "&:hover": { bgcolor: "#f9a825" },
-              boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
-            }}
+       <Typography
+            variant="h4"
+            sx={{ fontWeight: "600", color: "#4A3B3B" }}
           >
-            <ArrowBackIcon fontSize="medium" />
-          </IconButton>
-        </Box> */}
-
-        <Typography
-          variant="h4"
-          sx={{ fontWeight: "600", color: "#4A3B3B", mb: 0.5 }}
-        >
-          Actualiza tu perfil
-        </Typography>
-
+            Actualiza tu perfil
+          </Typography>
+      
         <Box sx={{ width: 60, height: 4, bgcolor: "#00BCD4", mb: 4 }} />
-
+        
         <Box
           sx={{
             bgcolor: "#D1F2F5",
@@ -216,6 +195,32 @@ export default function AccountSettingsUser() {
             textAlign: "center",
           }}
         >
+          <Box 
+          sx={{ 
+            width: "100%", 
+            maxWidth: 650, 
+            position: "relative", 
+            display: "flex", 
+            justifyContent: "center", 
+            alignItems: "center", 
+            mb: 6
+          }}
+        >
+          <IconButton
+            onClick={() => navigate(SCREEN.WELCOME_USER)}
+            sx={{
+              position: "absolute",
+              left: 0,
+              bgcolor: "#FBC02D",
+              color: "black",
+              boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
+              "&:hover": { bgcolor: "#f9a825" },
+            }}
+          >
+            <ArrowBackIcon fontSize="medium" />
+          </IconButton>
+        </Box>
+
           <Box component="form" noValidate sx={{ mt: 1 }}>
             <Collapse in={Boolean(error)}>
               <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
@@ -365,7 +370,6 @@ export default function AccountSettingsUser() {
                   BUSCAR CENTRO VETERINARIO
                 </Button>
 
-                {/*Conditionally styled and disabled button */}
                 <Button
                   variant="contained"
                   disabled={!isFormModified}
@@ -452,7 +456,7 @@ export default function AccountSettingsUser() {
                     <Button
                       variant="contained"
                       onClick={handleConfirmEmailChange}
-                      disabled={emailSuccess} // Deshabilitar si ya ha tenido éxito
+                      disabled={emailSuccess} 
                       sx={{
                         bgcolor: "#FBC02D",
                         color: "black",

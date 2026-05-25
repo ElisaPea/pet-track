@@ -25,6 +25,7 @@ import { logout, updateUserSettingsEmail } from "../api/signInQuery";
 import { SCREEN } from "../constants/constants";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 export default function AccountSettingsVet() {
   const navigate = useNavigate();
@@ -182,6 +183,32 @@ export default function AccountSettingsVet() {
             textAlign: "center",
           }}
         >
+        <Box 
+          sx={{ 
+            width: "100%", 
+            maxWidth: 650, 
+            position: "relative", 
+            display: "flex", 
+            justifyContent: "center", 
+            alignItems: "center", 
+            mb: 6
+          }}
+        >
+          <IconButton
+            onClick={() => navigate(SCREEN.HOME_VET)}
+            sx={{
+              position: "absolute",
+              left: 0,
+              bgcolor: "#FBC02D",
+              color: "black",
+              boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
+              "&:hover": { bgcolor: "#f9a825" },
+            }}
+          >
+            <ArrowBackIcon fontSize="medium" />
+          </IconButton>
+         </Box>
+
           <Box component="form" noValidate sx={{ mt: 1 }}>
             <Collapse in={Boolean(error)}>
               <Alert severity="error" sx={{ mb: 3, borderRadius: 5 }}>
