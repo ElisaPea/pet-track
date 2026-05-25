@@ -143,7 +143,7 @@ export default function ListVetCenters() {
                 sx={{ width: "100%" }}
               >
                 <IconButton
-                  onClick={() => navigate(SCREEN.WELCOME_USER)}
+                  onClick={() => navigate(SCREEN.SETTINGS_USER)}
                   sx={{
                     bgcolor: "#FBC02D",
                     color: "black",
