@@ -67,7 +67,10 @@ export function PopupCreatePetUser({
   const [nameError, setNameError] = useState("");
   const [razaError, setRazaError] = useState("");
 
+
+
   const [loading, setLoading] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   const [toast, setToast] = useState({
     open: false,
@@ -147,7 +150,7 @@ export function PopupCreatePetUser({
   };
 
   const isFormValid =
-    name && !nameError && edad && peso && raza && !razaError && vacunas;
+    name && !nameError && !razaError;
   const hasChanges =
     name !== originalData.name ||
     raza !== originalData.raza ||
@@ -231,25 +234,21 @@ export function PopupCreatePetUser({
       });
       return;
     }
-    if (window.confirm("¿Estás seguro de que quieres eliminar esta mascota?")) {
-      setLoading(true);
-      try {
-        await deletePetUser(mascota!.id, userState?.id);
-        setToast({
-          open: true,
-          message: "Mascota eliminada correctamente",
-          severity: "success",
-        });
-        setTimeout(() => setOpen(false), 1500);
-      } catch {
-        setToast({
-          open: true,
-          message: "Error al eliminar",
-          severity: "error",
-        });
-      } finally {
-        setLoading(false);
-      }
+    // si no es una mascota vinculada llamamos al dialog de confirmDelete
+    setConfirmDeleteOpen(true);
+  }
+
+  const handleConfirmDelete = async () => {
+    setConfirmDeleteOpen(false);
+    setLoading(true);
+    try {
+      await deletePetUser(mascota!.id, userState?.id);
+      setToast({ open: true, message: "Mascota eliminada correctamente", severity: "success" });
+      setTimeout(() => setOpen(false), 1500);
+    } catch {
+      setToast({ open: true, message: "Error al eliminar", severity: "error" });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -527,6 +526,35 @@ export function PopupCreatePetUser({
                 {loading ? <CircularProgress size={24} /> : "Guardar cambios"}
               </Button>
             )}
+          </Stack>
+        </Box>
+      </Dialog>
+      <Dialog
+        open={confirmDeleteOpen}
+        onClose={() => setConfirmDeleteOpen(false)}
+        PaperProps={{ sx: { borderRadius: 4, bgcolor: "#E4F7FB", p: 1 } }}
+      >
+        <Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 3 }}>
+          <Typography fontWeight="bold">
+            ¿Estás seguro de que quieres eliminar a <strong>{mascota?.name}</strong>?
+          </Typography>
+          <Stack direction="row" spacing={2} justifyContent="flex-end">
+            <Button
+              onClick={() => setConfirmDeleteOpen(false)}
+              sx={{ color: "#00ADBA", fontWeight: "bold", borderRadius: 10 }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleConfirmDelete}
+              sx={{
+                bgcolor: "#F02F0A", borderRadius: 10, fontWeight: "bold",
+                "&:hover": { bgcolor: "#D82E0C" }
+              }}
+            >
+              Eliminar
+            </Button>
           </Stack>
         </Box>
       </Dialog>

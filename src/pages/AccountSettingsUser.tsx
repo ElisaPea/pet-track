@@ -1,4 +1,7 @@
 import BasicScreen from "../components/BasicScreen";
+import { useAssociation } from "../context/AssociationContext";
+import { Chip } from "@mui/material";
+import BusinessIcon from "@mui/icons-material/Business";
 import {
   Box,
   Typography,
@@ -15,7 +18,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 // Import centralized validations
@@ -31,12 +34,11 @@ import { useAuth } from "../context/AuthContext";
 import { logout, updateUserSettingsEmail } from "../api/signInQuery";
 
 export default function AccountSettingsUser() {
-  const [vetRequestStatus, setVetRequestStatus] = useState(
-    "Ninguno seleccionado",
-  );
+
   const navigate = useNavigate();
   const [emailError, setEmailError] = useState<string | null>(null);
   const [emailSuccess, setEmailSuccess] = useState(false);
+  const { associatedVets } = useAssociation();
 
   // States for error and success messages
   const [error, setError] = useState<string | null>(null);
@@ -53,14 +55,6 @@ export default function AccountSettingsUser() {
     address: userState?.address,
   });
 
-  // Load Initial Data
-  useEffect(() => {
-    // Check if the browser has a pending request note
-    const pendingRequest = localStorage.getItem("pendingVetRequest");
-    if (pendingRequest) {
-      setVetRequestStatus(`Esperando confirmación de: ${pendingRequest}`);
-    }
-  }, []);
 
   // Input change handler
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,15 +165,15 @@ export default function AccountSettingsUser() {
           px: 2,
         }}
       >
-       <Typography
-            variant="h4"
-            sx={{ fontWeight: "600", color: "#4A3B3B" }}
-          >
-            Actualiza tu perfil
-          </Typography>
-      
+        <Typography
+          variant="h4"
+          sx={{ fontWeight: "600", color: "#4A3B3B" }}
+        >
+          Actualiza tu perfil
+        </Typography>
+
         <Box sx={{ width: 60, height: 4, bgcolor: "#00BCD4", mb: 4 }} />
-        
+
         <Box
           sx={{
             bgcolor: "#D1F2F5",
@@ -191,31 +185,31 @@ export default function AccountSettingsUser() {
             textAlign: "center",
           }}
         >
-          <Box 
-          sx={{ 
-            width: "100%", 
-            maxWidth: 650, 
-            position: "relative", 
-            display: "flex", 
-            justifyContent: "center", 
-            alignItems: "center", 
-            mb: 6
-          }}
-        >
-          <IconButton
-            onClick={() => navigate(SCREEN.WELCOME_USER)}
+          <Box
             sx={{
-              position: "absolute",
-              left: 0,
-              bgcolor: "#FBC02D",
-              color: "black",
-              boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
-              "&:hover": { bgcolor: "#f9a825" },
+              width: "100%",
+              maxWidth: 650,
+              position: "relative",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              mb: 6
             }}
           >
-            <ArrowBackIcon fontSize="medium" />
-          </IconButton>
-        </Box>
+            <IconButton
+              onClick={() => navigate(SCREEN.WELCOME_USER)}
+              sx={{
+                position: "absolute",
+                left: 0,
+                bgcolor: "#FBC02D",
+                color: "black",
+                boxShadow: "0px 2px 5px rgba(0,0,0,0.2)",
+                "&:hover": { bgcolor: "#f9a825" },
+              }}
+            >
+              <ArrowBackIcon fontSize="medium" />
+            </IconButton>
+          </Box>
 
           <Box component="form" noValidate sx={{ mt: 1 }}>
             <Collapse in={Boolean(error)}>
@@ -314,6 +308,7 @@ export default function AccountSettingsUser() {
                 sx={{ width: "100%" }}
               >
                 <Typography
+                  component="label"
                   sx={{
                     width: 400,
                     textAlign: { xs: "center", sm: "left" },
@@ -325,10 +320,48 @@ export default function AccountSettingsUser() {
                 <TextField
                   fullWidth
                   variant="standard"
-                  value={vetRequestStatus}
-                  InputProps={{ disableUnderline: true, readOnly: true }}
+                  value=""
+                  InputProps={{
+                    disableUnderline: true,
+                    readOnly: true,
+                    inputComponent: () => (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexWrap: "nowrap",
+                          overflowX: "auto",
+                          gap: 1,
+                          alignItems: "center",
+                          width: "100%",
+                          "&::-webkit-scrollbar": { height: 4 },
+                          "&::-webkit-scrollbar-thumb": { bgcolor: "#00ADBA", borderRadius: 2 },
+                        }}
+                      >
+                        {associatedVets.length > 0 ? (
+                          associatedVets.map((vet, index) => (
+                            <Chip
+                              key={vet.id}
+                              label={vet.name}
+                              size="small"
+                              icon={<BusinessIcon style={{ fontSize: "0.9rem" }} />}
+                              sx={{
+                                flexShrink: 0,
+                                bgcolor: ["#FFD1DC", "#B3E5BE", "#FFECB3", "#C5CAE9", "#F8BBD0"][index % 5],
+                                fontWeight: 500,
+                                fontSize: "0.75rem",
+                              }}
+                            />
+                          ))
+                        ) : (
+                          <Typography variant="body2" sx={{ color: "#666" }}>
+                            Ninguno seleccionado
+                          </Typography>
+                        )}
+                      </Box>
+                    ),
+                  }}
                   sx={{
-                    bgcolor: "#bebebeff", // Slightly gray to denote it's not editable here
+                    bgcolor: associatedVets.length > 0 ? "white" : "#bebebeff",
                     borderRadius: 50,
                     px: 2,
                     py: 0.5,
@@ -452,7 +485,7 @@ export default function AccountSettingsUser() {
                     <Button
                       variant="contained"
                       onClick={handleConfirmEmailChange}
-                      disabled={emailSuccess} 
+                      disabled={emailSuccess}
                       sx={{
                         bgcolor: "#FBC02D",
                         color: "black",
