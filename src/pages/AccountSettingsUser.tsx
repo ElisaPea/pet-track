@@ -142,7 +142,11 @@ export default function AccountSettingsUser() {
 
     try {
       // 2. Intentar actualizar en Supabase
-      await updateUserSettingsEmail(formData.email);
+      await updateUserSettingsEmail(
+        formData.email,
+        userState?.email || "",
+        userState?.id || "",
+      );
 
       // 3. Si todo va bien, avisamos al usuario
       setEmailSuccess(true);
