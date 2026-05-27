@@ -106,6 +106,15 @@ export default function Login() {
       setErrorDialog("El formato del correo electrónico no es válido.");
       return;
     }
+    // Validar teléfono del centro (si se ha introducido)
+    if (newCenter.phone && newCenter.phone.trim().length > 0) {
+      // import validatePhone dynamically to avoid circular imports
+      const { validatePhone } = await import("../utils/validationUtils");
+      if (!validatePhone(newCenter.phone)) {
+        setErrorDialog("El formato del teléfono no es válido. Debe contener únicamente dígitos (4-15).");
+        return;
+      }
+    }
     try {
       const createdCenter = await createVetCenter(newCenter);
       await loadVetCenters(); 
@@ -160,6 +169,10 @@ export default function Login() {
       newErrors.password = "Mínimo 6 caracteres.";
     }
     if (!form.name && !isLogin) newErrors.name = "El nombre es obligatorio.";
+    // Validación teléfono en registro (opcional)
+    if (!isLogin && form.phone && form.phone.length && !(/^[0-9]{4,15}$/.test(form.phone.trim()))) {
+      newErrors.phone = "Formato incorrecto.";
+    }
     if (!isLogin && isProfessional) {
       if (!form.licenseNumber) newErrors.licenseNumber = "El Nº Colegiado es obligatorio.";
       if (!form.selectedVet) newErrors.selectedVet = "El Centro Vet es obligatorio.";
@@ -286,6 +299,11 @@ export default function Login() {
                       Teléfono:
                     </Typography>
                     <TextField fullWidth variant="standard" value={form.phone} onChange={(e) => handleChange("phone", e.target.value)} InputProps={{ disableUnderline: true }} sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }} />
+                      {errors.phone && (
+                        <Typography sx={{ color: "red", position: "absolute", left: { xs: 0, sm: 180 }, top: "100%", fontSize: "0.8rem" }}>
+                          {errors.phone}
+                        </Typography>
+                      )}
                   </Stack>
 
                   <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ xs: "flex-start", sm: "center" }} spacing={{ xs: 0.5, sm: 0 }} sx={{ width: "100%" }}>

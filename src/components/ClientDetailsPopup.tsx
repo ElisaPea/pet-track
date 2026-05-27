@@ -75,6 +75,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
   const [errorName, setErrorName] = useState(false);
   const [errorEmail, setErrorEmail] = useState(false);
   const [errorPhone, setErrorPhone] = useState(false);
+  const [errorFormat, setErrorFormat] = useState<string | null>(null);
   const [loadingAction, setLoadingAction] = useState(false);
   const { userState } = useAuth();
 
@@ -122,6 +123,8 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError(false);
+    if (e.target.name === "phone" && errorPhone) setErrorPhone(false);
+    if (e.target.name === "phone" && errorFormat) setErrorFormat(null);
   };
 
   const handleAddNewPetRow = () => {
@@ -147,6 +150,15 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
 
   const handleSave = async () => {
     if (!clientData?.id) return;
+
+    // Validar teléfono antes de guardar
+    if (!validatePhone(formData.phone)) {
+      setErrorPhone(true);
+      setErrorFormat("Formato incorrecto en: Número de teléfono.");
+      return;
+    }
+    setErrorPhone(false);
+    setErrorFormat(null);
     setLoadingAction(true);
 
     try {
@@ -281,6 +293,12 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
 
       <DialogContent sx={{ bgcolor: "#E1F5FE", p: 0 }}>
         <TabPanel value={tabValue} index={0}>
+          <Collapse in={Boolean(errorFormat)}>
+            <Alert severity="error" sx={{ mb: 2, borderRadius: 5 }}>
+              {errorFormat}
+            </Alert>
+          </Collapse>
+
           <Stack spacing={3} sx={{ maxWidth: 600, mx: "auto", mt: 2 }}>
             <Box
               sx={{
@@ -344,9 +362,10 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                 variant="standard"
                 value={formData.phone}
                 onChange={handleChange}
+                error={errorPhone}
                 InputProps={{ disableUnderline: true }}
                 sx={{
-                  bgcolor: "white",
+                  bgcolor: errorPhone ? "#FFEBEE" : "white",
                   borderRadius: 50,
                   px: 2,
                   py: 0.5,
