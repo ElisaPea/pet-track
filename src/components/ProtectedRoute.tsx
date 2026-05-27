@@ -10,10 +10,10 @@ export function ProtectedRoute({
   children: JSX.Element;
   requiredRole?: string;
 }) {
-  const { userAuthenticated, role, loading } = useAuth();
+  const { userAuthenticated, role, loading, isLoggingOut } = useAuth();
 
   // 1. Si está cargando la sesión inicial de Supabase
-  if (loading) return <p>Cargando sesión...</p>;
+  if (loading || isLoggingOut) return <p>Cargando sesión...</p>;
 
   // 2. Si no hay usuario en absoluto
   if (!userAuthenticated) return <Navigate to={SCREEN.LOGIN} />;

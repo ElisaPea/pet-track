@@ -28,7 +28,7 @@ import {
   createPetForClient,
   getPetUserNotas,
   updatePet,
-  updatePetVetNotes, // Importamos la nueva función
+  updatePetVetNotes,
 } from "../api/query";
 import { validateEmail, validatePhone } from "../utils/validationUtils";
 import { validateName } from "../utils/validatorName";
@@ -70,12 +70,19 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
   const [tabValue, setTabValue] = useState(0);
   const { pendingRequests, acceptedRequests, refreshAssociations } =
     useAssociation();
-
+  //m
   const [error, setError] = useState(false);
   const [errorName, setErrorName] = useState(false);
   const [errorEmail, setErrorEmail] = useState(false);
   const [errorPhone, setErrorPhone] = useState(false);
   const [errorFormat, setErrorFormat] = useState<string | null>(null);
+  //m
+
+  //v
+  const [nameError, setNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  //v
   const [loadingAction, setLoadingAction] = useState(false);
   const { userState } = useAuth();
 
@@ -100,7 +107,6 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
         email: clientData.email || "",
         phone: clientData.phone || "",
       });
-
       setLocalPets(clientData.pets || []);
       fetchPetsExtras();
     }
@@ -120,6 +126,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
     setPetsExtras(extras);
   };
 
+  //malcon
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (error) setError(false);
@@ -127,7 +134,41 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
     if (e.target.name === "phone" && errorFormat) setErrorFormat(null);
   };
 
+  const handleChangeName = (value: string) => {
+    if (/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/.test(value)) {
+      setNameError("El nombre solo puede contener letras.");
+    } else {
+      setNameError("");
+    }
+    setFormData({ ...formData, name: value });
+  };
+
+  const handleChangeEmail = (value: string) => {
+    if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      setEmailError("El correo no es válido.");
+    } else {
+      setEmailError("");
+    }
+    setFormData({ ...formData, email: value });
+  };
+
+  const handleChangePhone = (value: string) => {
+    if (/[^\d]/.test(value) || value.length > 16) return;
+    if (value && value.length < 4) {
+      setPhoneError("El teléfono debe tener mínimo 4 dígitos.");
+    } else {
+      setPhoneError("");
+    }
+    setFormData({ ...formData, phone: value });
+  };
+
   const handleAddNewPetRow = () => {
+    // Evitar crear otra fila si ya hay una nueva sin nombre
+    const hasUnfinishedNewPet = localPets.some(
+      (p) => p.isNew && p.name.trim() === "",
+    );
+    if (hasUnfinishedNewPet) return;
+
     const tempId = "new-" + Date.now();
     const newPet = {
       id: tempId,
@@ -159,37 +200,37 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
     }
     setErrorPhone(false);
     setErrorFormat(null);
+    if (nameError || emailError || phoneError) return;
     setLoadingAction(true);
 
     try {
-      // 1. Actualizar Datos Cliente
       await updateClientProfile(clientData.id, formData);
 
-      // 2. Ciclo de actualización de mascotas
       for (const pet of localPets) {
         const sanitizedDate =
           pet.birthdate && pet.birthdate.trim() !== "" ? pet.birthdate : null;
 
         if (pet.isNew) {
           if (pet.name.trim()) {
-            await createPetForClient(
+            const createdPet = await createPetForClient(
               { ...pet, birthdate: sanitizedDate },
               clientData.id,
               clientData.userid,
             );
-            if (pet.vetNotes) {
-              await updatePetVetNotes(pet.id, clientData.id, pet.vetNotes);
+            if (pet.vetNotes && createdPet?.id) {
+              await updatePetVetNotes(
+                createdPet.id,
+                clientData.id,
+                pet.vetNotes,
+              );
             }
           }
         } else {
-          // Actualizamos datos básicos de la mascota
           await updatePet(pet.id, {
             name: pet.name,
             breed: pet.breed,
             birthDate: sanitizedDate,
           });
-
-          // ACTUALIZACIÓN DE NOTAS DEL CENTRO (PetClient)
           await updatePetVetNotes(pet.id, clientData.id, pet.vetNotes);
         }
       }
@@ -300,6 +341,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
           </Collapse>
 
           <Stack spacing={3} sx={{ maxWidth: 600, mx: "auto", mt: 2 }}>
+            {/* Nombre */}
             <Box
               sx={{
                 display: "flex",
@@ -308,22 +350,33 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
               }}
             >
               <Typography sx={{ fontWeight: "bold" }}>Nombre</Typography>
-              <TextField
-                name="name"
-                size="small"
-                variant="standard"
-                value={formData.name}
-                onChange={handleChange}
-                InputProps={{ disableUnderline: true }}
-                sx={{
-                  bgcolor: "white",
-                  borderRadius: 50,
-                  px: 2,
-                  py: 0.5,
-                  width: 350,
-                }}
-              />
+              <Box sx={{ width: 350 }}>
+                <TextField
+                  name="name"
+                  size="small"
+                  variant="standard"
+                  value={formData.name}
+                  onChange={(e) => handleChangeName(e.target.value)}
+                  InputProps={{ disableUnderline: true }}
+                  sx={{
+                    bgcolor: "white",
+                    borderRadius: 50,
+                    px: 2,
+                    py: 0.5,
+                    width: "100%",
+                  }}
+                />
+                {nameError && (
+                  <Typography
+                    sx={{ color: "red", fontSize: "0.75rem", ml: 2, mt: 0.5 }}
+                  >
+                    {nameError}
+                  </Typography>
+                )}
+              </Box>
             </Box>
+
+            {/* Email */}
             <Box
               sx={{
                 display: "flex",
@@ -332,22 +385,33 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
               }}
             >
               <Typography sx={{ fontWeight: "bold" }}>Email</Typography>
-              <TextField
-                name="email"
-                size="small"
-                variant="standard"
-                value={formData.email}
-                onChange={handleChange}
-                InputProps={{ disableUnderline: true }}
-                sx={{
-                  bgcolor: "white",
-                  borderRadius: 50,
-                  px: 2,
-                  py: 0.5,
-                  width: 350,
-                }}
-              />
+              <Box sx={{ width: 350 }}>
+                <TextField
+                  name="email"
+                  size="small"
+                  variant="standard"
+                  value={formData.email}
+                  onChange={(e) => handleChangeEmail(e.target.value)}
+                  InputProps={{ disableUnderline: true }}
+                  sx={{
+                    bgcolor: "white",
+                    borderRadius: 50,
+                    px: 2,
+                    py: 0.5,
+                    width: "100%",
+                  }}
+                />
+                {emailError && (
+                  <Typography
+                    sx={{ color: "red", fontSize: "0.75rem", ml: 2, mt: 0.5 }}
+                  >
+                    {emailError}
+                  </Typography>
+                )}
+              </Box>
             </Box>
+
+            {/* Teléfono */}
             <Box
               sx={{
                 display: "flex",
@@ -543,7 +607,6 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                         </Box>
                       </Box>
 
-                      {/* NOTAS CENTRO VETERINARIO - Ahora con binding a localPets */}
                       <Box sx={{ bgcolor: "white", p: 2, borderRadius: 3 }}>
                         <Typography
                           variant="caption"
@@ -557,7 +620,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                           rows={3}
                           variant="standard"
                           placeholder="Observaciones médicas..."
-                          value={pet.vetNotes} // Binding correcto
+                          value={pet.vetNotes}
                           onChange={(e) =>
                             handlePetChange(pet.id, "vetNotes", e.target.value)
                           }
@@ -610,7 +673,9 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
         <Button
           variant="contained"
           onClick={handleSave}
-          disabled={loadingAction}
+          disabled={
+            loadingAction || !!nameError || !!emailError || !!phoneError
+          }
           sx={{
             bgcolor: "#FFCA28",
             color: "black",
