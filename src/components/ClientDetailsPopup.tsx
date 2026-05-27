@@ -84,6 +84,9 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
   const [petsExtras, setPetsExtras] = useState<Record<string, string>>({});
 
   const isAssociated = !!clientData?.userid;
+
+  if (open) console.log(pendingRequests, clientData);
+
   const pendingRequest = pendingRequests.find(
     (r) => r.useremail === clientData?.email,
   );
@@ -192,7 +195,11 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
               clientData.userid,
             );
             if (pet.vetNotes && createdPet?.id) {
-              await updatePetVetNotes(createdPet.id, clientData.id, pet.vetNotes);
+              await updatePetVetNotes(
+                createdPet.id,
+                clientData.id,
+                pet.vetNotes,
+              );
             }
           }
         } else {
@@ -305,9 +312,14 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
       <DialogContent sx={{ bgcolor: "#E1F5FE", p: 0 }}>
         <TabPanel value={tabValue} index={0}>
           <Stack spacing={3} sx={{ maxWidth: 600, mx: "auto", mt: 2 }}>
-
             {/* Nombre */}
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <Typography sx={{ fontWeight: "bold" }}>Nombre</Typography>
               <Box sx={{ width: 350 }}>
                 <TextField
@@ -317,10 +329,18 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                   value={formData.name}
                   onChange={(e) => handleChangeName(e.target.value)}
                   InputProps={{ disableUnderline: true }}
-                  sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5, width: "100%" }}
+                  sx={{
+                    bgcolor: "white",
+                    borderRadius: 50,
+                    px: 2,
+                    py: 0.5,
+                    width: "100%",
+                  }}
                 />
                 {nameError && (
-                  <Typography sx={{ color: "red", fontSize: "0.75rem", ml: 2, mt: 0.5 }}>
+                  <Typography
+                    sx={{ color: "red", fontSize: "0.75rem", ml: 2, mt: 0.5 }}
+                  >
                     {nameError}
                   </Typography>
                 )}
@@ -328,7 +348,13 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
             </Box>
 
             {/* Email */}
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <Typography sx={{ fontWeight: "bold" }}>Email</Typography>
               <Box sx={{ width: 350 }}>
                 <TextField
@@ -338,10 +364,18 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                   value={formData.email}
                   onChange={(e) => handleChangeEmail(e.target.value)}
                   InputProps={{ disableUnderline: true }}
-                  sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5, width: "100%" }}
+                  sx={{
+                    bgcolor: "white",
+                    borderRadius: 50,
+                    px: 2,
+                    py: 0.5,
+                    width: "100%",
+                  }}
                 />
                 {emailError && (
-                  <Typography sx={{ color: "red", fontSize: "0.75rem", ml: 2, mt: 0.5 }}>
+                  <Typography
+                    sx={{ color: "red", fontSize: "0.75rem", ml: 2, mt: 0.5 }}
+                  >
                     {emailError}
                   </Typography>
                 )}
@@ -349,7 +383,13 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
             </Box>
 
             {/* Teléfono */}
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <Typography sx={{ fontWeight: "bold" }}>Teléfono</Typography>
               <Box sx={{ width: 150 }}>
                 <TextField
@@ -360,10 +400,18 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                   onChange={(e) => handleChangePhone(e.target.value)}
                   inputProps={{ maxLength: 16 }}
                   InputProps={{ disableUnderline: true }}
-                  sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5, width: "100%" }}
+                  sx={{
+                    bgcolor: "white",
+                    borderRadius: 50,
+                    px: 2,
+                    py: 0.5,
+                    width: "100%",
+                  }}
                 />
                 {phoneError && (
-                  <Typography sx={{ color: "red", fontSize: "0.75rem", ml: 2, mt: 0.5 }}>
+                  <Typography
+                    sx={{ color: "red", fontSize: "0.75rem", ml: 2, mt: 0.5 }}
+                  >
                     {phoneError}
                   </Typography>
                 )}
@@ -376,7 +424,11 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
               <Button
                 variant="contained"
                 onClick={handleUnlink}
-                sx={{ bgcolor: "#F02F0A", borderRadius: 10, fontWeight: "bold" }}
+                sx={{
+                  bgcolor: "#F02F0A",
+                  borderRadius: 10,
+                  fontWeight: "bold",
+                }}
               >
                 ANULAR ASOCIACIÓN
               </Button>
@@ -389,7 +441,11 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
               <Button
                 variant="contained"
                 onClick={handleInvite}
-                sx={{ bgcolor: "#66BB6A", borderRadius: 10, fontWeight: "bold" }}
+                sx={{
+                  bgcolor: "#66BB6A",
+                  borderRadius: 10,
+                  fontWeight: "bold",
+                }}
               >
                 INVITAR USUARIO
               </Button>
@@ -423,7 +479,11 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                     onClick={() => setExpandedPetId(isExpanded ? null : pet.id)}
                   >
                     <Avatar
-                      sx={{ bgcolor: "white", color: "#00ADBA", fontWeight: "bold" }}
+                      sx={{
+                        bgcolor: "white",
+                        color: "#00ADBA",
+                        fontWeight: "bold",
+                      }}
                     >
                       {pet.name ? pet.name.charAt(0).toUpperCase() : "?"}
                     </Avatar>
@@ -431,7 +491,10 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                       <Typography sx={{ color: "white", fontWeight: "bold" }}>
                         {pet.name || "Nueva Mascota (Sin nombre)"}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.8)" }}>
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "rgba(255,255,255,0.8)" }}
+                      >
                         {pet.breed || "Raza no definida"}
                       </Typography>
                     </Box>
@@ -461,7 +524,10 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                         }}
                       >
                         <Box sx={{ flex: 1, minWidth: 200 }}>
-                          <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                          <Typography
+                            variant="caption"
+                            sx={{ fontWeight: "bold" }}
+                          >
                             Nombre
                           </Typography>
                           <TextField
@@ -469,13 +535,18 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                             size="small"
                             variant="standard"
                             value={pet.name}
-                            onChange={(e) => handlePetChange(pet.id, "name", e.target.value)}
+                            onChange={(e) =>
+                              handlePetChange(pet.id, "name", e.target.value)
+                            }
                             InputProps={{ disableUnderline: true }}
                             sx={{ bgcolor: "#F5F5F5", borderRadius: 2, px: 1 }}
                           />
                         </Box>
                         <Box sx={{ flex: 1, minWidth: 150 }}>
-                          <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                          <Typography
+                            variant="caption"
+                            sx={{ fontWeight: "bold" }}
+                          >
                             Raza
                           </Typography>
                           <TextField
@@ -483,13 +554,18 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                             size="small"
                             variant="standard"
                             value={pet.breed}
-                            onChange={(e) => handlePetChange(pet.id, "breed", e.target.value)}
+                            onChange={(e) =>
+                              handlePetChange(pet.id, "breed", e.target.value)
+                            }
                             InputProps={{ disableUnderline: true }}
                             sx={{ bgcolor: "#F5F5F5", borderRadius: 2, px: 1 }}
                           />
                         </Box>
                         <Box sx={{ width: 170 }}>
-                          <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                          <Typography
+                            variant="caption"
+                            sx={{ fontWeight: "bold" }}
+                          >
                             Fecha Nac.
                           </Typography>
                           <TextField
@@ -498,7 +574,13 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                             size="small"
                             variant="standard"
                             value={pet.birthdate || ""}
-                            onChange={(e) => handlePetChange(pet.id, "birthdate", e.target.value)}
+                            onChange={(e) =>
+                              handlePetChange(
+                                pet.id,
+                                "birthdate",
+                                e.target.value,
+                              )
+                            }
                             InputProps={{ disableUnderline: true }}
                             sx={{ bgcolor: "#F5F5F5", borderRadius: 2, px: 1 }}
                           />
@@ -506,7 +588,10 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                       </Box>
 
                       <Box sx={{ bgcolor: "white", p: 2, borderRadius: 3 }}>
-                        <Typography variant="caption" sx={{ fontWeight: "bold", color: "#00ADBA" }}>
+                        <Typography
+                          variant="caption"
+                          sx={{ fontWeight: "bold", color: "#00ADBA" }}
+                        >
                           Notas del Centro Veterinario
                         </Typography>
                         <TextField
@@ -516,14 +601,30 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                           variant="standard"
                           placeholder="Observaciones médicas..."
                           value={pet.vetNotes}
-                          onChange={(e) => handlePetChange(pet.id, "vetNotes", e.target.value)}
+                          onChange={(e) =>
+                            handlePetChange(pet.id, "vetNotes", e.target.value)
+                          }
                           InputProps={{ disableUnderline: true }}
-                          sx={{ bgcolor: "#F5F5F5", borderRadius: 2, p: 1, mt: 0.5 }}
+                          sx={{
+                            bgcolor: "#F5F5F5",
+                            borderRadius: 2,
+                            p: 1,
+                            mt: 0.5,
+                          }}
                         />
                       </Box>
 
-                      <Box sx={{ bgcolor: "rgba(255,255,255,0.6)", p: 2, borderRadius: 3 }}>
-                        <Typography variant="caption" sx={{ fontWeight: "bold" }}>
+                      <Box
+                        sx={{
+                          bgcolor: "rgba(255,255,255,0.6)",
+                          p: 2,
+                          borderRadius: 3,
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          sx={{ fontWeight: "bold" }}
+                        >
                           Notas del Propietario (Lectura)
                         </Typography>
                         <Typography
@@ -543,13 +644,18 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
       </DialogContent>
 
       <DialogActions sx={{ p: 3, bgcolor: "#E1F5FE" }}>
-        <Button onClick={handleExit} sx={{ color: "#F02F0A", fontWeight: "bold" }}>
+        <Button
+          onClick={handleExit}
+          sx={{ color: "#F02F0A", fontWeight: "bold" }}
+        >
           SALIR
         </Button>
         <Button
           variant="contained"
           onClick={handleSave}
-          disabled={loadingAction || !!nameError || !!emailError || !!phoneError}
+          disabled={
+            loadingAction || !!nameError || !!emailError || !!phoneError
+          }
           sx={{
             bgcolor: "#FFCA28",
             color: "black",

@@ -104,7 +104,10 @@ export default function AssociationRequestPopup({
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={(_, reason) => {
+        if (reason === "backdropClick") return;
+      }}
+      disableEscapeKeyDown
       PaperProps={{
         sx: {
           borderRadius: 8,
@@ -115,19 +118,6 @@ export default function AssociationRequestPopup({
         },
       }}
     >
-      <IconButton
-        onClick={onClose}
-        sx={{
-          position: "absolute",
-          right: 8,
-          top: 8,
-          color: "white",
-          zIndex: 10,
-        }}
-      >
-        <CloseIcon />
-      </IconButton>
-
       <DialogContent sx={{ mt: 2 }}>
         <Typography
           variant="h5"
