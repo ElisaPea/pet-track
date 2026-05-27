@@ -114,7 +114,7 @@ export default function AccountSettingsUser() {
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error(err);
-      setError("Technical error: Could not connect to the database.");
+      setError("Error técnico: No se pudo conectar con la base de datos.");
     }
   };
 
@@ -136,7 +136,11 @@ export default function AccountSettingsUser() {
 
     try {
       // 2. Intentar actualizar en Supabase
-      await updateUserSettingsEmail(formData.email);
+      await updateUserSettingsEmail(
+        formData.email,
+        userState?.email || "",
+        userState?.id || "",
+      );
 
       // 3. Si todo va bien, avisamos al usuario
       setEmailSuccess(true);

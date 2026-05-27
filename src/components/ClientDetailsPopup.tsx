@@ -146,6 +146,12 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
   };
 
   const handleAddNewPetRow = () => {
+    // Evitar crear otra fila si ya hay una nueva sin nombre
+    const hasUnfinishedNewPet = localPets.some(
+      (p) => p.isNew && p.name.trim() === "",
+    );
+    if (hasUnfinishedNewPet) return;
+
     const tempId = "new-" + Date.now();
     const newPet = {
       id: tempId,
@@ -180,13 +186,13 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
 
         if (pet.isNew) {
           if (pet.name.trim()) {
-            await createPetForClient(
+            const createdPet = await createPetForClient(
               { ...pet, birthdate: sanitizedDate },
               clientData.id,
               clientData.userid,
             );
-            if (pet.vetNotes) {
-              await updatePetVetNotes(pet.id, clientData.id, pet.vetNotes);
+            if (pet.vetNotes && createdPet?.id) {
+              await updatePetVetNotes(createdPet.id, clientData.id, pet.vetNotes);
             }
           }
         } else {

@@ -78,7 +78,7 @@ export default function AccountSettingsVet() {
     if (!isNotEmpty(licenseNumber)) missingFields.push("Nº Colegiado");
 
     if (missingFields.length > 0) {
-      setError(`Missing required fields: ${missingFields.join(", ")}.`);
+      setError(`Campos requeridos faltantes: ${missingFields.join(", ")}.`);
       return;
     }
 
@@ -89,7 +89,7 @@ export default function AccountSettingsVet() {
     if (!validateColegiado(licenseNumber)) invalidFields.push("Nº Colegiado");
 
     if (invalidFields.length > 0) {
-      setError2(`Incorrect format in: ${invalidFields.join(", ")}.`);
+      setError2(`Formato incorrecto en: ${invalidFields.join(", ")}.`);
       return;
     }
 
@@ -105,11 +105,11 @@ export default function AccountSettingsVet() {
 
         // setTimeout(() => setSuccess(false), 3000);
       } else {
-        setError("No active user session detected.");
+        setError("No se ha detectado ninguna sesión de usuario activa.");
       }
     } catch (err) {
       console.error(err);
-      setError("Technical error: Could not connect to the database.");
+      setError("Error técnico: No se pudo conectar con la base de datos.");
     }
   };
 
@@ -131,7 +131,11 @@ export default function AccountSettingsVet() {
 
     try {
       // 2. Intentar actualizar en Supabase
-      await updateUserSettingsEmail(formData.email);
+      await updateUserSettingsEmail(
+        formData.email,
+        userState?.email || "",
+        userState?.id || "",
+      );
 
       // 3. Si todo va bien, avisamos al usuario
       setEmailSuccess(true);
