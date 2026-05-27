@@ -70,10 +70,19 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
   const [tabValue, setTabValue] = useState(0);
   const { pendingRequests, acceptedRequests, refreshAssociations } =
     useAssociation();
+  //m
+  const [error, setError] = useState(false);
+  const [errorName, setErrorName] = useState(false);
+  const [errorEmail, setErrorEmail] = useState(false);
+  const [errorPhone, setErrorPhone] = useState(false);
+  const [errorFormat, setErrorFormat] = useState<string | null>(null);
+  //m
 
+  //v
   const [nameError, setNameError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  //v
   const [loadingAction, setLoadingAction] = useState(false);
   const { userState } = useAuth();
 
@@ -118,6 +127,14 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
       }
     }
     setPetsExtras(extras);
+  };
+
+  //malcon
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (error) setError(false);
+    if (e.target.name === "phone" && errorPhone) setErrorPhone(false);
+    if (e.target.name === "phone" && errorFormat) setErrorFormat(null);
   };
 
   const handleChangeName = (value: string) => {
@@ -177,6 +194,15 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
 
   const handleSave = async () => {
     if (!clientData?.id) return;
+
+    // Validar teléfono antes de guardar
+    if (!validatePhone(formData.phone)) {
+      setErrorPhone(true);
+      setErrorFormat("Formato incorrecto en: Número de teléfono.");
+      return;
+    }
+    setErrorPhone(false);
+    setErrorFormat(null);
     if (nameError || emailError || phoneError) return;
     setLoadingAction(true);
 
@@ -311,6 +337,12 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
 
       <DialogContent sx={{ bgcolor: "#E1F5FE", p: 0 }}>
         <TabPanel value={tabValue} index={0}>
+          <Collapse in={Boolean(errorFormat)}>
+            <Alert severity="error" sx={{ mb: 2, borderRadius: 5 }}>
+              {errorFormat}
+            </Alert>
+          </Collapse>
+
           <Stack spacing={3} sx={{ maxWidth: 600, mx: "auto", mt: 2 }}>
             {/* Nombre */}
             <Box
@@ -391,31 +423,22 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
               }}
             >
               <Typography sx={{ fontWeight: "bold" }}>Teléfono</Typography>
-              <Box sx={{ width: 150 }}>
-                <TextField
-                  name="phone"
-                  size="small"
-                  variant="standard"
-                  value={formData.phone}
-                  onChange={(e) => handleChangePhone(e.target.value)}
-                  inputProps={{ maxLength: 16 }}
-                  InputProps={{ disableUnderline: true }}
-                  sx={{
-                    bgcolor: "white",
-                    borderRadius: 50,
-                    px: 2,
-                    py: 0.5,
-                    width: "100%",
-                  }}
-                />
-                {phoneError && (
-                  <Typography
-                    sx={{ color: "red", fontSize: "0.75rem", ml: 2, mt: 0.5 }}
-                  >
-                    {phoneError}
-                  </Typography>
-                )}
-              </Box>
+              <TextField
+                name="phone"
+                size="small"
+                variant="standard"
+                value={formData.phone}
+                onChange={handleChange}
+                error={errorPhone}
+                InputProps={{ disableUnderline: true }}
+                sx={{
+                  bgcolor: errorPhone ? "#FFEBEE" : "white",
+                  borderRadius: 50,
+                  px: 2,
+                  py: 0.5,
+                  width: 150,
+                }}
+              />
             </Box>
 
             <Divider sx={{ my: 2 }} />
