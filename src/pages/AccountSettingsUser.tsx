@@ -64,6 +64,44 @@ export default function AccountSettingsUser() {
     if (success) setSuccess(false); // Hide success if user types again
   };
 
+  const handleChangeName = (value: string) => {
+    if (/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/.test(value)) {
+      setError("El nombre solo puede contener letras.");
+    } else {
+      // Clear error if valid again
+      if (error === "El nombre solo puede contener letras.") {
+        setError(null);
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        name: value,
+      }));
+    }
+
+    if (success) setSuccess(false);
+  };
+
+  const handleChangePhone = (value: string) => {
+    // Prevent letters or special characters
+    if (/[^\d]/.test(value)) {
+      setError2("El teléfono solo puede contener números.");
+      return;
+    }
+
+    // Clear error if valid again
+    if (error2 === "El teléfono solo puede contener números.") {
+      setError2(null);
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      phone: value,
+    }));
+
+    if (success) setSuccess(false);
+  };
+
   //Variable that calculates in real-time if there are changes
   const isFormModified =
     formData.name !== userState?.name ||
@@ -250,7 +288,7 @@ export default function AccountSettingsUser() {
                     fontWeight: "bold",
                   }}
                 >
-                  Nombre*:
+                  Nombre: *
                 </Typography>
                 <TextField
                   fullWidth
@@ -258,7 +296,7 @@ export default function AccountSettingsUser() {
                   name="name"
                   variant="standard"
                   value={formData.name}
-                  onChange={handleChange}
+                  onChange={(e) => handleChangeName(e.target.value)}
                   error={Boolean(error) && !isNotEmpty(formData.name)}
                   InputProps={{ disableUnderline: true }}
                   sx={{
@@ -293,7 +331,7 @@ export default function AccountSettingsUser() {
                   variant="standard"
                   name="phone"
                   value={formData.phone}
-                  onChange={handleChange}
+                  onChange={(e) => handleChangePhone(e.target.value)}
                   error={Boolean(error2) && !validatePhone(formData.phone)}
                   InputProps={{ disableUnderline: true }}
                   sx={{

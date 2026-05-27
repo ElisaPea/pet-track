@@ -135,12 +135,27 @@ export default function Login() {
   };
 
   const handleChangeName = (value: string) => {
-    if (/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/.test(value)) {
-      setErrors((prev) => ({ ...prev, name: "El nombre solo puede contener letras." }));
-      setForm((prev) => ({ ...prev, name: value }));
-    } else {
-      handleChange("name", value);
+    // Solo permite letras, espacios y acentos
+    const validNameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]*$/;
+
+    // Si hay números o caracteres especiales, no actualiza el input
+    if (!validNameRegex.test(value)) {
+      setErrors((prev) => ({
+        ...prev,
+        name: "El nombre solo puede contener letras.",
+      }));
+      return;
     }
+
+    // Limpia el error si vuelve a ser válido
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.name;
+      return newErrors;
+    });
+
+    // Actualiza solo valores válidos
+    handleChange("name", value);
   };
 
   const handleChangePhone = (value: string) => {
