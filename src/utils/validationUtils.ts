@@ -4,11 +4,10 @@ export const validateEmail = (email: string): boolean => {
   return emailRegex.test(email.trim());
 };
 
-// Valida que el teléfono tenga de 4 a 15 dígitos (inclusive)
+// Valida que el teléfono contenga únicamente dígitos y tenga entre 4 y 15 caracteres
 export const validatePhone = (phone: string): boolean => {
   if (!phone || !phone?.length) return true;
-  const justNumbers = phone.replace(/\D/g, "");
-  return justNumbers.length >= 4 && justNumbers.length <= 15;
+  return /^\d{4,15}$/.test(phone.trim());
 };
 
 // Valida que el número de colegiado sea de 4 a 6 dígitos

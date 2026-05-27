@@ -255,17 +255,17 @@ const AddClientPopup = ({
         <Stack spacing={2} sx={{ mt: 1 }}>
           {[
             {
-              label: "Nombre",
+              label: "Nombre*",
               fieldKey: "Nombre",
               placeholder: "Nombre completo ...",
             },
             {
-              label: "Email",
+              label: "Email*",
               fieldKey: "Email",
               placeholder: "ejemplo@mail.com ...",
             },
             {
-              label: "Teléfono",
+              label: "Teléfono*",
               fieldKey: "Telefono",
               placeholder: "600 000 000 ...",
             },
