@@ -12,6 +12,7 @@ interface AuthContextType {
   loading: boolean;
   userState: any | null;
   updateAuth: (session?: any) => Promise<void>;
+  isLoggingOut: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -21,6 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [role, setRole] = useState<"user" | "professional" | null>(null);
   const [userState, setUserState] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   // const navigate = useNavigate();
 
   const updateAuth = async (session?: any) => {
@@ -114,8 +116,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === "SIGNED_OUT") {
+          setIsLoggingOut(true)
           setUserAuth(null);
           setRole(null);
+          setUserState(null);
+        }
+        if (event === "SIGNED_IN") {
+          setIsLoggingOut(false)
         }
       },
     );
@@ -131,6 +138,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         userState,
         loading,
         updateAuth,
+        isLoggingOut,
       }}
     >
       {children}

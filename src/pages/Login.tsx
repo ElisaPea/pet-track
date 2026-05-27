@@ -20,7 +20,7 @@ import {
 } from "@mui/material";
 import FootprintIcon from "../components/FootprintIcon";
 import { useEffect, useState } from "react";
-import { getVetCenters, createVetCenter } from "../api/query"; 
+import { getVetCenters, createVetCenter } from "../api/query";
 import { signIn, signUpComplete } from "../api/signInQuery";
 import { useNavigate } from "react-router-dom";
 import { SCREEN } from "../constants/constants";
@@ -89,7 +89,7 @@ export default function Login() {
   const handleOpenDialog = () => {
     setNewCenter({
       name: "",
-      email: form.email, 
+      email: form.email,
       address: "",
       phone: "",
     });
@@ -108,7 +108,7 @@ export default function Login() {
     }
     try {
       const createdCenter = await createVetCenter(newCenter);
-      await loadVetCenters(); 
+      await loadVetCenters();
       setForm((prev) => ({ ...prev, selectedVet: createdCenter.id }));
       setOpenDialog(false);
     } catch (error: any) {
@@ -123,7 +123,6 @@ export default function Login() {
     setForm(initialFormState);
   };
 
-  // 🌟 SENIOR FIX: Logic to completely clear error keys
   const handleChange = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
@@ -135,6 +134,25 @@ export default function Login() {
     }
   };
 
+  const handleChangeName = (value: string) => {
+    if (/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/.test(value)) {
+      setErrors((prev) => ({ ...prev, name: "El nombre solo puede contener letras." }));
+      setForm((prev) => ({ ...prev, name: value }));
+    } else {
+      handleChange("name", value);
+    }
+  };
+
+  const handleChangePhone = (value: string) => {
+    if (/[^\d]/.test(value) || value.length > 16) return;
+    handleChange("phone", value);
+  };
+
+  const handleChangeLicenseNumber = (value: string) => {
+    if (/[^\d]/.test(value) || value.length > 9) return;
+    handleChange("licenseNumber", value);
+  };
+
   const handleChangeTypeUser = (value: string) => {
     setForm({
       ...initialFormState,
@@ -143,6 +161,15 @@ export default function Login() {
       typeUser: value as "user" | "professional",
     });
     if (Object.keys(errors).length > 0) setErrors({});
+  };
+
+  const handleChangePassword = (value: string) => {
+    if (!isLogin && value.length > 0 && value.length < 6) {
+      setErrors((prev) => ({ ...prev, password: "La contraseña debe tener mínimo 6 caracteres." }));
+    } else {
+      setErrors((prev) => { const n = { ...prev }; delete n.password; return n; });
+    }
+    setForm((prev) => ({ ...prev, password: value }));
   };
 
   const testEmail = (value: string) => {
@@ -160,8 +187,15 @@ export default function Login() {
       newErrors.password = "Mínimo 6 caracteres.";
     }
     if (!form.name && !isLogin) newErrors.name = "El nombre es obligatorio.";
+    if (!isLogin && form.phone && form.phone.length < 4) {
+      newErrors.phone = "El teléfono debe tener mínimo 4 dígitos.";
+    }
     if (!isLogin && isProfessional) {
-      if (!form.licenseNumber) newErrors.licenseNumber = "El Nº Colegiado es obligatorio.";
+      if (!form.licenseNumber) {
+        newErrors.licenseNumber = "El Nº Colegiado es obligatorio.";
+      } else if (form.licenseNumber.length < 4) {
+        newErrors.licenseNumber = "El Nº Colegiado debe tener mínimo 4 dígitos.";
+      }
       if (!form.selectedVet) newErrors.selectedVet = "El Centro Vet es obligatorio.";
     }
     if (Object.keys(newErrors).length > 0) {
@@ -229,7 +263,7 @@ export default function Login() {
     <BasicScreen>
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", mt: 8, px: 2 }}>
         <Box sx={{ bgcolor: "#D1F2F5", width: "100%", maxWidth: 550, borderRadius: 10, p: { xs: 3, sm: 4 }, boxShadow: "0px 4px 10px rgba(0,0,0,0.05)", textAlign: "center" }}>
-          
+
           <Stack direction="row" spacing={2} justifyContent="center" alignItems="center" sx={{ mb: 4, flexWrap: "wrap" }}>
             <FootprintIcon />
             <Typography variant="h4" sx={{ fontWeight: "500", color: "#333" }}>
@@ -239,7 +273,7 @@ export default function Login() {
 
           <Box component="form" noValidate sx={{ mt: 1 }}>
             <Stack spacing={{ xs: 3, sm: 3.5 }} alignItems="center">
-              
+
               <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ xs: "flex-start", sm: "center" }} spacing={{ xs: 1, sm: 0 }} sx={{ width: "100%", position: "relative" }}>
                 <Typography sx={{ width: { xs: "100%", sm: 180 }, textAlign: "left", fontWeight: "bold" }}>
                   Correo: *
@@ -256,7 +290,7 @@ export default function Login() {
                 <Typography sx={{ width: { xs: "100%", sm: 180 }, textAlign: "left", fontWeight: "bold" }}>
                   Password: *
                 </Typography>
-                <TextField fullWidth type={viewPassword ? "text" : "password"} variant="standard" value={form.password} onChange={(e) => handleChange("password", e.target.value)} InputProps={{ disableUnderline: true }} sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }} />
+                <TextField fullWidth type={viewPassword ? "text" : "password"} variant="standard" value={form.password} onChange={(e) => handleChangePassword(e.target.value)} InputProps={{ disableUnderline: true }} sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }} />
                 <IconButton onClick={() => setViewPassword(!viewPassword)} edge="end" sx={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", zIndex: 1 }}>
                   {viewPassword ? <Visibility /> : <VisibilityOff />}
                 </IconButton>
@@ -273,7 +307,14 @@ export default function Login() {
                     <Typography sx={{ width: { xs: "100%", sm: 180 }, textAlign: "left", fontWeight: "bold" }}>
                       Nombre: *
                     </Typography>
-                    <TextField fullWidth variant="standard" value={form.name} onChange={(e) => handleChange("name", e.target.value)} InputProps={{ disableUnderline: true }} sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }} />
+                    <TextField
+                      fullWidth
+                      variant="standard"
+                      value={form.name}
+                      onChange={(e) => handleChangeName(e.target.value)}
+                      InputProps={{ disableUnderline: true }}
+                      sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
+                    />
                     {errors.name && (
                       <Typography sx={{ color: "red", position: "absolute", left: { xs: 0, sm: 180 }, top: "100%", fontSize: "0.8rem" }}>
                         {errors.name}
@@ -285,7 +326,20 @@ export default function Login() {
                     <Typography sx={{ width: { xs: "100%", sm: 180 }, textAlign: "left", fontWeight: "bold" }}>
                       Teléfono:
                     </Typography>
-                    <TextField fullWidth variant="standard" value={form.phone} onChange={(e) => handleChange("phone", e.target.value)} InputProps={{ disableUnderline: true }} sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }} />
+                    <TextField
+                      fullWidth
+                      variant="standard"
+                      value={form.phone}
+                      onChange={(e) => handleChangePhone(e.target.value)}
+                      inputProps={{ maxLength: 16 }}
+                      InputProps={{ disableUnderline: true }}
+                      sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
+                    />
+                    {errors.phone && (
+                      <Typography sx={{ color: "red", position: "absolute", left: { xs: 0, sm: 180 }, top: "100%", fontSize: "0.8rem" }}>
+                        {errors.phone}
+                      </Typography>
+                    )}
                   </Stack>
 
                   <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ xs: "flex-start", sm: "center" }} spacing={{ xs: 0.5, sm: 0 }} sx={{ width: "100%" }}>
@@ -300,7 +354,6 @@ export default function Login() {
                 </>
               )}
 
-              {/* 🌟 SENIOR FIX: Solución definitiva a errores superpuestos y elipsis */}
               {!isLogin && isProfessional && (
                 <>
                   <Stack direction={{ xs: "column", sm: "row" }} alignItems={{ xs: "flex-start", sm: "center" }} spacing={{ xs: 1, sm: 0 }} sx={{ width: "100%" }}>
@@ -308,7 +361,14 @@ export default function Login() {
                       Nº Colegiado: *
                     </Typography>
                     <Box sx={{ width: "100%" }}>
-                      <TextField fullWidth variant="standard" value={form.licenseNumber} onChange={(e) => handleChange("licenseNumber", e.target.value)} InputProps={{ disableUnderline: true }} sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }} />
+                      <TextField
+                        fullWidth
+                        variant="standard"
+                        value={form.licenseNumber}
+                        onChange={(e) => handleChangeLicenseNumber(e.target.value)}
+                        InputProps={{ disableUnderline: true }}
+                        sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 0.5 }}
+                      />
                       {errors.licenseNumber && (
                         <Typography sx={{ color: "red", fontSize: "0.75rem", textAlign: "left", mt: 0.5, ml: 2 }}>
                           {errors.licenseNumber}
@@ -392,7 +452,7 @@ export default function Login() {
             <TextField placeholder="Nombre del centro *" fullWidth variant="standard" value={newCenter.name} onChange={(e) => { setNewCenter({ ...newCenter, name: e.target.value }); if (errorDialog) setErrorDialog(null); }} InputProps={{ disableUnderline: true }} sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 1 }} />
             <TextField placeholder="Correo electrónico del centro *" fullWidth variant="standard" value={newCenter.email} onChange={(e) => { setNewCenter({ ...newCenter, email: e.target.value }); if (errorDialog) setErrorDialog(null); }} InputProps={{ disableUnderline: true }} sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 1 }} />
             <TextField placeholder="Dirección" fullWidth variant="standard" value={newCenter.address} onChange={(e) => setNewCenter({ ...newCenter, address: e.target.value })} InputProps={{ disableUnderline: true }} sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 1 }} />
-            <TextField placeholder="Teléfono" fullWidth variant="standard" value={newCenter.phone} onChange={(e) => setNewCenter({ ...newCenter, phone: e.target.value })} InputProps={{ disableUnderline: true }} sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 1 }} />
+            <TextField placeholder="Teléfono" fullWidth variant="standard" value={newCenter.phone} onChange={(e) => { const val = e.target.value; if (/[^\d]/.test(val) || val.length > 16) return; setNewCenter({ ...newCenter, phone: val }); }} InputProps={{ disableUnderline: true }} sx={{ bgcolor: "white", borderRadius: 50, px: 2, py: 1 }} />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ justifyContent: "center", gap: 2, pb: 3, px: 3 }}>
