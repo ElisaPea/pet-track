@@ -20,7 +20,9 @@ import {
   updatePet,
   updatePetUserNotas,
   getPetUserNotas,
-  deletePetUser, // Asegúrate de tenerla en tu query
+  deletePetUser,
+  handleImagePetUpload,
+  handleDeleteImage, // Asegúrate de tenerla en tu query
 } from "../api/query";
 import { useAuth } from "../context/AuthContext";
 
@@ -33,6 +35,7 @@ interface MascotaExistente {
   centerNotes?: string | null;
   weight?: number;
   vaccines?: boolean;
+  imageurl?: string;
 }
 
 function edadDesde(birthdate?: string): string {
@@ -63,11 +66,10 @@ export function PopupCreatePetUser({
   const [notasUser, setNotasUser] = useState("");
   const [notasCentro, setNotasCentro] = useState("");
   const [name, setName] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
 
   const [nameError, setNameError] = useState("");
   const [razaError, setRazaError] = useState("");
-
-
 
   const [loading, setLoading] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -85,6 +87,7 @@ export function PopupCreatePetUser({
     peso: "",
     vacunas: "",
     notasUser: "",
+    imageUrl: "",
   });
 
   useEffect(() => {
@@ -93,6 +96,7 @@ export function PopupCreatePetUser({
         const edadCalc = edadDesde(mascota.birthdate);
         setName(mascota.name || "");
         setRaza(mascota.breed || "");
+        setImageUrl(mascota.imageurl || "");
         setEdad(edadCalc);
         setNotasCentro(mascota.centerNotes || "");
         setPeso(String(mascota.weight || ""));
@@ -108,11 +112,13 @@ export function PopupCreatePetUser({
           peso: String(mascota.weight || ""),
           vacunas: mascota.vaccines ? "yes" : "no",
           notasUser: extras.notasUser || "",
+          imageUrl: mascota.imageurl || "",
         });
       } else {
         setName("");
         setRaza("");
         setEdad("");
+        setImageUrl("");
         setPeso("");
         setVacunas("");
         setNotasUser("");
@@ -125,6 +131,7 @@ export function PopupCreatePetUser({
           peso: "",
           vacunas: "",
           notasUser: "",
+          imageUrl: "",
         });
       }
     };
@@ -149,15 +156,15 @@ export function PopupCreatePetUser({
     if (/^\d{0,2}$/.test(value)) setter(value);
   };
 
-  const isFormValid =
-    name && !nameError && !razaError;
+  const isFormValid = name && !nameError && !razaError;
   const hasChanges =
     name !== originalData.name ||
     raza !== originalData.raza ||
     edad !== originalData.edad ||
     peso !== originalData.peso ||
     vacunas !== originalData.vacunas ||
-    notasUser !== originalData.notasUser;
+    notasUser !== originalData.notasUser ||
+    imageUrl !== originalData.imageUrl;
 
   const handleGuardar = async () => {
     if (!isFormValid) return;
@@ -173,6 +180,7 @@ export function PopupCreatePetUser({
           birthDate,
           weight: parseInt(peso) || 0,
           vaccines: vacunas === "yes",
+          imageurl: imageUrl,
         },
         userState?.id,
       );
@@ -203,6 +211,7 @@ export function PopupCreatePetUser({
         breed: raza,
         birthDate,
         weight: parseInt(peso) || 0,
+        imageurl: imageUrl,
         vaccines: vacunas === "yes",
       });
 
@@ -236,14 +245,18 @@ export function PopupCreatePetUser({
     }
     // si no es una mascota vinculada llamamos al dialog de confirmDelete
     setConfirmDeleteOpen(true);
-  }
+  };
 
   const handleConfirmDelete = async () => {
     setConfirmDeleteOpen(false);
     setLoading(true);
     try {
       await deletePetUser(mascota!.id, userState?.id);
-      setToast({ open: true, message: "Mascota eliminada correctamente", severity: "success" });
+      setToast({
+        open: true,
+        message: "Mascota eliminada correctamente",
+        severity: "success",
+      });
       setTimeout(() => setOpen(false), 1500);
     } catch {
       setToast({ open: true, message: "Error al eliminar", severity: "error" });
@@ -324,17 +337,68 @@ export function PopupCreatePetUser({
                   >
                     Foto
                   </Typography>
-                  <Button
-                    sx={{
-                      width: 120,
-                      height: 120,
-                      bgcolor: "#F7F9FA",
-                      border: "2px dashed #00ADBA",
-                      fontSize: 40,
-                    }}
-                  >
-                    +
-                  </Button>
+                  <Box>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="pet-image"
+                      hidden
+                      onChange={async (e) => {
+                        const urlImage = await handleImagePetUpload(e);
+                        if (urlImage) {
+                          setImageUrl(urlImage);
+                        }
+                      }}
+                    />
+
+                    <label htmlFor="pet-image">
+                      <Button
+                        component="span"
+                        sx={{
+                          width: 120,
+                          height: 120,
+                          bgcolor: "#F7F9FA",
+                          border: "2px dashed #00ADBA",
+                          overflow: "hidden",
+                          p: 0,
+                          position: "relative",
+                        }}
+                      >
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt="pet"
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          "+"
+                        )}
+                      </Button>
+                    </label>
+
+                    {imageUrl && (
+                      <Typography
+                        onClick={async () => {
+                          await handleDeleteImage(imageUrl);
+                          setImageUrl("");
+                        }}
+                        sx={{
+                          fontSize: 12,
+                          color: "#F02F0A",
+                          cursor: "pointer",
+                          mt: 0.5,
+                          textAlign: "center",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Eliminar
+                      </Typography>
+                    )}
+                  </Box>
                 </Box>
                 <Box sx={{ flex: 1 }}>
                   <Typography sx={{ fontWeight: "bold", mb: 1 }}>
@@ -536,7 +600,8 @@ export function PopupCreatePetUser({
       >
         <Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 3 }}>
           <Typography fontWeight="bold">
-            ¿Estás seguro de que quieres eliminar a <strong>{mascota?.name}</strong>?
+            ¿Estás seguro de que quieres eliminar a{" "}
+            <strong>{mascota?.name}</strong>?
           </Typography>
           <Stack direction="row" spacing={2} justifyContent="flex-end">
             <Button
@@ -549,8 +614,10 @@ export function PopupCreatePetUser({
               variant="contained"
               onClick={handleConfirmDelete}
               sx={{
-                bgcolor: "#F02F0A", borderRadius: 10, fontWeight: "bold",
-                "&:hover": { bgcolor: "#D82E0C" }
+                bgcolor: "#F02F0A",
+                borderRadius: 10,
+                fontWeight: "bold",
+                "&:hover": { bgcolor: "#D82E0C" },
               }}
             >
               Eliminar

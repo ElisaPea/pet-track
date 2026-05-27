@@ -19,6 +19,7 @@ import { validateEmail, validatePhone } from "../utils/validationUtils";
 import { validateName } from "../utils/validatorName";
 import { supabase } from "../api/supabaseClient";
 import { createAssociationRequest } from "../api/createAssociationReq";
+import { useAuth } from "../context/AuthContext";
 
 // --- Types & Interfaces ---
 interface AddClientPopupProps {
@@ -41,6 +42,7 @@ const AddClientPopup = ({
   const [emailExistsError, setEmailExistsError] = useState(false); // Nuevo estado para email duplicado
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const { userState } = useAuth();
 
   // Form inputs state
   const [formData, setFormData] = useState({
@@ -135,7 +137,7 @@ const AddClientPopup = ({
         await createAssociationRequest(
           vetCenterId,
           formData.Email.trim().toLowerCase(),
-          "", // El mail del centro se puede obviar si la query usa el ID
+          userState?.vetCenterEmail || "",
           "professional",
         );
 

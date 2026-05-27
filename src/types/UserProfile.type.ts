@@ -10,4 +10,5 @@ export interface UserProfile {
   licenseNumber?: string;
   veterinaryCenterId?: string;
   vetCenterEmail?: string;
+  vetCenterName?: string;
 }

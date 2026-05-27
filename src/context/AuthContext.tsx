@@ -2,9 +2,6 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { type User } from "@supabase/supabase-js";
 import { supabase } from "../api/supabaseClient";
 import type { UserProfile } from "../types/UserProfile.type";
-import { logout } from "../api/signInQuery";
-import { useNavigate } from "react-router-dom";
-import { SCREEN } from "../constants/constants";
 
 interface AuthContextType {
   userAuthenticated: User | null;
@@ -22,7 +19,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [role, setRole] = useState<"user" | "professional" | null>(null);
   const [userState, setUserState] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   // const navigate = useNavigate();
 
   const updateAuth = async (session?: any) => {
@@ -75,7 +72,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (vetId) {
             const { data: vetCenterData, error: vetError } = await supabase
               .from("VeterinaryCenter")
-              .select("email")
+              .select("email, name")
               .eq("id", vetId)
               .single();
 
@@ -83,6 +80,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             fullProfile.licenseNumber = profData?.licensenumber;
             fullProfile.veterinaryCenterId = profData?.veterinarycenterid;
             fullProfile.vetCenterEmail = vetCenterData?.email;
+            fullProfile.vetCenterName = vetCenterData?.name;
           }
         }
 
@@ -116,13 +114,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === "SIGNED_OUT") {
-          setIsLoggingOut(true)
+          setIsLoggingOut(true);
           setUserAuth(null);
           setRole(null);
           setUserState(null);
         }
         if (event === "SIGNED_IN") {
-          setIsLoggingOut(false)
+          setIsLoggingOut(false);
         }
       },
     );

@@ -373,15 +373,17 @@ export default function HomeVet() {
                 </IconButton>
 
                 {/* MODAL DE DETALLES */}
-                <ClientDetailsPopup
-                  open={isModalOpen && selectedClientId === client.id}
-                  onClose={() => {
-                    setIsModalOpen(false);
-                    fetchClientsAndPets(); // Refrescamos al cerrar por si hubo cambios
-                  }}
-                  clientData={client}
-                  vetCenterId={vetCenterId}
-                />
+                {isModalOpen && selectedClientId === client.id && (
+                  <ClientDetailsPopup
+                    open={isModalOpen && selectedClientId === client.id}
+                    onClose={() => {
+                      setIsModalOpen(false);
+                      fetchClientsAndPets(); // Refrescamos al cerrar por si hubo cambios
+                    }}
+                    clientData={client}
+                    vetCenterId={vetCenterId}
+                  />
+                )}
               </Box>
             </Box>
           ))

@@ -29,6 +29,8 @@ import {
   getPetUserNotas,
   updatePet,
   updatePetVetNotes,
+  handleImagePetUpload,
+  handleDeleteImage,
 } from "../api/query";
 import { validateEmail, validatePhone } from "../utils/validationUtils";
 import { validateName } from "../utils/validatorName";
@@ -93,6 +95,9 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
   const [petsExtras, setPetsExtras] = useState<Record<string, string>>({});
 
   const isAssociated = !!clientData?.userid;
+
+  if (open) console.log(pendingRequests, clientData);
+
   const pendingRequest = pendingRequests.find(
     (r) => r.useremail === clientData?.email,
   );
@@ -230,6 +235,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
             name: pet.name,
             breed: pet.breed,
             birthDate: sanitizedDate,
+            imageurl: pet.imageurl,
           });
           await updatePetVetNotes(pet.id, clientData.id, pet.vetNotes);
         }
@@ -498,7 +504,69 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                     }}
                     onClick={() => setExpandedPetId(isExpanded ? null : pet.id)}
                   >
-                    <Avatar
+                    <Box>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id="pet-image"
+                        hidden
+                        onChange={async (e) => {
+                          const urlImage = await handleImagePetUpload(e);
+                          if (urlImage) {
+                            handlePetChange(pet.id, "imageurl", urlImage);
+                          }
+                        }}
+                      />
+
+                      <label htmlFor="pet-image">
+                        <Button
+                          component="span"
+                          sx={{
+                            width: 120,
+                            height: 120,
+                            bgcolor: "#F7F9FA",
+                            border: "2px dashed #00ADBA",
+                            overflow: "hidden",
+                            p: 0,
+                            position: "relative",
+                          }}
+                        >
+                          {pet.imageurl ? (
+                            <img
+                              src={pet.imageurl}
+                              alt="pet"
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                              }}
+                            />
+                          ) : (
+                            "+"
+                          )}
+                        </Button>
+                      </label>
+
+                      {pet.imageurl && (
+                        <Typography
+                          onClick={async () => {
+                            await handleDeleteImage(pet.imageurl);
+                            handlePetChange(pet.id, "imageurl", "");
+                          }}
+                          sx={{
+                            fontSize: 12,
+                            color: "#F02F0A",
+                            cursor: "pointer",
+                            mt: 0.5,
+                            textAlign: "center",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          Eliminar
+                        </Typography>
+                      )}
+                    </Box>
+                    {/* <Avatar
                       sx={{
                         bgcolor: "white",
                         color: "#00ADBA",
@@ -506,7 +574,7 @@ const ClientDetailsPopup: React.FC<ClientDetailsPopupProps> = ({
                       }}
                     >
                       {pet.name ? pet.name.charAt(0).toUpperCase() : "?"}
-                    </Avatar>
+                    </Avatar> */}
                     <Box sx={{ flexGrow: 1 }}>
                       <Typography sx={{ color: "white", fontWeight: "bold" }}>
                         {pet.name || "Nueva Mascota (Sin nombre)"}
