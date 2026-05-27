@@ -120,7 +120,7 @@ export default function AccountSettingsUser() {
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error(err);
-      setError("Technical error: Could not connect to the database.");
+      setError("Error técnico: No se pudo conectar con la base de datos.");
     }
   };
 

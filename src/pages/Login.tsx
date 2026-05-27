@@ -154,7 +154,11 @@ export default function Login() {
     const newErrors: Record<string, string> = {};
     if (!form.email) newErrors.email = "El correo es obligatorio.";
     if (form.email && !testEmail(form.email)) newErrors.email = "El correo no es válido.";
-    if (!form.password) newErrors.password = "El password es obligatorio.";
+    if (!form.password) {
+      newErrors.password = "El password es obligatorio.";
+    } else if (form.password.length < 6) {
+      newErrors.password = "Mínimo 6 caracteres.";
+    }
     if (!form.name && !isLogin) newErrors.name = "El nombre es obligatorio.";
     if (!isLogin && isProfessional) {
       if (!form.licenseNumber) newErrors.licenseNumber = "El Nº Colegiado es obligatorio.";
@@ -198,10 +202,18 @@ export default function Login() {
     } catch (error: any) {
       if (error.message.includes("User already registered") || error.code === "23505") {
         setErrors({ email: "Este correo ya está registrado. Intenta iniciar sesión." });
-      } else if (error.message.includes("Invalid login credentials")) {
+      } else if (
+        error.message.includes("Invalid login credentials") ||
+        error.message.includes("no son correctos")
+      ) {
         setErrors({ email: "Credenciales incorrectas.", password: " " });
+      } else if (
+        error.message.includes("Password should be at least 6 characters") ||
+        error.message.includes("at least 6")
+      ) {
+        setErrors({ password: "Mínimo 6 caracteres." });
       } else {
-        alert("Error: " + error.message);
+        setErrors({ email: "Error: " + error.message });
       }
     }
   };
@@ -249,7 +261,7 @@ export default function Login() {
                   {viewPassword ? <Visibility /> : <VisibilityOff />}
                 </IconButton>
                 {errors.password && (
-                  <Typography sx={{ color: "red", position: "absolute", left: { xs: 0, sm: 180 }, top: "100%", fontSize: "0.8rem" }}>
+                  <Typography sx={{ color: "red", position: "absolute", left: { xs: 0, sm: 180 }, top: "100%", fontSize: "0.8rem", whiteSpace: "nowrap" }}>
                     {errors.password}
                   </Typography>
                 )}

@@ -1,66 +1,105 @@
-//Importación de utilidades de testeo y componentes necesarios para las pruebas unitarias
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
-import { BrowserRouter } from 'react-router-dom';
-import AccountSettingsUser from '../pages/AccountSettingsUser';
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { BrowserRouter } from "react-router-dom";
+import AccountSettingsUser from "../pages/AccountSettingsUser";
 
-// Mock de la navegación para evitar errores de ejecución
-//Creamos una función mock para simular la navegación y evitar errores relacionados con el enrutamiento durante las pruebas unitarias. Esto nos permite centrarnos en probar la lógica de validación del teléfono sin preocuparnos por la navegación real.
+// Mock de la navegación
 const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual("react-router-dom");
   return { ...actual, useNavigate: () => mockNavigate };
 });
 
-describe('Pruebas Unitarias - Validación de Teléfono', () => {
-  //Renderiza el componente dentro de un Router
+// Mock del contexto de autenticación
+vi.mock("../context/AuthContext", () => ({
+  useAuth: () => ({
+    userState: {
+      id: "test-user-id",
+      name: "Test User",
+      email: "test@email.com",
+      phone: "600123456",
+      address: "Test Address",
+    },
+    updateAuth: vi.fn(),
+  }),
+}));
+
+// Mock del contexto de asociación (usado por el NavBar)
+vi.mock("../context/AssociationContext", () => ({
+  useAssociation: () => ({
+    pendingRequests: [],
+    acceptedRequests: [],
+    refreshAssociations: vi.fn(),
+  }),
+}));
+
+// Mock de las llamadas a la API
+vi.mock("../api/query", () => ({
+  updateUserProfile: vi.fn().mockResolvedValue({}),
+}));
+
+describe("Pruebas Unitarias - Validación de Teléfono en Perfil", () => {
   const setup = () => {
     render(
       <BrowserRouter>
         <AccountSettingsUser />
       </BrowserRouter>
     );
-    // Para probar el teléfono sin que salte el error de los otros campos,
-    // primero rellenamos Nombre y Email válidos.
-    fireEvent.change(screen.getByLabelText(/Nombre\*/i), { target: { value: 'Test User' } });
-    fireEvent.change(screen.getByLabelText(/Correo electrónico\*/i), { target: { value: 'test@email.com' } });
   };
-  //-- Escenarios de pruebas---
 
-  it('debe mostrar error si el teléfono está vacío (solo contiene +34)', async () => {
+  it("debe mostrar error si el nombre está vacío", async () => {
     setup();
-    const saveButton = screen.getByRole('button', { name: /GUARDAR/i });
-    
-    // El valor por defecto ya es "+34 ", así que solo pulsamos guardar
+    const nameInput = screen.getByLabelText(/Nombre\*/i);
+    const saveButton = screen.getByRole("button", { name: /GUARDAR/i });
+
+    // Limpiamos el nombre
+    fireEvent.change(nameInput, { target: { value: "" } });
     fireEvent.click(saveButton);
-    //Verificación: Buscamos el mensaje de error específico para campos vacíos (error 1)
-    const alert = await screen.findByText(/Por favor, rellena todos los campos obligatorios/i);
+
+    const alert = await screen.findByText(/Campos requeridos faltantes: Nombre/i);
     expect(alert).toBeInTheDocument();
   });
 
-  it('debe mostrar error de formato si el teléfono no tiene 11 dígitos', async () => {
+  it("debe mostrar error de formato si el teléfono tiene menos de 4 dígitos", async () => {
     setup();
-    const phoneInput = screen.getByLabelText(/Número de teléfono\*/i);
-    const saveButton = screen.getByRole('button', { name: /GUARDAR/i });
+    const phoneInput = screen.getByLabelText(/Número de teléfono:/i);
+    const saveButton = screen.getByRole("button", { name: /GUARDAR/i });
 
-    // Introducimos un teléfono corto (ej: 8 dígitos en total con el +34)
-    fireEvent.change(phoneInput, { target: { value: '+34 12345' } });
+    // Cambiamos a un teléfono muy corto (3 dígitos)
+    fireEvent.change(phoneInput, { target: { value: "123" } });
     fireEvent.click(saveButton);
-    //Verificación: Buscamos el mensaje de error específico para formato incorrecto (error 2)
-    const alertError2 = await screen.findByText(/Por favor, rellena con el formato adecuado los campos obligatorios/i);
-    expect(alertError2).toBeInTheDocument();
+
+    const alert = await screen.findByText(/Formato incorrecto en: Número de teléfono/i);
+    expect(alert).toBeInTheDocument();
   });
 
-  it('debe mostrar éxito si el teléfono tiene exactamente 11 dígitos (+34 y 9 números)', async () => {
+  it("debe mostrar error de formato si el teléfono tiene más de 15 dígitos", async () => {
     setup();
-    const phoneInput = screen.getByLabelText(/Número de teléfono\*/i);
-    const saveButton = screen.getByRole('button', { name: /GUARDAR/i });
+    const phoneInput = screen.getByLabelText(/Número de teléfono:/i);
+    const saveButton = screen.getByRole("button", { name: /GUARDAR/i });
 
-    // Formato correcto: +34 (2 dígitos) + 9 números = 11 dígitos totales
-    fireEvent.change(phoneInput, { target: { value: '+34 600123456' } });
+    // Cambiamos a un teléfono muy largo (16 dígitos)
+    fireEvent.change(phoneInput, { target: { value: "1234567890123456" } });
     fireEvent.click(saveButton);
-    //Verificación: Buscamos el mensaje de éxito
-    const successAlert = await screen.findByText(/¡Datos guardados correctamente!/i);
-    expect(successAlert).toBeInTheDocument();
+
+    const alert = await screen.findByText(/Formato incorrecto en: Número de teléfono/i);
+    expect(alert).toBeInTheDocument();
+  });
+
+  it("debe mostrar éxito si el teléfono es correcto (entre 4 y 15 dígitos)", async () => {
+    setup();
+    const phoneInput = screen.getByLabelText(/Número de teléfono:/i);
+    const saveButton = screen.getByRole("button", { name: /GUARDAR/i });
+
+    // Cambiamos a un teléfono válido de 9 dígitos
+    fireEvent.change(phoneInput, { target: { value: "600123456" } });
+    
+    // Forzamos que se active el botón simulando un cambio
+    fireEvent.click(saveButton);
+
+    await waitFor(async () => {
+      const alert = await screen.findByText(/¡Datos guardados exitosamente!/i);
+      expect(alert).toBeInTheDocument();
+    });
   });
 });
