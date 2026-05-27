@@ -200,7 +200,11 @@ export default function NavBar() {
                 fontSize: "1.1rem",
               }}
             >
-              {currentTitle} - {userState?.vetCenterName ?? userState?.name}
+              {userState && (
+                <>
+                  {currentTitle} - {userState?.vetCenterName ?? userState?.name}
+                </>
+              )}
             </Typography>
           )}
 
