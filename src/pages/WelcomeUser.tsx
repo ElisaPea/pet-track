@@ -232,7 +232,20 @@ export default function WelcomeUser() {
                         alignItems: "center",
                       }}
                     >
-                      <Typography fontSize={40}>🐾</Typography>
+                      {mascota.imageurl ? (
+                        <img
+                          src={mascota.imageurl}
+                          alt={mascota.name}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            borderRadius: 20,
+                          }}
+                        />
+                      ) : (
+                        <Typography fontSize={40}>🐾</Typography>
+                      )}
                     </Box>
                   </Box>
 

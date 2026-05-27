@@ -75,6 +75,7 @@ export async function createPet(
     birthDate?: string;
     weight?: number;
     vaccines?: boolean;
+    imageurl?: string;
   },
   userId: string,
 ) {
@@ -91,6 +92,7 @@ export async function createPet(
         weight: petData.weight,
         vaccines: petData.vaccines,
         isverified: false,
+        imageurl: petData.imageurl,
       },
     ])
     .select()
@@ -271,6 +273,7 @@ export async function getPetsByUser(userId: string) {
         name,
         breed,
         birthdate,
+        imageurl,
         PetClient (
           Client (
             id,
@@ -305,6 +308,7 @@ export async function getPetById(petId: string) {
       birthdate,
       weight,
       vaccines,
+      imageurl,
       PetClient (
         extrafields,
         Client (
@@ -360,6 +364,7 @@ export async function updatePet(
     birthDate?: string;
     weight?: number;
     vaccines?: boolean;
+    imageurl?: string;
   },
 ) {
   const { data, error } = await supabase
@@ -370,6 +375,7 @@ export async function updatePet(
       birthdate: petData.birthDate,
       weight: petData.weight,
       vaccines: petData.vaccines,
+      imageurl: petData.imageurl,
     })
     .eq("id", petId)
     .select()
@@ -490,6 +496,7 @@ export async function getPetsByClient(clientId: string) {
         id,
         name,
         species,
+        imageurl,
         breed,
         birthdate,
         isverified
@@ -564,3 +571,41 @@ export async function createVetCenter(centerData: {
   if (error) throw error;
   return data;
 }
+
+export const handleImagePetUpload = async (
+  e: React.ChangeEvent<HTMLInputElement>,
+) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const fileName = `${Date.now()}-${file.name}`;
+
+  const { error } = await supabase.storage.from("pets").upload(fileName, file);
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const { data } = supabase.storage.from("pets").getPublicUrl(fileName);
+
+  return data.publicUrl;
+};
+
+export const handleDeleteImage = async (imageUrl: string) => {
+  if (!imageUrl) return;
+
+  try {
+    const fileName = imageUrl.split("/").pop();
+    if (!fileName) return;
+
+    const { error } = await supabase.storage.from("pets").remove([fileName]);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+  } catch (err) {
+    console.error(err);
+  }
+};

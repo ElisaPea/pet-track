@@ -38,7 +38,7 @@ const HELP_URL = "https://dam-6.gitbook.io/manual-usuario-pettrack";
 export default function NavBar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userAuthenticated, role } = useAuth();
+  const { userAuthenticated, userState, role } = useAuth();
   const { associatedVets } = useAssociation();
 
   const theme = useTheme();
@@ -60,13 +60,13 @@ export default function NavBar() {
   // Menu items visibility and navigation logic
   const menuItems = [
     {
-      label: "Home",
+      label: "Inicio",
       screen: SCREEN.WELCOME_USER,
       onClick: () => navigate(SCREEN.WELCOME_USER),
       visible: userAuthenticated && role === "user",
     },
     {
-      label: "HomeVet",
+      label: "Inicio",
       screen: SCREEN.HOME_VET,
       onClick: () => navigate(SCREEN.HOME_VET),
       visible: userAuthenticated && role === "professional",
@@ -78,19 +78,19 @@ export default function NavBar() {
       visible: userAuthenticated && role === "user",
     },
     {
-      label: "PerfilVet",
+      label: "Perfil",
       screen: SCREEN.SETTINGS_VET,
       onClick: () => navigate(SCREEN.SETTINGS_VET),
       visible: userAuthenticated && role === "professional",
     },
     {
-      label: "Log in",
+      label: "Iniciar sesión",
       screen: SCREEN.LOGIN,
       onClick: () => navigate(SCREEN.LOGIN),
       visible: !userAuthenticated,
     },
     {
-      label: "Log out",
+      label: "Cerrar sesión",
       screen: null,
       onClick: () => logout(navigate),
       visible: userAuthenticated,
@@ -200,7 +200,7 @@ export default function NavBar() {
                 fontSize: "1.1rem",
               }}
             >
-              {currentTitle}
+              {currentTitle} - {userState?.vetCenterName ?? userState?.name}
             </Typography>
           )}
 
